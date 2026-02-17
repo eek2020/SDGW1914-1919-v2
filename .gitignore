@@ -43,6 +43,10 @@ data/*.db
 data/*.mdb
 data/backups/
 
+# Large export files
+data/exports/SOLDIERS.csv
+data/exports/OFFICERS.csv
+
 # Cache
 .pytest_cache/
 .coverage

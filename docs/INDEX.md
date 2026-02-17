@@ -51,6 +51,19 @@
 - **[08_IMPLEMENTATION_STATUS.md](08_IMPLEMENTATION_STATUS.md)** – Current build state for developer handoff  
   *Scope: Phases A & B complete; Phase C prototype built; database schema and indexes documented*
 
+### System Audit (February 2026)
+
+- **[10_PARITY_REPORT.md](10_PARITY_REPORT.md)** – Legacy-to-modern parity analysis  
+  *Scope: Screen-by-screen comparison, functionality matrix, gap analysis, PRD audit, technical verification*  
+  *Key Findings: 78% overall migration completeness; 22 of 30 legacy features fully matched; 9 new features added; 7 gaps identified*
+
+- **[11_PRD_E_ENHANCEMENTS.md](11_PRD_E_ENHANCEMENTS.md)** – Enhancement backlog PRD  
+  *Scope: 13 prioritized enhancements with specifications, acceptance criteria, effort estimates*  
+  *Key Items: Human-readable dates (P0), UI test suite (P1), breadcrumbs (P2), CSV export (P2)*
+
+- **[12_EXECUTIVE_SUMMARY.md](12_EXECUTIVE_SUMMARY.md)** – Audit executive summary  
+  *Scope: Migration completeness, key risks, feature parity summary, recommended next steps*
+
 ---
 
 ## 📖 Product Requirements Documents (PRDs)

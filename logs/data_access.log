@@ -1,0 +1,19 @@
+[2026-02-16 19:20:37] INFO  [sdgw.data_access] Creating backup: /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/backups/sd_2011.mdb.backup.20260216_192037
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Backup complete: sd_2011.mdb.backup.20260216_192037 (281.9 MB, match=True)
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Found 7 tables: SD_RANKS, SD_Battalions, REGBATS, OD_REGBATS, OD_Battalions, OFFICERS, SOLDIERS
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Starting export of 7 tables to /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exporting table: SD_RANKS -> /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/SD_RANKS.csv
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exported SD_RANKS: 547 rows, 7 columns in 0.0s
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exporting table: SD_Battalions -> /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/SD_Battalions.csv
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exported SD_Battalions: 721 rows, 2 columns in 0.0s
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exporting table: REGBATS -> /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/REGBATS.csv
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exported REGBATS: 1987 rows, 3 columns in 0.0s
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exporting table: OD_REGBATS -> /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/OD_REGBATS.csv
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exported OD_REGBATS: 1662 rows, 3 columns in 0.0s
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exporting table: OD_Battalions -> /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/OD_Battalions.csv
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exported OD_Battalions: 480 rows, 2 columns in 0.0s
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exporting table: OFFICERS -> /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/OFFICERS.csv
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exported OFFICERS: 41846 rows, 15 columns in 0.5s
+[2026-02-16 19:20:39] INFO  [sdgw.data_access] Exporting table: SOLDIERS -> /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/SOLDIERS.csv
+[2026-02-16 19:20:49] INFO  [sdgw.data_access] Exported SOLDIERS: 661960 rows, 25 columns in 10.4s
+[2026-02-16 19:20:49] INFO  [sdgw.data_access] Export complete: 7/7 tables successful, 709203 total rows

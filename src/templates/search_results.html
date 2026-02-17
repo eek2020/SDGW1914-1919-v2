@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Search Results - SDGW 1914-1919</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Search Results</h1>
+            <p class="subtitle">{{ total }} records found</p>
+        </header>
+
+        <main>
+            <div class="results-header">
+                <a href="{{ url_for('home') }}" class="btn btn-secondary">&larr; Back to Search</a>
+            </div>
+
+            {% if total > 0 %}
+            <div class="results-list">
+                {% for record in results %}
+                <article class="result-card">
+                    <a href="{{ url_for('detail', record_type=record['record_type'], record_id=record['id']) }}" class="result-link">
+                        <h3>{{ record['surname'] }}, {{ record['christian_names'] if record['christian_names'] else '' }}</h3>
+                        <div class="result-details">
+                            <p><strong>Type:</strong> {{ record['record_type'].capitalize() }}</p>
+                            {% if record['rank_new'] %}
+                            <p><strong>Rank:</strong> {{ record['rank_new'] }}</p>
+                            {% endif %}
+                            {% if record['battalion_name'] %}
+                            <p><strong>Battalion:</strong> {{ record['battalion_name'] }}</p>
+                            {% endif %}
+                            {% if record['death_date'] %}
+                            <p><strong>Date of Death:</strong> {{ record['death_date'] }}</p>
+                            {% endif %}
+                            {% if record['death_location'] %}
+                            <p><strong>Death Location:</strong> {{ record['death_location'] }}</p>
+                            {% endif %}
+                        </div>
+                    </a>
+                </article>
+                {% endfor %}
+            </div>
+
+            {% if total_pages > 1 %}
+            <nav class="pagination" aria-label="Pagination">
+                {% if has_prev %}
+                <a href="{{ url_for('search', page=page - 1, **search_params) }}" class="btn btn-secondary">Previous</a>
+                {% endif %}
+
+                <span class="page-info">Page {{ page }} of {{ total_pages }}</span>
+
+                {% if has_next %}
+                <a href="{{ url_for('search', page=page + 1, **search_params) }}" class="btn btn-secondary">Next</a>
+                {% endif %}
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="no-results">
+                <h2>No Results Found</h2>
+                <p>No records match your search criteria. Try:</p>
+                <ul>
+                    <li>Removing some filters</li>
+                    <li>Checking the spelling of names</li>
+                    <li>Searching with just a surname</li>
+                    <li>Trying different record types (officers vs soldiers)</li>
+                </ul>
+                <a href="{{ url_for('home') }}" class="btn btn-primary">Start New Search</a>
+            </div>
+            {% endif %}
+        </main>
+
+        <footer>
+            <p>SDGW 1914-1919 Personnel Database &copy; 2026</p>
+        </footer>
+    </div>
+</body>
+</html>

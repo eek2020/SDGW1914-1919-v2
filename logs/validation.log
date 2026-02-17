@@ -1,0 +1,9 @@
+[2026-02-16 19:21:02] INFO  [sdgw.data_access] Found 7 tables: SD_RANKS, SD_Battalions, REGBATS, OD_REGBATS, OD_Battalions, OFFICERS, SOLDIERS
+[2026-02-16 19:21:02] INFO  [sdgw.data_access] Validating exports in /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports
+[2026-02-16 19:21:02] INFO  [sdgw.data_access] Validated SD_RANKS: PASS (547 rows)
+[2026-02-16 19:21:02] INFO  [sdgw.data_access] Validated SD_Battalions: PASS (721 rows)
+[2026-02-16 19:21:02] INFO  [sdgw.data_access] Validated REGBATS: PASS (1987 rows)
+[2026-02-16 19:21:02] INFO  [sdgw.data_access] Validated OD_REGBATS: PASS (1662 rows)
+[2026-02-16 19:21:02] INFO  [sdgw.data_access] Validated OD_Battalions: PASS (480 rows)
+[2026-02-16 19:21:02] INFO  [sdgw.data_access] Validated OFFICERS: PASS (41846 rows)
+[2026-02-16 19:21:03] INFO  [sdgw.data_access] Validated SOLDIERS: PASS (661960 rows)

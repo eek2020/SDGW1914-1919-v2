@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SDGW 1914-1919 - Personnel Database Search</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/css/tom-select.css">
+    <style>
+        .ts-wrapper { width: 100%; }
+        .ts-wrapper .ts-control { border: 1px solid #ccc; border-radius: 4px; padding: 6px 10px; min-height: 38px; font-size: inherit; }
+        .ts-wrapper .ts-control input { font-size: inherit; }
+        .ts-wrapper.focus .ts-control { border-color: #4a90d9; box-shadow: 0 0 0 2px rgba(74,144,217,0.2); }
+        .ts-dropdown { font-size: inherit; }
+        .ts-dropdown .optgroup-header { font-weight: 700; font-size: 0.85em; color: #666; padding: 6px 10px 2px; }
+        .ts-dropdown .option { padding: 6px 10px; }
+        .ts-wrapper.loading .ts-control::after { content: ''; display: inline-block; width: 14px; height: 14px; border: 2px solid #ccc; border-top-color: #4a90d9; border-radius: 50%; animation: ts-spin 0.5s linear infinite; position: absolute; right: 10px; top: 50%; margin-top: -7px; }
+        @keyframes ts-spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Soldiers Died in the Great War 1914-1919</h1>
+            <p class="subtitle">Search military personnel records</p>
+        </header>
+
+        <main>
+            <form action="{{ url_for('search') }}" method="get" class="search-form">
+                <div class="form-section">
+                    <h2>Search Records</h2>
+
+                    <div class="form-group">
+                        <label for="surname">Surname</label>
+                        <input type="text" id="surname" name="surname" placeholder="e.g., Smith" autocomplete="family-name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="christian_names">First Name(s)</label>
+                        <input type="text" id="christian_names" name="christian_names" placeholder="e.g., John or J" autocomplete="given-name">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="service_number">Service Number</label>
+                        <input type="text" id="service_number" name="service_number" placeholder="e.g., 4493">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rank_name">Rank</label>
+                        <select id="rank_name" name="rank_name">
+                            <option value="">All Ranks</option>
+                            {% for group in rank_groups %}
+                            <optgroup label="{{ group }}">
+                                {% for rank in ranks if rank.rank_group == group %}
+                                <option value="{{ rank.rank_new }}">{{ rank.rank_new }}</option>
+                                {% endfor %}
+                            </optgroup>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="battalion_id">Battalion</label>
+                        <select id="battalion_id" name="battalion_id">
+                            <option value="">All Battalions</option>
+                            {% for battalion in battalions %}
+                            <option value="{{ battalion.battalion_id }}">{{ battalion.name }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="birth_town">Birth Town</label>
+                        <input type="text" id="birth_town" name="birth_town" placeholder="e.g., London">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="death_location">Death Location</label>
+                        <select id="death_location" name="death_location">
+                            <option value="">All Locations</option>
+                            {% for location in death_locations %}
+                            <option value="{{ location }}">{{ location }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="death_date_from">Death Date From</label>
+                            <input type="date" id="death_date_from" name="death_date_from">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="death_date_to">Death Date To</label>
+                            <input type="date" id="death_date_to" name="death_date_to">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <fieldset>
+                            <legend>Record Type</legend>
+                            <div class="radio-group">
+                                <label class="radio-label">
+                                    <input type="radio" name="record_type" value="all" checked>
+                                    <span>All Records</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="record_type" value="officers">
+                                    <span>Officers Only</span>
+                                </label>
+                                <label class="radio-label">
+                                    <input type="radio" name="record_type" value="soldiers">
+                                    <span>Soldiers Only</span>
+                                </label>
+                            </div>
+                        </fieldset>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="submit" class="btn btn-primary">Search</button>
+                        <button type="reset" class="btn btn-secondary">Clear</button>
+                    </div>
+                </div>
+            </form>
+
+            <section class="help-section">
+                <h2>Search Tips</h2>
+                <ul>
+                    <li>Enter a surname to search for all matching records</li>
+                    <li>Use first name to narrow down results</li>
+                    <li>Service numbers are unique to soldiers</li>
+                    <li>Filter by battalion, rank, or death location for specific searches</li>
+                    <li>Leave fields blank to include all records</li>
+                </ul>
+
+                <h2>About This Database</h2>
+                <p>This database contains 703,806 military personnel records from the First World War (1914-1919), including 41,846 officers and 661,960 soldiers.</p>
+            </section>
+        </main>
+
+        <footer>
+            <p>SDGW 1914-1919 Personnel Database &copy; 2026</p>
+        </footer>
+    </div>
+<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/js/tom-select.complete.min.js"></script>
+<script>
+(function() {
+    const FILTER_OPTIONS_URL = '{{ url_for("filter_options") }}';
+    const SURNAME_SUGGEST_URL = '{{ url_for("surname_suggest") }}';
+    const textFields = ['christian_names', 'service_number', 'birth_town'];
+    const selectFields = ['surname', 'rank_name', 'battalion_id', 'death_location'];
+    const dateFields = ['death_date_from', 'death_date_to'];
+    const radioName = 'record_type';
+
+    // Tom Select instances
+    const tsInstances = {};
+
+    // Full (unfiltered) option sets from initial page load
+    const fullOptions = { ranks: [], rank_groups: [], battalions: [], death_locations: [] };
+
+    function storeInitialOptions() {
+        document.getElementById('rank_name').querySelectorAll('optgroup').forEach(og => {
+            const group = og.label;
+            if (!fullOptions.rank_groups.includes(group)) fullOptions.rank_groups.push(group);
+            og.querySelectorAll('option').forEach(opt => {
+                fullOptions.ranks.push({ rank_new: opt.value, rank_group: group });
+            });
+        });
+        document.getElementById('battalion_id').querySelectorAll('option').forEach(opt => {
+            if (opt.value) fullOptions.battalions.push({ battalion_id: String(opt.value), name: opt.textContent.trim() });
+        });
+        document.getElementById('death_location').querySelectorAll('option').forEach(opt => {
+            if (opt.value) fullOptions.death_locations.push(opt.value);
+        });
+    }
+
+    function initTomSelect() {
+        // Surname - remote autocomplete
+        tsInstances.surname = new TomSelect('#surname', {
+            create: true,
+            maxItems: 1,
+            valueField: 'value',
+            labelField: 'text',
+            searchField: 'text',
+            placeholder: 'Type to search surnames...',
+            shouldLoad: function(query) { return query.length >= 2; },
+            load: function(query, callback) {
+                this.clearOptions();
+                this.loadedSearches = {};
+                fetch(SURNAME_SUGGEST_URL + '?q=' + encodeURIComponent(query))
+                    .then(r => r.json())
+                    .then(items => callback(items.map(s => ({ value: s, text: s }))))
+                    .catch(() => callback());
+            },
+            onType: function(query) {
+                if (query.length < 2) { this.clearOptions(); }
+            },
+            onClear: function() { this.clearOptions(); },
+            onChange: () => refreshDropdowns(true)
+        });
+
+        // Rank - with optgroups
+        tsInstances.rank_name = new TomSelect('#rank_name', {
+            placeholder: 'Type to search ranks...',
+            allowEmptyOption: true,
+            sortField: [{ field: '$order' }],
+            optgroupField: 'rank_group',
+            optgroups: fullOptions.rank_groups.map(g => ({ value: g, label: g })),
+            onChange: () => refreshDropdowns(true)
+        });
+
+        // Battalion
+        tsInstances.battalion_id = new TomSelect('#battalion_id', {
+            placeholder: 'Type to search battalions...',
+            allowEmptyOption: true,
+            sortField: [{ field: '$order' }],
+            onChange: () => refreshDropdowns(true)
+        });
+
+        // Death Location
+        tsInstances.death_location = new TomSelect('#death_location', {
+            placeholder: 'Type to search locations...',
+            allowEmptyOption: true,
+            sortField: [{ field: '$order' }],
+            onChange: () => refreshDropdowns(true)
+        });
+    }
+
+    function getFormValues() {
+        const vals = {};
+        textFields.forEach(id => { vals[id] = document.getElementById(id).value.trim(); });
+        selectFields.forEach(id => {
+            vals[id] = tsInstances[id] ? tsInstances[id].getValue() : document.getElementById(id).value;
+        });
+        dateFields.forEach(id => { vals[id] = document.getElementById(id).value; });
+        const checked = document.querySelector('input[name="' + radioName + '"]:checked');
+        vals.record_type = checked ? checked.value : 'all';
+        return vals;
+    }
+
+    function updateTomSelect(id, options, currentValue) {
+        const ts = tsInstances[id];
+        if (!ts) return;
+
+        // Disable change handler while rebuilding
+        ts.lock();
+        ts.clearOptions();
+
+        // Add the "All" empty option
+        ts.addOption({ value: '', text: ts.settings.placeholder || 'All' });
+
+        options.forEach(opt => ts.addOption(opt));
+
+        // Restore value if still valid, otherwise clear
+        if (currentValue && options.some(o => o.value === currentValue)) {
+            ts.setValue(currentValue, true);
+        } else {
+            ts.setValue('', true);
+        }
+        ts.unlock();
+    }
+
+    function updateRankTomSelect(ranks, rankGroups, currentValue) {
+        const ts = tsInstances.rank_name;
+        if (!ts) return;
+
+        ts.lock();
+        ts.clearOptionGroups();
+        ts.clearOptions();
+
+        // Add optgroups
+        rankGroups.forEach(g => ts.addOptionGroup(g, { value: g, label: g }));
+
+        // Add empty option
+        ts.addOption({ value: '', text: 'All Ranks' });
+
+        // Add rank options with group
+        ranks.forEach(r => {
+            ts.addOption({ value: r.rank_new, text: r.rank_new, rank_group: r.rank_group });
+        });
+
+        if (currentValue && ranks.some(r => r.rank_new === currentValue)) {
+            ts.setValue(currentValue, true);
+        } else {
+            ts.setValue('', true);
+        }
+        ts.unlock();
+    }
+
+    function setLoading(loading) {
+        selectFields.forEach(id => {
+            if (id === 'surname') return;
+            const wrapper = tsInstances[id] && tsInstances[id].wrapper;
+            if (wrapper) {
+                wrapper.classList.toggle('loading', loading);
+            }
+        });
+    }
+
+    let fetchController = null;
+    let debounceTimer = null;
+
+    function refreshDropdowns(immediate) {
+        clearTimeout(debounceTimer);
+        const delay = immediate ? 0 : 300;
+
+        debounceTimer = setTimeout(() => {
+            const vals = getFormValues();
+
+            const hasFilter = textFields.some(f => vals[f].length > 0) ||
+                              selectFields.some(f => vals[f]) ||
+                              dateFields.some(f => vals[f]);
+
+            if (!hasFilter) {
+                updateRankTomSelect(fullOptions.ranks, fullOptions.rank_groups, '');
+                updateTomSelect('battalion_id',
+                    fullOptions.battalions.map(b => ({ value: b.battalion_id, text: b.name })), '');
+                updateTomSelect('death_location',
+                    fullOptions.death_locations.map(l => ({ value: l, text: l })), '');
+                return;
+            }
+
+            const textActive = textFields.some(f => vals[f].length >= 3);
+            const otherActive = selectFields.some(f => vals[f]) || dateFields.some(f => vals[f]);
+            if (!textActive && !otherActive) return;
+
+            if (fetchController) fetchController.abort();
+            fetchController = new AbortController();
+
+            const params = new URLSearchParams();
+            Object.entries(vals).forEach(([k, v]) => { if (v) params.set(k, v); });
+
+            setLoading(true);
+
+            fetch(FILTER_OPTIONS_URL + '?' + params.toString(), { signal: fetchController.signal })
+                .then(r => r.json())
+                .then(data => {
+                    setLoading(false);
+                    if (data.unfiltered) {
+                        updateRankTomSelect(fullOptions.ranks, fullOptions.rank_groups, vals.rank_name);
+                        updateTomSelect('battalion_id',
+                            fullOptions.battalions.map(b => ({ value: b.battalion_id, text: b.name })),
+                            vals.battalion_id);
+                        updateTomSelect('death_location',
+                            fullOptions.death_locations.map(l => ({ value: l, text: l })),
+                            vals.death_location);
+                    } else {
+                        updateRankTomSelect(data.ranks, data.rank_groups, vals.rank_name);
+                        updateTomSelect('battalion_id',
+                            data.battalions.map(b => ({ value: String(b.battalion_id), text: b.name })),
+                            vals.battalion_id);
+                        updateTomSelect('death_location',
+                            data.death_locations.map(l => ({ value: l, text: l })),
+                            vals.death_location);
+                    }
+                })
+                .catch(err => {
+                    if (err.name !== 'AbortError') {
+                        setLoading(false);
+                        console.error('Filter options error:', err);
+                    }
+                });
+        }, delay);
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        storeInitialOptions();
+        initTomSelect();
+
+        textFields.forEach(id => {
+            document.getElementById(id).addEventListener('input', () => refreshDropdowns(false));
+        });
+        dateFields.forEach(id => {
+            document.getElementById(id).addEventListener('change', () => refreshDropdowns(true));
+        });
+        document.querySelectorAll('input[name="' + radioName + '"]').forEach(radio => {
+            radio.addEventListener('change', () => refreshDropdowns(true));
+        });
+
+        // Handle form reset
+        document.querySelector('.search-form').addEventListener('reset', () => {
+            setTimeout(() => {
+                if (tsInstances.surname) { tsInstances.surname.clear(); tsInstances.surname.clearOptions(); }
+                updateRankTomSelect(fullOptions.ranks, fullOptions.rank_groups, '');
+                updateTomSelect('battalion_id',
+                    fullOptions.battalions.map(b => ({ value: b.battalion_id, text: b.name })), '');
+                updateTomSelect('death_location',
+                    fullOptions.death_locations.map(l => ({ value: l, text: l })), '');
+            }, 10);
+        });
+    });
+})();
+</script>
+</body>
+</html>

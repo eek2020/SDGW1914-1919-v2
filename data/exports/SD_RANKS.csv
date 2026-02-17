@@ -1,0 +1,548 @@
+ID,NEW_RANK_ID,RANK_ID,Rank Group,Rank New,Rank Original,MYRANKID
+1,7,1,"Privates","Armourer","ARMR./PTE.",19
+2,8,1,"Privates","Artificer","ARTIFICER",20
+3,9,1,"Privates","Band Boy","BAND BOY",21
+4,10,1,"Privates","Bandsman","BANDSMAN",22
+5,11,1,"Privates","Bandsman","BDN.",22
+6,14,1,"Privates","Boy","BOY",23
+7,12,1,"Privates","Bugler","BGLR",24
+8,13,1,"Privates","Bugler","BGR",24
+9,15,1,"Privates","Bugler","BUGLER",24
+10,16,1,"Privates","Bugler","BUGLR.",24
+11,17,1,"Privates","Cadet","CADET",25
+12,18,1,"Privates","Cyclist","CYCLIST",26
+13,25,1,"Privates","Driver","DRVR.",27
+14,27,1,"Privates","Driver","DVR.",27
+15,30,1,"Privates","Driver","DVS.",27
+16,2,1,"Privates","Drummer","A/DMR.",28
+17,3,1,"Privates","Drummer","A/DRUMMER",28
+18,19,1,"Privates","Drummer","DMR",28
+19,20,1,"Privates","Drummer","DR.",28
+20,21,1,"Privates","Drummer","DRM.",28
+21,22,1,"Privates","Drummer","DRMR",28
+22,23,1,"Privates","Drummer","DRUMMER",28
+23,24,1,"Privates","Drummer","DRUMMER.",28
+24,31,1,"Privates","Farrier","FARRIER",29
+25,32,1,"Privates","Farrier","FARRIER, DVR.",29
+26,4,1,"Privates","Fitter","A/FTR.",30
+27,33,1,"Privates","Fitter","FITTER",30
+28,35,1,"Privates","Fitter","FTR./GNR.",30
+29,36,1,"Privates","Fitter","FTR/GNR.",30
+30,37,1,"Privates","Fitter","FTTR.",30
+31,310,1,"Privates","Fitter","FTR.",30
+32,39,1,"Privates","Guardsman","GDS.",31
+33,40,1,"Privates","Guardsman","GDSMN.",31
+34,41,1,"Privates","Guardsman","GDSN.",31
+35,45,1,"Privates","Guardsman","GSN.",31
+36,534,1,"Privates","Guardsman","DSN.",31
+37,46,1,"Privates","Gunner","GUNNER",32
+38,71,1,"Privates","Gunner","SM/GNR.",32
+39,72,1,"Privates","Gunner","SMITH/GUNNER.",32
+40,28,1,"Privates","Lance Bombardier","DVR. (UNPD/L/BDR.)",33
+41,47,1,"Privates","Motor Cyclist","MOTOR CYCLIST",34
+42,48,1,"Privates","Musician","MUSICIAN",35
+43,538,1,"Privates","Nagsman","NAGSMAN",36
+44,50,1,"Privates","Piper","PIPER",37
+45,51,1,"Privates","Piper","PPR.",37
+46,49,1,"Privates","Private","PIONEER",38
+47,52,1,"Privates","Private","PRIVATE",38
+48,540,1,"Privates","Private","PAT.",38
+49,541,1,"Privates","Private","PE.",38
+50,542,1,"Privates","Private","PEC.",38
+51,543,1,"Privates","Private","PET.",38
+52,544,1,"Privates","Private","PT PE P.P.",38
+53,545,1,"Privates","Private","PUR.",38
+54,546,1,"Privates","Private","R.R.",38
+55,55,1,"Privates","Rifleman","RIFLEMAN",39
+56,537,1,"Privates","Rifleman","FRN.",39
+57,53,1,"Privates","Rough Rider","R/RIDER.",40
+58,56,1,"Privates","Rough Rider","ROUGH RIDER",40
+59,29,1,"Privates","Saddler","DVR./SADDLER",41
+60,42,1,"Privates","Saddler","GNR./SDLR.",41
+61,61,1,"Privates","Saddler","SADDLER",41
+62,185,1,"Privates","Saddler","SAD.",41
+63,186,1,"Privates","Saddler","SADDLER",41
+64,1,1,"Privates","Sapper","'SPR.",42
+65,54,1,"Privates","Sapper","RECRUIT",42
+66,74,1,"Privates","Sapper","SPR.",42
+67,57,1,"Privates","Shoeing & Carriage Smith","S. & C. SMITH",43
+68,58,1,"Privates","Shoeing & Carriage Smith","S.& C.S.",43
+69,173,1,"Privates","Shoeing & Carriage Smith","S. & C.S.",43
+70,60,1,"Privates","Shoeing Smith","S/SMITH",44
+71,65,1,"Privates","Shoeing Smith","SH/SMITH",44
+72,66,1,"Privates","Shoeing Smith","SH/STH.",44
+73,67,1,"Privates","Shoeing Smith","SHOEING SMITH",44
+74,120,1,"Privates","Shoeing Smith","A/S/S.",44
+75,179,1,"Privates","Shoeing Smith","S/S",44
+76,181,1,"Privates","Shoeing Smith","S/S.",44
+77,343,1,"Privates","Shoeing Smith","S.S.",44
+78,175,1,"Privates","Shoeing Smith","S./S.",44
+79,243,1,"Privates","Shoeing Smith","A/S/SMITH",44
+80,43,1,"Privates","Signaller","GNR./SIG.",45
+81,44,1,"Privates","Signaller","GNR/SIG.",45
+82,59,1,"Privates","Signaller","S/GNR.",45
+83,62,1,"Privates","Signaller","SGLR.",45
+84,63,1,"Privates","Signaller","SGLR/GNR.",45
+85,64,1,"Privates","Signaller","SGNLR.",45
+86,68,1,"Privates","Signaller","SIG.",45
+87,69,1,"Privates","Signaller","SIG./GNR.",45
+88,70,1,"Privates","Signaller","SIGNALLER",45
+89,75,1,"Privates","Strapper","STRAPPER",46
+90,76,1,"Privates","Tailor","TAILOR.",47
+91,77,1,"Privates","Trooper","TPR.",48
+92,5,1,"Privates","Trumpeter","A/TPTR.",49
+93,78,1,"Privates","Trumpeter","TRUMPETER",49
+94,79,1,"Privates","Waggoner","WAGGONER",50
+95,6,1,"Privates","Wheeler","A/WHLR.",51
+96,26,1,"Privates","Wheeler","DVR-WHLR.",51
+97,80,1,"Privates","Wheeler","WHEELER",51
+98,82,1,"Privates","Wheeler","WHLR. DVR.",51
+99,83,1,"Privates","Wheeler","WHLR./GNR.",51
+100,84,1,"Privates","Wheeler","WHLR/GNR.",51
+101,81,1,"Privates","Wheelwright","WHEELWRIGHT",52
+102,547,1,"Privates","Worker","WORKER.",53
+103,126,2,"Corporals","Artificer Corporal","ARTFR/CPL.",1
+104,157,2,"Corporals","Artificer Lance Corporal","L/CPL., ART. MOTOR CYCLIST",2
+105,92,2,"Corporals","Bombardier","A BDR.",3
+106,98,2,"Corporals","Bombardier","A/A/BDR.",3
+107,99,2,"Corporals","Bombardier","A/BDR.",3
+108,100,2,"Corporals","Bombardier","A/BDR. (A.C.)",3
+109,101,2,"Corporals","Bombardier","A/BOMBR.",3
+110,107,2,"Corporals","Bombardier","A/F/BDR.",3
+111,110,2,"Corporals","Bombardier","A/FULL/BDR.",3
+112,119,2,"Corporals","Bombardier","A/PD/BDR.",3
+113,124,2,"Corporals","Bombardier","ACT./BDR.",3
+114,128,2,"Corporals","Bombardier","BDR.",3
+115,129,2,"Corporals","Bombardier","BDR. (A/CPL.)",3
+116,131,2,"Corporals","Bombardier","BOMBARDIER",3
+117,160,2,"Corporals","Bombardier","P/A/BDR.",3
+118,163,2,"Corporals","Bombardier","PD./A/BDR.",3
+119,73,2,"Corporals","Corporal","CPL.",4
+120,85,2,"Corporals","Corporal","(A/CPL.)",4
+121,89,2,"Corporals","Corporal","2/CPL.",4
+122,91,2,"Corporals","Corporal","2ND/CPL.",4
+123,95,2,"Corporals","Corporal","A.S/CPL.",4
+124,96,2,"Corporals","Corporal","A/2/CPL.",4
+125,97,2,"Corporals","Corporal","A/2ND/CPL.",4
+126,102,2,"Corporals","Corporal","A/C",4
+127,103,2,"Corporals","Corporal","A/CORPL.",4
+128,104,2,"Corporals","Corporal","A/CP.",4
+129,105,2,"Corporals","Corporal","A/CPL.",4
+130,106,2,"Corporals","Corporal","A/E/CPL.",4
+131,108,2,"Corporals","Corporal","A/F/CPL.",4
+132,109,2,"Corporals","Corporal","A/FTR./CPL.",4
+133,121,2,"Corporals","Corporal","A/S/S., CPL.",4
+134,123,2,"Corporals","Corporal","AC/CPL.",4
+135,127,2,"Corporals","Corporal","B/CPL.",4
+136,132,2,"Corporals","Corporal","C/CPL.",4
+137,133,2,"Corporals","Corporal","CORPL.",4
+138,134,2,"Corporals","Corporal","CP.",4
+139,135,2,"Corporals","Corporal","CPL.",4
+140,136,2,"Corporals","Corporal","CPL. (L/CPL.)",4
+141,161,2,"Corporals","Corporal","P/A/CPL.",4
+142,164,2,"Corporals","Corporal","PD./A/CPL.",4
+143,167,2,"Corporals","Corporal","PTE. (A/CPL.)",4
+144,170,2,"Corporals","Corporal","RFN. (A/CPL.)",4
+145,178,2,"Corporals","Corporal","S/CPL.",4
+146,195,2,"Corporals","Corporal","T/2/CPL.",4
+147,196,2,"Corporals","Corporal","T/CPL",4
+148,197,2,"Corporals","Corporal","T/CPL.",4
+149,198,2,"Corporals","Corporal","U/A/CPL.",4
+150,386,2,"Corporals","Corporal","TEMP. 2ND/CPL.",4
+151,140,2,"Corporals","Farrier Corporal","F/CPL.",5
+152,141,2,"Corporals","Farrier Corporal","FAR-CPL.",5
+153,142,2,"Corporals","Farrier Corporal","FARR./CPL.",5
+154,143,2,"Corporals","Farrier Corporal","FARR/CPL.",5
+155,144,2,"Corporals","Farrier Corporal","FARRIER CPL.",5
+156,223,2,"Corporals","Farrier Corporal","A/FARR/CPL.",5
+157,535,2,"Corporals","Farrier Staff Corporal","F.S.C.",6
+158,138,2,"Corporals","Fitter Corporal","CPL/FTR.",7
+159,145,2,"Corporals","Fitter Corporal","FITTER/CPL.",7
+160,146,2,"Corporals","Fitter Corporal","FTR., CPL.",7
+161,147,2,"Corporals","Fitter Corporal","FTR./CPL.",7
+162,148,2,"Corporals","Fitter Corporal","FTR/CPL.",7
+163,536,2,"Corporals","Forewoman","FOREWOMAN",8
+164,114,2,"Corporals","Lance Bombardier","A/L/BDR.",9
+165,117,2,"Corporals","Lance Bombardier","A/P/L/BDR.",9
+166,118,2,"Corporals","Lance Bombardier","A/PD./L/BDR.",9
+167,149,2,"Corporals","Lance Bombardier","GNR/A/P/L/BDR.",9
+168,150,2,"Corporals","Lance Bombardier","L./BDR.",9
+169,152,2,"Corporals","Lance Bombardier","L/BDR.",9
+170,159,2,"Corporals","Lance Bombardier","P./L/BDR.",9
+171,162,2,"Corporals","Lance Bombardier","P/L/BDR.",9
+172,165,2,"Corporals","Lance Bombardier","PD./L/BOMBR.",9
+173,199,2,"Corporals","Lance Bombardier","U/L/BDR.",9
+174,201,2,"Corporals","Lance Bombardier","U/P/L/BDR.",9
+175,86,2,"Corporals","Lance Corporal","(A/L/CPL.)",10
+176,87,2,"Corporals","Lance Corporal","(L/CPL.)",10
+177,88,2,"Corporals","Lance Corporal","/LCPL.",10
+178,90,2,"Corporals","Lance Corporal","2/L/CPL.",10
+179,93,2,"Corporals","Lance Corporal","A L/CPL.",10
+180,94,2,"Corporals","Lance Corporal","A.L/CPL",10
+181,111,2,"Corporals","Lance Corporal","A/L-CPL.",10
+182,113,2,"Corporals","Lance Corporal","A/L.-CPL.",10
+183,115,2,"Corporals","Lance Corporal","A/L/CPL.",10
+184,116,2,"Corporals","Lance Corporal","A/L/CPT.",10
+185,125,2,"Corporals","Lance Corporal","AL/CPL.",10
+186,151,2,"Corporals","Lance Corporal","L.CPL.",10
+187,153,2,"Corporals","Lance Corporal","L/C",10
+188,154,2,"Corporals","Lance Corporal","L/C.",10
+189,155,2,"Corporals","Lance Corporal","L/CL.",10
+190,156,2,"Corporals","Lance Corporal","L/CPL",10
+191,158,2,"Corporals","Lance Corporal","L/CPLFL.",10
+192,166,2,"Corporals","Lance Corporal","PROV. L/CPL.",10
+193,168,2,"Corporals","Lance Corporal","PTE. (A/L/CPL.)",10
+194,169,2,"Corporals","Lance Corporal","PTE. (L/CPL.)",10
+195,171,2,"Corporals","Lance Corporal","RFN. (L/CORP.)",10
+196,200,2,"Corporals","Lance Corporal","U/L/CPL.",10
+197,202,2,"Corporals","Lance Corporal","UNPD/L/CPL.",10
+198,187,2,"Corporals","Saddler Corporal","SADDLER-CPL.",11
+199,353,2,"Corporals","Saddler Corporal","SADDLER-CPL.",11
+200,172,2,"Corporals","Shoeing & Carriage Smith Corporal","S. & C. CPL.",12
+201,174,2,"Corporals","Shoeing & Carriage Smith Corporal","S. & C.S., CPL.",12
+202,137,2,"Corporals","Shoeing Smith Corporal","CPL. S/S.",13
+203,139,2,"Corporals","Shoeing Smith Corporal","CPL/S/SMITH",13
+204,176,2,"Corporals","Shoeing Smith Corporal","S./S. CPL",13
+205,177,2,"Corporals","Shoeing Smith Corporal","S./S. CPL.",13
+206,180,2,"Corporals","Shoeing Smith Corporal","S/S CPL.",13
+207,182,2,"Corporals","Shoeing Smith Corporal","S/S. CPL.",13
+208,183,2,"Corporals","Shoeing Smith Corporal","S/S/CPL.",13
+209,184,2,"Corporals","Shoeing Smith Corporal","S/STH/CPL.",13
+210,188,2,"Corporals","Shoeing Smith Corporal","SH./SM./CPL.",13
+211,130,2,"Corporals","Signaller Bombardier","BDR./SIG.",14
+212,191,2,"Corporals","Signaller Bombardier","SIG/BDR.",14
+213,189,2,"Corporals","Signaller Corporal","SIG./CPL",15
+214,190,2,"Corporals","Signaller Corporal","SIG./CPL.",15
+215,192,2,"Corporals","Signaller Lance Bombardier","SIG/L/BDR.",16
+216,193,2,"Corporals","Smith Corporal","SMITH/CPL.",17
+217,194,2,"Corporals","Smith Corporal","STH/CPL.",17
+218,122,2,"Corporals","Wheeler Corporal","A/WHLR./CPL.",18
+219,203,2,"Corporals","Wheeler Corporal","WHEELER/CPL",18
+220,204,2,"Corporals","Wheeler Corporal","WHEELER/CPL.",18
+221,205,2,"Corporals","Wheeler Corporal","WHLR./A/CPL.",18
+222,432,3,"Sergeants","Armament Quarter Master Sergeant","AMT/Q.M.S.",54
+223,435,3,"Sergeants","Armament Quarter Master Sergeant","ARMR/Q.M.S.",54
+224,261,3,"Sergeants","Armourer Staff Sergeant","ARMR/S/SGT.",55
+225,263,3,"Sergeants","Band Sergeant","BAND SGT.",56
+226,214,3,"Sergeants","Battery Quarter Master Sergeant","A/B.Q.M.S.",57
+227,262,3,"Sergeants","Battery Quarter Master Sergeant","B.Q.M.S.",57
+228,266,3,"Sergeants","Bugler Major","BUGLR-MAJOR",58
+229,264,3,"Sergeants","Bugler Sergeant","BGLR. (A/SGT.)",59
+230,265,3,"Sergeants","Bugler Sergeant","BGLR/SGT.",59
+231,361,3,"Sergeants","Bugler Sergeant","SGT. BGLR.",59
+232,370,3,"Sergeants","Bugler Sergeant","SGT.-BUGLER",59
+233,209,3,"Sergeants","Colour Sergeant","A.CR./SGT.",60
+234,219,3,"Sergeants","Colour Sergeant","A/CLR./SGT.",60
+235,220,3,"Sergeants","Colour Sergeant","A/COL.-SGT.",60
+236,222,3,"Sergeants","Colour Sergeant","A/CRSGT.",60
+237,268,3,"Sergeants","Colour Sergeant","C./SGT.",60
+238,276,3,"Sergeants","Colour Sergeant","C/SGT.",60
+239,277,3,"Sergeants","Colour Sergeant","C/SGT. (A/C.Q.M.S.)",60
+240,278,3,"Sergeants","Colour Sergeant","C/SGT. (C.Q.M.S.)",60
+241,279,3,"Sergeants","Colour Sergeant","CLR./SGT.",60
+242,280,3,"Sergeants","Colour Sergeant","CLR./SGT. (C.Q.M.S.)",60
+243,281,3,"Sergeants","Colour Sergeant","COL.",60
+244,282,3,"Sergeants","Colour Sergeant","COL.-SGT. INSTR.",60
+245,283,3,"Sergeants","Colour Sergeant","COL./SGT.",60
+246,289,3,"Sergeants","Colour Sergeant","CR./SGT.",60
+247,345,3,"Sergeants","Colour Sergeant","S/COL.-SGT.",60
+248,206,3,"Sergeants","Company Quarter Master Sergeant","(C.Q.M.S.), CLR/SGT.",61
+249,216,3,"Sergeants","Company Quarter Master Sergeant","A/C.Q.M. SGT.",61
+250,217,3,"Sergeants","Company Quarter Master Sergeant","A/C.Q.M.S.",61
+251,270,3,"Sergeants","Company Quarter Master Sergeant","C.Q.M.S.",61
+252,271,3,"Sergeants","Company Quarter Master Sergeant","C.Q.M.S.D.",61
+253,272,3,"Sergeants","Company Quarter Master Sergeant","C.Q.S.M.",61
+254,273,3,"Sergeants","Company Quarter Master Sergeant","C.S. (C.Q.M.S.)",61
+255,275,3,"Sergeants","Company Quarter Master Sergeant","C/Q.M.SGT.",61
+256,288,3,"Sergeants","Company Quarter Master Sergeant","CQMS.",61
+257,221,3,"Sergeants","Cook Sergeant","A/COOK-SGT.",62
+258,362,3,"Sergeants","Cook Sergeant","SGT. COOK.",62
+259,374,3,"Sergeants","Cook Sergeant","SGT/COOK",62
+260,215,3,"Sergeants","Corporal of Horse","A/C. OF H.",63
+261,267,3,"Sergeants","Corporal of Horse","C. OF H.",63
+262,364,3,"Sergeants","Drummer Sergeant","SGT. DRMR.",64
+263,373,3,"Sergeants","Drummer Sergeant","SGT./DMR.",64
+264,302,3,"Sergeants","Farrier Corporal of Horse","FARR/C. OF H.",65
+265,303,3,"Sergeants","Farrier Quarter Master Sergeant","FARR/Q.M.D.",66
+266,304,3,"Sergeants","Farrier Quarter Master Sergeant","FARR/Q.M.S.",66
+267,305,3,"Sergeants","Farrier Quarter Master Sergeant","FARRIER/Q.M.",66
+268,411,3,"Sergeants","Farrier Quarter Master Sergeant","A/FARR.Q.M.S.",66
+269,412,3,"Sergeants","Farrier Quarter Master Sergeant","A/FARRIER/Q.M.S.",66
+270,462,3,"Sergeants","Farrier Quarter Master Sergeant","FAR./Q.M.S.",66
+271,463,3,"Sergeants","Farrier Quarter Master Sergeant","FAR/Q.M.S.",66
+272,464,3,"Sergeants","Farrier Quarter Master Sergeant","FARR. Q.M.S.",66
+273,224,3,"Sergeants","Farrier Sergeant","A/FARRIER SGT.",67
+274,299,3,"Sergeants","Farrier Sergeant","FAR./SGT.",67
+275,309,3,"Sergeants","Farrier Sergeant","FR./SGT.",67
+276,348,3,"Sergeants","Farrier Sergeant","S/S/FARR.",67
+277,368,3,"Sergeants","Farrier Sergeant","SGT., FARR",67
+278,225,3,"Sergeants","Farrier Staff Sergeant","A/FARRIER STAFF SGT",68
+279,298,3,"Sergeants","Farrier Staff Sergeant","FAR.-A/S.-SGT.",68
+280,300,3,"Sergeants","Farrier Staff Sergeant","FAR./STF./SGT.",68
+281,301,3,"Sergeants","Farrier Staff Sergeant","FAR/STAFF/SGT.",68
+282,307,3,"Sergeants","Farrier Staff Sergeant","FNR/S/SGT.",68
+283,308,3,"Sergeants","Farrier Staff Sergeant","FR./S./SGT.",68
+284,382,3,"Sergeants","Farrier Staff Sergeant","STAFF/SGT/FARR.",68
+285,227,3,"Sergeants","Fitter Sergeant","A/FTR./SGT",69
+286,229,3,"Sergeants","Fitter Sergeant","A/FTR/SGT.",69
+287,311,3,"Sergeants","Fitter Sergeant","FTR./SGT.",69
+288,226,3,"Sergeants","Fitter Staff Sergeant","A/FTR./S/SGT.",70
+289,228,3,"Sergeants","Fitter Staff Sergeant","A/FTR./STAFF.",70
+290,306,3,"Sergeants","Fitter Staff Sergeant","FITTER/S./SGT.",70
+291,312,3,"Sergeants","Fitter Staff Sergeant","FTR./STAFF/SGT.",70
+292,313,3,"Sergeants","Fitter Staff Sergeant","FTR/S/S.",70
+293,34,3,"Sergeants","Flight Cadet","FLIGHT CADET",71
+294,112,3,"Sergeants","Lance Sergeant","A/L.",72
+295,207,3,"Sergeants","Lance Sergeant","(L/SGT)",72
+296,208,3,"Sergeants","Lance Sergeant","A L/SGT.",72
+297,210,3,"Sergeants","Lance Sergeant","A.L/SGT",72
+298,213,3,"Sergeants","Lance Sergeant","A/.LC.SGT.",72
+299,230,3,"Sergeants","Lance Sergeant","A/L SGT.",72
+300,231,3,"Sergeants","Lance Sergeant","A/L. SGT.",72
+301,232,3,"Sergeants","Lance Sergeant","A/L/SGT.",72
+302,259,3,"Sergeants","Lance Sergeant","AL/SGT.",72
+303,284,3,"Sergeants","Lance Sergeant","CPL. (A/L/SGT.)",72
+304,286,3,"Sergeants","Lance Sergeant","CPL. (L/SERGT.)",72
+305,287,3,"Sergeants","Lance Sergeant","CPL. (L/SGT.)",72
+306,314,3,"Sergeants","Lance Sergeant","L/S",72
+307,315,3,"Sergeants","Lance Sergeant","L/S.J.T.",72
+308,316,3,"Sergeants","Lance Sergeant","L/SGT",72
+309,330,3,"Sergeants","Lance Sergeant","PTE. (L/SGT.)",72
+310,335,3,"Sergeants","Lance Sergeant","RFN. (L/SGT.)",72
+311,234,3,"Sergeants","Orderly Room Sergeant","A/O.R./SGT.",73
+312,247,3,"Sergeants","Piper Sergeant","A/SGT-PIPER.",74
+313,251,3,"Sergeants","Piper Sergeant","A/SGT., PIPER",74
+314,366,3,"Sergeants","Piper Sergeant","SGT. PIPER.",74
+315,237,3,"Sergeants","Quarter Master Sergeant","A/S.Q.M.S.",75
+316,238,3,"Sergeants","Quarter Master Sergeant","A/S.Q.M.SGT.",75
+317,240,3,"Sergeants","Quarter Master Sergeant","A/S/Q.M.S.",75
+318,293,3,"Sergeants","Quarter Master Sergeant","F.OF W., Q.M.S.",75
+319,323,3,"Sergeants","Quarter Master Sergeant","MECH. Q.M.S.",75
+320,331,3,"Sergeants","Quarter Master Sergeant","Q.M.S.",75
+321,414,3,"Sergeants","Quarter Master Sergeant","A/Q.M.S.",75
+322,415,3,"Sergeants","Quarter Master Sergeant","A/Q.M.S.-INSTRUCTOR",75
+323,427,3,"Sergeants","Quarter Master Sergeant","A/T/Q.M.S.",75
+324,456,3,"Sergeants","Quarter Master Sergeant","E.C.Q.M.S.",75
+325,457,3,"Sergeants","Quarter Master Sergeant","ENG.CLERK/Q.M.S",75
+326,458,3,"Sergeants","Quarter Master Sergeant","F. OF W. Q.M.S.",75
+327,459,3,"Sergeants","Quarter Master Sergeant","F.Q.M.S.",75
+328,460,3,"Sergeants","Quarter Master Sergeant","F.W.Q.M.S.",75
+329,461,3,"Sergeants","Quarter Master Sergeant","F/Q.M.S.",75
+330,473,3,"Sergeants","Quarter Master Sergeant","P.Q.M.S.",75
+331,474,3,"Sergeants","Quarter Master Sergeant","Q.M.S",75
+332,475,3,"Sergeants","Quarter Master Sergeant","Q.M.S. (O.R.S.)",75
+333,476,3,"Sergeants","Quarter Master Sergeant","Q.M.S./INSTR.",75
+334,477,3,"Sergeants","Quarter Master Sergeant","Q.M.S.I.",75
+335,478,3,"Sergeants","Quarter Master Sergeant","Q.M.SGT.",75
+336,506,3,"Sergeants","Quarter Master Sergeant","SMITH/Q.M.S.",75
+337,539,3,"Sergeants","Quarter Master Sergeant","O.M.S.",75
+338,499,3,"Sergeants","Saddler Quarter Master Sergeant","SAD./Q.M.S.",76
+339,500,3,"Sergeants","Saddler Quarter Master Sergeant","SAD/Q.M.S.",76
+340,244,3,"Sergeants","Saddler Sergeant","A/SADD/SGT.",77
+341,245,3,"Sergeants","Saddler Sergeant","A/SDLR./SGT.",77
+342,354,3,"Sergeants","Saddler Sergeant","SADDLER-SGT.",77
+343,355,3,"Sergeants","Saddler Sergeant","SDLR/L/SGT.",77
+344,352,3,"Sergeants","Saddler Staff Sergeant","SADD/STAFF/SGT.",78
+345,367,3,"Sergeants","Saddle-Tree Maker Sergeant","SGT. SADDLE-TREE MAKER",79
+346,212,3,"Sergeants","Sergeant","A.SGT.",80
+347,246,3,"Sergeants","Sergeant","A/SERGT.",80
+348,248,3,"Sergeants","Sergeant","A/SGT.",80
+349,249,3,"Sergeants","Sergeant","A/SGT. (A.C.)",80
+350,252,3,"Sergeants","Sergeant","A/SGT./INST.",80
+351,258,3,"Sergeants","Sergeant","ACT/SGT.",80
+352,285,3,"Sergeants","Sergeant","CPL. (A/SGT.)",80
+353,297,3,"Sergeants","Sergeant","F/SGT.",80
+354,317,3,"Sergeants","Sergeant","LOCAL SGT.",80
+355,318,3,"Sergeants","Sergeant","M.S./SGT.",80
+356,319,3,"Sergeants","Sergeant","M.S.S.",80
+357,320,3,"Sergeants","Sergeant","M.S/SGT.",80
+358,321,3,"Sergeants","Sergeant","M/S/S.",80
+359,322,3,"Sergeants","Sergeant","MACH/S/SGT.",80
+360,324,3,"Sergeants","Sergeant","MECH./S.",80
+361,326,3,"Sergeants","Sergeant","PARK/SGT.",80
+362,327,3,"Sergeants","Sergeant","PIONEER SGT.",80
+363,328,3,"Sergeants","Sergeant","PR/SGT.",80
+364,329,3,"Sergeants","Sergeant","PTE. (A/SGT.)",80
+365,334,3,"Sergeants","Sergeant","RFN. (A/SGT.)",80
+366,356,3,"Sergeants","Sergeant","SERGT.",80
+367,358,3,"Sergeants","Sergeant","SGT",80
+368,359,3,"Sergeants","Sergeant","SGT. (A.C.)",80
+369,360,3,"Sergeants","Sergeant","SGT. (A/CPL.)",80
+370,363,3,"Sergeants","Sergeant","SGT. DR.",80
+371,365,3,"Sergeants","Sergeant","SGT. INSTR.",80
+372,371,3,"Sergeants","Sergeant","SGT.-INST.",80
+373,372,3,"Sergeants","Sergeant","SGT.-INSTR. MSKY.",80
+374,376,3,"Sergeants","Sergeant","SJT.",80
+375,377,3,"Sergeants","Sergeant","SKT.",80
+376,384,3,"Sergeants","Sergeant","T/SGT.",80
+377,385,3,"Sergeants","Sergeant","TEM/SGT.",80
+378,387,3,"Sergeants","Sergeant","TRANS. SGT.",80
+379,388,3,"Sergeants","Sergeant","U/A/SGT.",80
+380,344,3,"Sergeants","Shoeing Smith Sergeant","S.S/SGT.",81
+381,378,3,"Sergeants","Shoeing Smith Sergeant","SM/SGT.",81
+382,379,3,"Sergeants","Shoeing Smith Sergeant","SMITH-SGT.",81
+383,380,3,"Sergeants","Shoeing Smith Sergeant","SMITH/SGT.",81
+384,383,3,"Sergeants","Shoeing Smith Sergeant","STH/S/SGT.",81
+385,357,3,"Sergeants","Signaller Sergeant","SGLR./SGT.",82
+386,375,3,"Sergeants","Signaller Sergeant","SIG/SGT.",82
+387,337,3,"Sergeants","Squadron Quarter Master Corporal","S.Q.C.",83
+388,340,3,"Sergeants","Squadron Quarter Master Corporal","S.Q.M.C.",83
+389,338,3,"Sergeants","Squadron Quarter Master Sergeant","S.Q.M. SGT.",84
+390,339,3,"Sergeants","Squadron Quarter Master Sergeant","S.Q.M./SGT.",84
+391,341,3,"Sergeants","Squadron Quarter Master Sergeant","S.Q.M.S.",84
+392,342,3,"Sergeants","Squadron Quarter Master Sergeant","S.Q.S.M.",84
+393,346,3,"Sergeants","Squadron Quarter Master Sergeant","S/Q.M.S.",84
+394,347,3,"Sergeants","Squadron Quarter Master Sergeant","S/Q/M/SGT.",84
+395,211,3,"Sergeants","Staff Sergeant","A.S/SGT.",85
+396,233,3,"Sergeants","Staff Sergeant","A/M.S.S.",85
+397,236,3,"Sergeants","Staff Sergeant","A/S SGT.",85
+398,239,3,"Sergeants","Staff Sergeant","A/S.SGT.",85
+399,241,3,"Sergeants","Staff Sergeant","A/S/S/SGT.",85
+400,242,3,"Sergeants","Staff Sergeant","A/S/SGT.",85
+401,253,3,"Sergeants","Staff Sergeant","A/STAFF/SGT.",85
+402,257,3,"Sergeants","Staff Sergeant","ACT./S/SMITH/CPL.",85
+403,260,3,"Sergeants","Staff Sergeant","AMT/S/SGT.",85
+404,291,3,"Sergeants","Staff Sergeant","F. OF W. S/SGT.",85
+405,292,3,"Sergeants","Staff Sergeant","F. OF WRKS. S/SGT.",85
+406,294,3,"Sergeants","Staff Sergeant","F.T.R. S/SGT.",85
+407,295,3,"Sergeants","Staff Sergeant","F.W.S./SGT.",85
+408,296,3,"Sergeants","Staff Sergeant","F/S/SGT.",85
+409,325,3,"Sergeants","Staff Sergeant","MECH.S/SGT.",85
+410,336,3,"Sergeants","Staff Sergeant","S-SGT.",85
+411,349,3,"Sergeants","Staff Sergeant","S/S/SGT.",85
+412,351,3,"Sergeants","Staff Sergeant","S/SGT.",85
+413,381,3,"Sergeants","Staff Sergeant","STAFF SGT.",85
+414,369,3,"Sergeants","Trumpeter Sergeant","SGT., TPTR.",86
+415,391,3,"Sergeants","Wheeler Quarter Master Sergeant","WHLR./Q.M.S.",87
+416,256,3,"Sergeants","Wheeler Sergeant","A/WHRL/SGT.",88
+417,350,3,"Sergeants","Wheeler Sergeant","S/S/WHLR.",88
+418,392,3,"Sergeants","Wheeler Sergeant","WHLR./SGT.",88
+419,394,3,"Sergeants","Wheeler Sergeant","WHLR.S/SGT.",88
+420,254,3,"Sergeants","Wheeler Staff Sergeant","A/WHEELER/S/SGT.",89
+421,255,3,"Sergeants","Wheeler Staff Sergeant","A/WHLR. S./SGT.",89
+422,389,3,"Sergeants","Wheeler Staff Sergeant","WHEELER/S/SGT.",89
+423,393,3,"Sergeants","Wheeler Staff Sergeant","WHLR.S/SGT",89
+424,390,3,"Sergeants","Wheelwright Sergeant","WHEELWRIGHT SGT.",90
+425,436,4,"Warrant Officers","Acting Regimental Sergeant Major","ARSM.",91
+426,433,4,"Warrant Officers","Armament Sergeant Major","AMT/SGT/MAJOR.",92
+427,434,4,"Warrant Officers","Armament Sergeant Major","AMT/SM.",92
+428,439,4,"Warrant Officers","Bandmaster","BANDMASTER",93
+429,400,4,"Warrant Officers","Battery Sergeant Major","A.B.S.M.",94
+430,405,4,"Warrant Officers","Battery Sergeant Major","A/B.S.M.",94
+431,406,4,"Warrant Officers","Battery Sergeant Major","A/BTY./S.M.",94
+432,437,4,"Warrant Officers","Battery Sergeant Major","B.S.M.",94
+433,438,4,"Warrant Officers","Battery Sergeant Major","B.S.M., W.O., CLASS II.",94
+434,440,4,"Warrant Officers","Battery Sergeant Major","BTY. SGT. MAJOR",94
+435,505,4,"Warrant Officers","Battery Sergeant Major","SGT./A.B.S.M.",94
+436,38,4,"Warrant Officers","Company Sergeant Major","G.S.M.",95
+437,218,4,"Warrant Officers","Company Sergeant Major","A/C.S.M.",95
+438,269,4,"Warrant Officers","Company Sergeant Major","C.M.S.",95
+439,274,4,"Warrant Officers","Company Sergeant Major","C.S.M.",95
+440,395,4,"Warrant Officers","Company Sergeant Major","(C.S.M.), W O. CL. II",95
+441,399,4,"Warrant Officers","Company Sergeant Major","A./.C.S.M.",95
+442,401,4,"Warrant Officers","Company Sergeant Major","A.C.S.M.",95
+443,407,4,"Warrant Officers","Company Sergeant Major","A/C.S.M.",95
+444,409,4,"Warrant Officers","Company Sergeant Major","A/CSM.",95
+445,441,4,"Warrant Officers","Company Sergeant Major","C.Q.M.S. (A/C.S.M.)",95
+446,443,4,"Warrant Officers","Company Sergeant Major","C.S.-MAJOR",95
+447,444,4,"Warrant Officers","Company Sergeant Major","C.S.I.M.",95
+448,445,4,"Warrant Officers","Company Sergeant Major","C.S.M.",95
+449,446,4,"Warrant Officers","Company Sergeant Major","C.S.M. (W.O., CLASS II)",95
+450,447,4,"Warrant Officers","Company Sergeant Major","C.S.M. INST.",95
+451,449,4,"Warrant Officers","Company Sergeant Major","C.S.M.K.",95
+452,450,4,"Warrant Officers","Company Sergeant Major","C/SGT. A/C.S.M.",95
+453,453,4,"Warrant Officers","Company Sergeant Major","COY./SGT. MAJOR",95
+454,454,4,"Warrant Officers","Company Sergeant Major","CSM.",95
+455,486,4,"Warrant Officers","Company Sergeant Major","S.C.S.M.",95
+456,502,4,"Warrant Officers","Company Sergeant Major","SGT. (A/C.S.M.)",95
+457,512,4,"Warrant Officers","Company Sergeant Major","T/C.S.M.",95
+458,524,4,"Warrant Officers","Company Sergeant Major","W.O. CL, 11 (C.S.M.)",95
+459,529,4,"Warrant Officers","Company Sergeant Major","W.O. CLASS 2 (C.S.M.)",95
+460,408,4,"Warrant Officers","Conductor","A/CONDR.",96
+461,452,4,"Warrant Officers","Conductor","CONDR.",96
+462,466,4,"Warrant Officers","Corporal Major","HON/CPL/MAJ.",97
+463,290,4,"Warrant Officers","Drill Sergeant","D/SGT.",98
+464,455,4,"Warrant Officers","Drill Sergeant","DRILL SGT.",98
+465,410,4,"Warrant Officers","Drill Sergeant","A/DRILL/SGT.",98
+466,465,4,"Warrant Officers","Farrier Sergeant Major","FARR/S.M.",99
+467,413,4,"Warrant Officers","Machinist Sergeant Major","A/M.S.M.",100
+468,467,4,"Warrant Officers","Machinist Sergeant Major","M.S.M.",100
+469,468,4,"Warrant Officers","Machinist Sergeant Major","M.SGT./MAJOR",100
+470,470,4,"Warrant Officers","Machinist Sergeant Major","MECH. SGT-MAJOR.",100
+471,471,4,"Warrant Officers","Machinist Sergeant Major","MECH/SGT/MAJOR",100
+472,513,4,"Warrant Officers","Machinist Sergeant Major","T/M.S.M.",100
+473,469,4,"Warrant Officers","Master Gunner (WO I)","MASTER GNR., W.O., CLASS I.",101
+474,397,4,"Warrant Officers","Master Gunner 1st class","1ST CLASS MASTER GUNNER",102
+475,398,4,"Warrant Officers","Master Gunner 2nd class","2ND CLASS M/GNR.",103
+476,472,4,"Warrant Officers","Orderly Room Quarter Master Sergeant","O.R.Q.M.S.",104
+477,332,4,"Warrant Officers","Regimental Quarter Master Sergeant","R.Q.M.S.",105
+478,416,4,"Warrant Officers","Regimental Quarter Master Sergeant","A/R.Q.M.S.",105
+479,479,4,"Warrant Officers","Regimental Quarter Master Sergeant","R.Q.M.S.",105
+480,526,4,"Warrant Officers","Regimental Quarter Master Sergeant","W.O. CL. II (R.Q.M.S.)",105
+481,235,4,"Warrant Officers","Regimental Sergeant Major","A/R.S.M.",106
+482,333,4,"Warrant Officers","Regimental Sergeant Major","R.S.M.",106
+483,402,4,"Warrant Officers","Regimental Sergeant Major","A.R.S.M.",106
+484,417,4,"Warrant Officers","Regimental Sergeant Major","A/R.S.M.",106
+485,431,4,"Warrant Officers","Regimental Sergeant Major","ACT/R.S.M.",106
+486,448,4,"Warrant Officers","Regimental Sergeant Major","C.S.M.A./R.S.M.",106
+487,480,4,"Warrant Officers","Regimental Sergeant Major","R.S.M.",106
+488,481,4,"Warrant Officers","Regimental Sergeant Major","R.S.M. (W.O.I.)",106
+489,482,4,"Warrant Officers","Regimental Sergeant Major","REG./SGT./MAJ. (W.O.I)",106
+490,483,4,"Warrant Officers","Regimental Sergeant Major","RSM.",106
+491,510,4,"Warrant Officers","Regimental Sergeant Major","T.R.S.M.",106
+492,514,4,"Warrant Officers","Regimental Sergeant Major","T/R.S.M.",106
+493,521,4,"Warrant Officers","Regimental Sergeant Major","TEMP/R.S.M.",106
+494,525,4,"Warrant Officers","Regimental Sergeant Major","W.O. CL. I (R.S.M.)",106
+495,527,4,"Warrant Officers","Regimental Sergeant Major","W.O. CL. II, A/R.S.M.",106
+496,530,4,"Warrant Officers","Regimental Sergeant Major","W.O. CLASS I (A/R.S.M.)",106
+497,250,4,"Warrant Officers","Sergeant Major","A/SGT. MAJOR",107
+498,396,4,"Warrant Officers","Sergeant Major","1ST CL/S.S.M.",107
+499,403,4,"Warrant Officers","Sergeant Major","A.S.M.",107
+500,419,4,"Warrant Officers","Sergeant Major","A/S.M.",107
+501,422,4,"Warrant Officers","Sergeant Major","A/S/M.",107
+502,423,4,"Warrant Officers","Sergeant Major","A/S/MAJOR.",107
+503,424,4,"Warrant Officers","Sergeant Major","A/SGT.-MAJOR",107
+504,425,4,"Warrant Officers","Sergeant Major","A/SGT.-MAJOR (A.C.)",107
+505,442,4,"Warrant Officers","Sergeant Major","C.S. (A/S.M.)",107
+506,451,4,"Warrant Officers","Sergeant Major","COL./SGT. (A/S.M.)",107
+507,487,4,"Warrant Officers","Sergeant Major","S.M.",107
+508,494,4,"Warrant Officers","Sergeant Major","S/M.",107
+509,495,4,"Warrant Officers","Sergeant Major","S/MAJOR.",107
+510,501,4,"Warrant Officers","Sergeant Major","SGT-MAJOR.",107
+511,503,4,"Warrant Officers","Sergeant Major","SGT. MAJOR",107
+512,504,4,"Warrant Officers","Sergeant Major","SGT.-MAJOR, W.O.I",107
+513,515,4,"Warrant Officers","Sergeant Major","T/S.M.",107
+514,517,4,"Warrant Officers","Sergeant Major","T/S/MAJOR.",107
+515,531,4,"Warrant Officers","Sergeant Major","W.O. CLASS I (A/S.M.)",107
+516,484,4,"Warrant Officers","Squadron Corporal Major","S.C.M.",108
+517,485,4,"Warrant Officers","Squadron Corporal Major","S.C.M.W.O. II",108
+518,404,4,"Warrant Officers","Staff Sergeant Major","A.S/S.M.",109
+519,418,4,"Warrant Officers","Staff Sergeant Major","A/S-S.M.",109
+520,420,4,"Warrant Officers","Staff Sergeant Major","A/S.S.M.",109
+521,488,4,"Warrant Officers","Staff Sergeant Major","S.S.M.",109
+522,489,4,"Warrant Officers","Staff Sergeant Major","S.S.M. (O.R.SGT.).",109
+523,490,4,"Warrant Officers","Staff Sergeant Major","S.S.M. (R.R.).",109
+524,491,4,"Warrant Officers","Staff Sergeant Major","S.S.M. (W.O.II)",109
+525,492,4,"Warrant Officers","Staff Sergeant Major","S.S.MAJ.",109
+526,496,4,"Warrant Officers","Staff Sergeant Major","S/S.M.",109
+527,497,4,"Warrant Officers","Staff Sergeant Major","S/S.M.M.",109
+528,498,4,"Warrant Officers","Staff Sergeant Major","S/S/M.",109
+529,511,4,"Warrant Officers","Staff Sergeant Major","T.S.S.M.",109
+530,516,4,"Warrant Officers","Staff Sergeant Major","T/S.S.M.",109
+531,518,4,"Warrant Officers","Staff Sergeant Major","T/SSM.",109
+532,520,4,"Warrant Officers","Staff Sergeant Major","TEMP. S.S.M.",109
+533,421,4,"Warrant Officers","Sub-Conductor","A/S/CONDR.",110
+534,426,4,"Warrant Officers","Sub-Conductor","A/SUB-CONDR.",110
+535,430,4,"Warrant Officers","Sub-Conductor","ACT.-SUB.-CONDR.",110
+536,493,4,"Warrant Officers","Sub-Conductor","S/CONDR.",110
+537,507,4,"Warrant Officers","Sub-Conductor","SUBCONDUCTOR",110
+538,519,4,"Warrant Officers","Sub-Conductor","T/SUB-CONDR.",110
+539,508,4,"Warrant Officers","Superintending Clerk","SUPT. CLERK",111
+540,509,4,"Warrant Officers","Superintending Clerk","SUPT. CLERK, W. O., CLASS I.,",111
+541,522,4,"Warrant Officers","Transport Sergeant Major","TRANSPORT SERGEANT-MAJOR",112
+542,428,4,"Warrant Officers","Warrant Officer","A/W.O.",113
+543,523,4,"Warrant Officers","Warrant Officer","W.O.",113
+544,532,4,"Warrant Officers","Warrant Officer Class 1","W.O. CLASS I.",114
+545,429,4,"Warrant Officers","Warrant Officer Class 11","A/W.O. CLASS II",115
+546,528,4,"Warrant Officers","Warrant Officer Class 11","W.O. CLASS 2",115
+547,533,4,"Warrant Officers","Wheeler Quarter Master Sergeant","WHLR/Q.M.S.",116

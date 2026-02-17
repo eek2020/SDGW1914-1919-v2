@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ record['surname'] }}, {{ record['christian_names'] if record['christian_names'] else '' }} - SDGW 1914-1919</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Personnel Record</h1>
+            <p class="subtitle">{{ record_type.capitalize() }}</p>
+        </header>
+
+        <main>
+            <div class="detail-header">
+                <a href="{{ url_for('home') }}" class="btn btn-secondary">&larr; Back to Search</a>
+                <button onclick="window.print()" class="btn btn-secondary">Print Record</button>
+            </div>
+
+            <article class="record-detail">
+                <h2>{{ record['surname'] }}, {{ record['christian_names'] if record['christian_names'] else '' }}</h2>
+
+                <div class="record-section">
+                    <h3>Personal Information</h3>
+                    <dl>
+                        <dt>Name</dt>
+                        <dd>{{ record['surname'] }}, {{ record['christian_names'] if record['christian_names'] else '' }}</dd>
+
+                        {% if record['initials'] %}
+                        <dt>Initials</dt>
+                        <dd>{{ record['initials'] }}</dd>
+                        {% endif %}
+
+                        {% if record['birth_town'] %}
+                        <dt>Birth Town</dt>
+                        <dd>{{ record['birth_town'] }}</dd>
+                        {% endif %}
+
+                        {% if record['enlistment_loc'] %}
+                        <dt>Enlistment Location</dt>
+                        <dd>{{ record['enlistment_loc'] }}</dd>
+                        {% endif %}
+
+                        {% if record['enlistment_place'] %}
+                        <dt>Enlistment Place</dt>
+                        <dd>{{ record['enlistment_place'] }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+
+                <div class="record-section">
+                    <h3>Military Service</h3>
+                    <dl>
+                        {% if record['rank_new'] %}
+                        <dt>Rank</dt>
+                        <dd>{{ record['rank_new'] }}</dd>
+                        {% endif %}
+
+                        {% if record['rank_group'] %}
+                        <dt>Rank Group</dt>
+                        <dd>{{ record['rank_group'] }}</dd>
+                        {% endif %}
+
+                        {% if record['battalion_name'] %}
+                        <dt>Battalion</dt>
+                        <dd>{{ record['battalion_name'] }}</dd>
+                        {% endif %}
+
+                        {% if record['service_number'] %}
+                        <dt>Service Number</dt>
+                        <dd>{{ record['service_number'] }}</dd>
+                        {% endif %}
+
+                        {% if record['decoration'] %}
+                        <dt>Decorations</dt>
+                        <dd>{{ record['decoration'] }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+
+                <div class="record-section">
+                    <h3>Casualty Information</h3>
+                    <dl>
+                        {% if record['death_date'] %}
+                        <dt>Date of Death</dt>
+                        <dd>{{ record['death_date'] }}</dd>
+                        {% endif %}
+
+                        {% if record['death_location'] %}
+                        <dt>Death Location</dt>
+                        <dd>{{ record['death_location'] }}</dd>
+                        {% endif %}
+
+                        {% if record['death_date_raw'] %}
+                        <dt>Original Death Date</dt>
+                        <dd>{{ record['death_date_raw'] }}</dd>
+                        {% endif %}
+                    </dl>
+                </div>
+
+                {% if record['additional_text'] %}
+                <div class="record-section">
+                    <h3>Additional Information</h3>
+                    <p>{{ record['additional_text'] }}</p>
+                </div>
+                {% endif %}
+
+                <div class="record-section">
+                    <h3>Record Details</h3>
+                    <dl>
+                        <dt>Record Type</dt>
+                        <dd>{{ record_type.capitalize() }}</dd>
+
+                        <dt>Record ID</dt>
+                        <dd>{{ record['officer_id'] if record_type == 'officer' else record['soldier_id'] }}</dd>
+                    </dl>
+                </div>
+            </article>
+
+            {% if related %}
+            <section class="related-records">
+                <h2>Explore Related Records</h2>
+
+                {% if related.get('battalion') %}
+                <div class="related-group">
+                    <h3>Others from the same battalion</h3>
+                    <ul>
+                        {% for r in related['battalion'] %}
+                        <li>
+                            <a href="{{ url_for('detail', record_type=r['record_type'], record_id=r['id']) }}">
+                                {{ r['surname'] }}, {{ r['christian_names'] if r['christian_names'] else '' }}
+                                {% if r['rank_text'] %} ({{ r['rank_text'] }}){% endif %}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% if related.get('death_date') %}
+                <div class="related-group">
+                    <h3>Others who died on {{ record['death_date'] }}</h3>
+                    <ul>
+                        {% for r in related['death_date'] %}
+                        <li>
+                            <a href="{{ url_for('detail', record_type=r['record_type'], record_id=r['id']) }}">
+                                {{ r['surname'] }}, {{ r['christian_names'] if r['christian_names'] else '' }}
+                                ({{ r['record_type'].capitalize() }})
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+
+                {% if related.get('birthplace') %}
+                <div class="related-group">
+                    <h3>Others from {{ record['birth_town'] }}</h3>
+                    <ul>
+                        {% for r in related['birthplace'] %}
+                        <li>
+                            <a href="{{ url_for('detail', record_type=r['record_type'], record_id=r['id']) }}">
+                                {{ r['surname'] }}, {{ r['christian_names'] if r['christian_names'] else '' }}
+                                {% if r['rank_text'] %} ({{ r['rank_text'] }}){% endif %}
+                            </a>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+                {% endif %}
+            </section>
+            {% endif %}
+        </main>
+
+        <footer>
+            <p>SDGW 1914-1919 Personnel Database &copy; 2026</p>
+        </footer>
+    </div>
+</body>
+</html>

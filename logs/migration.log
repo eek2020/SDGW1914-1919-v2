@@ -1,0 +1,31 @@
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Starting full migration from /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Creating database: /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/sd_2011.db
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Schema applied successfully
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Loading ranks from /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/SD_RANKS.csv
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Loaded 547 ranks in 0.0s (0 skipped)
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Loading battalions_sd from /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/SD_Battalions.csv
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Loaded 721 battalions_sd in 0.0s
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Loading battalions_od from /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/OD_Battalions.csv
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Loaded 480 battalions_od in 0.0s
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Loading regiment_battalion_sd from /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/REGBATS.csv
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Loaded 1987 regiment_battalion_sd in 0.0s
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Loading regiment_battalion_od from /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/OD_REGBATS.csv
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Loaded 1662 regiment_battalion_od in 0.0s
+[2026-02-16 19:25:49] INFO  [sdgw.migration] Loading officers from /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/OFFICERS.csv
+[2026-02-16 19:25:50] INFO  [sdgw.migration] Loaded 41846 officers in 0.5s (0 skipped)
+[2026-02-16 19:25:50] INFO  [sdgw.migration] Loading soldiers from /Users/erichook-marshall/Downloads/SDGW 1914-1919/data/exports/SOLDIERS.csv (chunk_size=5000)
+[2026-02-16 19:25:51] INFO  [sdgw.migration]   ...loaded 50000 soldiers so far
+[2026-02-16 19:25:52] INFO  [sdgw.migration]   ...loaded 100000 soldiers so far
+[2026-02-16 19:25:53] INFO  [sdgw.migration]   ...loaded 150000 soldiers so far
+[2026-02-16 19:25:54] INFO  [sdgw.migration]   ...loaded 200000 soldiers so far
+[2026-02-16 19:25:56] INFO  [sdgw.migration]   ...loaded 250000 soldiers so far
+[2026-02-16 19:25:58] INFO  [sdgw.migration]   ...loaded 300000 soldiers so far
+[2026-02-16 19:26:00] INFO  [sdgw.migration]   ...loaded 350000 soldiers so far
+[2026-02-16 19:26:03] INFO  [sdgw.migration]   ...loaded 400000 soldiers so far
+[2026-02-16 19:26:07] INFO  [sdgw.migration]   ...loaded 450000 soldiers so far
+[2026-02-16 19:26:12] INFO  [sdgw.migration]   ...loaded 500000 soldiers so far
+[2026-02-16 19:26:16] INFO  [sdgw.migration]   ...loaded 550000 soldiers so far
+[2026-02-16 19:26:19] INFO  [sdgw.migration]   ...loaded 600000 soldiers so far
+[2026-02-16 19:26:21] INFO  [sdgw.migration]   ...loaded 650000 soldiers so far
+[2026-02-16 19:26:25] INFO  [sdgw.migration] Loaded 661960 soldiers in 35.4s (0 skipped)
+[2026-02-16 19:26:25] INFO  [sdgw.migration] Migration complete: 709203 rows loaded, 0 skipped, 0 errors in 35.9s

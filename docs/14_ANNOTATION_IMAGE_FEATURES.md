@@ -26,17 +26,20 @@ New functionality allows users to contribute supplemental information and images
 ### New Tables Created
 
 **`record_annotations`** - User-contributed supplemental data
+
 - 15 optional text fields for additional information
 - Links to soldier/officer records via record_type + record_id
 - Tracks creator and modifier with timestamps
 - Soft delete with `is_active` flag
 
 **`annotation_history`** - Full audit trail
+
 - Tracks every field change with old/new values
 - Records who made changes and when
 - Optional change reason field
 
 **`record_images`** - Image storage
+
 - Stores images as BLOBs (max 10MB each)
 - Rich metadata: title, description, category, date, location, photographer, source, copyright
 - Primary image flag for profile photos
@@ -44,6 +47,7 @@ New functionality allows users to contribute supplemental information and images
 - Soft delete
 
 **`user_confirmations`** - Action logging
+
 - Records all user confirmations before changes
 - Tracks action type, user, timestamp, IP, user agent
 
@@ -59,12 +63,14 @@ New functionality allows users to contribute supplemental information and images
 ### AnnotationManager Class (`src/annotations.py`)
 
 **Annotation Methods:**
+
 - `get_annotation(record_type, record_id)` - Fetch active annotation
 - `create_annotation(record_type, record_id, user, fields)` - Add new annotation
 - `update_annotation(annotation_id, user, fields, reason)` - Modify with history tracking
 - `get_annotation_history(annotation_id)` - View change history
 
 **Image Methods:**
+
 - `validate_image(image_data)` - Check size/type (JPEG, PNG, GIF, WebP, TIFF)
 - `upload_image(record_type, record_id, data, user, metadata)` - Store image
 - `get_images(record_type, record_id)` - List all images for record
@@ -73,6 +79,7 @@ New functionality allows users to contribute supplemental information and images
 - `set_primary_image(image_id)` - Mark as profile photo
 
 **Statistics:**
+
 - `get_statistics()` - Overall counts and storage usage
 
 ---
@@ -82,6 +89,7 @@ New functionality allows users to contribute supplemental information and images
 ### Annotation Routes
 
 **`GET/POST /record/<type>/<id>/annotation`**
+
 - View or edit annotation form
 - Requires user confirmation checkbox
 - Tracks changes in history table
@@ -89,22 +97,27 @@ New functionality allows users to contribute supplemental information and images
 ### Image Routes
 
 **`POST /record/<type>/<id>/upload-image`**
+
 - Upload image with metadata
 - Validates file type and size
 - Requires user confirmation
 
 **`GET /image/<image_id>`**
+
 - Serve image from database
 - Returns proper MIME type
 
 **`POST /image/<image_id>/delete`**
+
 - Soft delete image
 - Requires confirmation
 
 **`POST /image/<image_id>/set-primary`**
+
 - Set as profile/primary image
 
 **`GET /api/annotations/stats`**
+
 - JSON statistics endpoint
 
 ---
@@ -245,6 +258,7 @@ All modifications require explicit user confirmation:
 
 **Document Version:** 1.0  
 **Related Files:**
+
 - `src/schema_amendments.sql` - Database schema
 - `src/annotations.py` - Backend logic
 - `src/web_app.py` - Flask routes (lines 802-995)

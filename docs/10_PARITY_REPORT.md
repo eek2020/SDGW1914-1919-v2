@@ -56,7 +56,7 @@ The SDGW 1914-1919 modernization project has successfully migrated the core data
 | Screen | Screenshot(s) | Description |
 | --- | --- | --- |
 | **S1: Main Search Form** | 112 | Full search form with all fields, query options, action buttons |
-| **S2: Branch Dropdown** | 113 | Branch of the Army dropdown expanded (12 values) |
+| **S2: Branch Dropdown** | 113 | Branch of Army dropdown expanded (12 values) |
 | **S3: Regiment Dropdown (top)** | 114 | Regiment/Corps hierarchical list (A-N) |
 | **S4: Regiment Dropdown (bottom)** | 115 | Regiment/Corps hierarchical list (N-Z) |
 | **S5: Theatre of War Dropdown** | 116 | Theatre of War dropdown expanded |
@@ -134,7 +134,7 @@ The SDGW 1914-1919 modernization project has successfully migrated the core data
 | **Christian Name(s) field** | Free text | Free text | ✅ Parity | |
 | **Initials field** | Free text | Not a search field | ⚠️ Partial | Initials searched via christian_names LIKE — not a dedicated field |
 | **Number (Service No.)** | Free text | Free text | ✅ Parity | |
-| **Branch of the Army** | Dropdown with temporal selector | Not present | ❌ Missing | SDGW data doesn't have this field structure |
+| **Branch of Army** | Dropdown with temporal selector | Not present | ❌ Missing | SDGW data doesn't have this field structure |
 | **Regiment/Corps** | Hierarchical 2-level dropdown | Flat "Battalion" dropdown with Tom Select | ⚠️ Partial | Flat list of 721 items vs hierarchical. Tom Select mitigates with type-ahead |
 | **Rank** | Dialog: group → specific rank | Grouped dropdown (optgroup by rank_group) | ✅ Enhanced | New system uses optgroups matching old hierarchy |
 | **Born (Birth Place)** | Dialog: Country → County hierarchy | Free text input | ⚠️ Partial | Lost geographic hierarchy; gained free text flexibility |

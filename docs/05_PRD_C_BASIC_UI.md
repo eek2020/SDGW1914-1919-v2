@@ -2,10 +2,12 @@
 
 ## Product Requirements Document – SDGW 1914-1919 Modernization
 
-**Version:** 1.0  
-**Date:** 16 February 2026  
-**Status:** Ready for Implementation  
+**Version:** 1.2  
+**Date:** 17 February 2026  
+**Status:** Complete — Aligned with Implementation  
 **Audience:** Engineering Team & Stakeholders
+
+> **v1.2 Changelog (17 Feb 2026):** Updated to match actual implementation. Key changes: 12 search fields (was 2), 50 results per page (was 10), Tom Select CDN dependency added, card/table view toggle, 5 sort options, filter pills, record-by-record navigation, breadcrumb navigation, CSV export, human-readable death dates, API endpoints documented, test suites documented. See ENH-12 in `11_PRD_E_ENHANCEMENTS.md`.
 
 ---
 
@@ -334,11 +336,18 @@ Search again? ┌─────────────────────
 
 **Features:**
 
-- Results sorted by rank (officers first), then by name
-- Each result shows: name, rank, battalion, death status
-- One-click access to full record
-- Pagination if > 10 results
+- Results sorted by name A-Z by default (5 sort options: Name A-Z/Z-A, Death Date earliest/latest, Rank)
+- Each result shows: name, type, rank, battalion, death date (human-readable), death location
+- One-click access to full record with position tracking (pos= parameter)
+- Pagination at 50 results per page with First/Previous/Next/Last navigation
+- Card view (default) and Table view toggle (saved in sessionStorage)
+- Filter pills showing active search criteria
+- Breadcrumb navigation: Home > Results (count)
+- CSV export button (max 10,000 rows)
+- Print list button (prints table view)
 - Easy "back" to modify search
+
+> **v1.2 Note:** PRD v1.0 specified 10 results per page. Actual implementation uses 50 per page — better for researchers scanning large result sets. Sort control and card/table toggle were added based on old system analysis (Appendix E).
 
 **Typography:**
 
@@ -559,11 +568,16 @@ User sees paginated results: "Private BAKER Robert", "Private BROWN John", ...
 
 | Component | Technology | Rationale |
 | ----------- | ----------- | ----------- |
-| **Frontend** | HTML5 + CSS3 | Semantic, accessible, no JavaScript required |
-| **Styling** | CSS Grid + Flexbox | Modern, responsive layout |
-| **Interactivity** | Vanilla JavaScript (minimal) | Progressive enhancement; works without JS |
-| **Database Query** | Python Flask backend | Fast server-side search + rendering |
-| **Deployment** | Single Docker container | Easy deployment; no dependencies on local setup |
+| **Frontend** | HTML5 + CSS3 | Semantic, accessible, no JavaScript required for core function |
+| **Styling** | CSS Grid + Flexbox | Modern, responsive layout; WCAG AAA (7:1 contrast) |
+| **Dropdowns** | Tom Select (CDN) | Searchable dropdowns for 721 battalions, 114 ranks, 137 death locations |
+| **Interactivity** | Vanilla JavaScript (minimal) | View toggle, sort, autocomplete — progressive enhancement |
+| **Backend** | Python Flask 3.0+ | Server-side search + Jinja2 template rendering |
+| **Database** | SQLite (sd_2011.db) | 257 MB, 27 indexes, < 100ms queries |
+| **Testing** | pytest + BeautifulSoup4 | 81 tests (43 route + 38 UI structure) |
+| **Deployment** | `python3 src/web_app.py` | Runs at `http://127.0.0.1:5000`; no container needed for dev |
+
+> **v1.2 Note:** Tom Select loaded via CDN for searchable dropdowns with type-ahead filtering. `beautifulsoup4` added to `requirements.txt` for HTML-parsing UI tests.
 
 ---
 
@@ -601,30 +615,50 @@ User sees paginated results: "Private BAKER Robert", "Private BROWN John", ...
 
 ### Features Included ✅
 
-- [ ] Home page with search box
-- [ ] Search by surname
-- [ ] Search by service number (if known)
-- [ ] Results list (paginated)
-- [ ] Detail view for individual records
-- [ ] Print-friendly layout
-- [ ] Back navigation
-- [ ] Browse by battalion dropdown
-- [ ] Help/instructions section
-- [ ] Responsive design (tablet-friendly)
-- [ ] Keyboard navigation
-- [ ] Screen reader support
+- [x] Home page with 12-field search form (surname, first name, service number, rank, battalion, birth town, enlistment location, decoration, death location, death date range, record type)
+- [x] Surname autocomplete via `surname_lookup` table (50,323 surnames)
+- [x] Dynamic filter narrowing (dropdowns update based on active filters)
+- [x] Search by surname (prefix match)
+- [x] Search by service number (exact match, soldiers only)
+- [x] Paginated results (50 per page, First/Previous/Next/Last)
+- [x] 5 sort options (Name A-Z/Z-A, Death Date earliest/latest, Rank)
+- [x] Card and Table view toggle (saved in sessionStorage)
+- [x] Filter pills showing active search criteria
+- [x] Detail view with grouped sections (Personal, Military, Casualty, Record)
+- [x] Human-readable death dates ("5 September 1915" on detail, "5 Sep 1915" in results)
+- [x] Record-by-record Previous/Next navigation within search results
+- [x] Related records (same battalion, same death date, same birthplace)
+- [x] Breadcrumb navigation (Home > Results > Record Name)
+- [x] CSV export (max 10,000 rows, UTF-8 BOM for Excel)
+- [x] Print support (individual records and results list)
+- [x] Back navigation (preserves search context and page)
+- [x] WCAG AAA accessibility (skip-to-main, ARIA landmarks, 7:1 contrast, keyboard navigable)
+- [x] Responsive design (tablet-friendly)
+- [x] Friendly 404 error page
+- [x] Help/instructions section on home page
 
 ### Features for Phase 2 (Later) 🚫
 
-- [ ] Fuzzy/phonetic name matching
+- [ ] Fuzzy/phonetic name matching (see PRD D Phase D3)
 - [ ] Advanced query builder
 - [ ] Map view of locations
 - [ ] Timeline view of casualties
-- [ ] Export to CSV
-- [ ] Batch operations
-- [ ] Relationship mapping
-- [ ] Photo album
+- [ ] Saved record lists / bookmarks (see ENH-06)
+- [ ] Copy record to clipboard (see ENH-05)
+- [ ] Hierarchical regiment/battalion grouping
+- [ ] Geographic hierarchy for birth/residence
 - [ ] User accounts / saved searches
+
+### API Endpoints (v1.2 — new section)
+
+| Endpoint | Method | Purpose |
+| --- | --- | --- |
+| `/` | GET | Home page with search form |
+| `/search` | GET | Search results (accepts all 12 filter params + sort + page) |
+| `/record/<type>/<id>` | GET | Detail view for officer or soldier |
+| `/export-csv` | GET | CSV download of current search results (max 10,000 rows) |
+| `/api/surname-suggest` | GET | Surname autocomplete (prefix match, LIMIT 50) |
+| `/api/filter-options` | GET | Dynamic dropdown options based on current filters |
 
 ---
 
@@ -640,19 +674,28 @@ User sees paginated results: "Private BAKER Robert", "Private BROWN John", ...
 
 ### AC2: Search Results
 
-- [ ] Results displayed within 1 second
-- [ ] Each result shows: surname, rank, battalion, death status
-- [ ] "Back" button returns to search page
-- [ ] Pagination works if > 10 results
-- [ ] Message shows count: "14 people named SMITH found"
+- [x] Results displayed within 1 second
+- [x] Each result shows: surname, type, rank, battalion, death date (human-readable), death location
+- [x] "New Search" button returns to home page
+- [x] Pagination works at 50 results per page with First/Previous/Next/Last
+- [x] Message shows count: "X records found"
+- [x] 5 sort options available
+- [x] Card/table view toggle
+- [x] Filter pills for active search criteria
+- [x] Breadcrumb navigation: Home > Results (count)
+- [x] CSV export button
+- [x] Search params preserved in all pagination links
 
 ### AC3: Detail View
 
-- [ ] All fields from database are visible (no truncation)
-- [ ] Fields are grouped logically
-- [ ] Related records suggested (same battalion, etc.)
-- [ ] Print button opens print preview
-- [ ] "Back" button returns to results
+- [x] All fields from database are visible (no truncation)
+- [x] Fields are grouped logically (Personal, Military, Casualty, Record)
+- [x] Related records suggested (same battalion, same death date, same birthplace)
+- [x] Print button opens print preview
+- [x] "Back to Results" button returns to results (preserving search context and page)
+- [x] Death date displayed as "5 September 1915" (human-readable)
+- [x] Record-by-record Previous/Next navigation within search results
+- [x] Breadcrumb: Home > Results (count) > Record Name
 
 ### AC4: Accessibility
 
@@ -828,7 +871,7 @@ The old system's main search screen has the following features:
 
 | Field | Control Type | Notes |
 | --- | --- | --- |
-| Branch of the Army | Dropdown | With "At 1/8/39" and "At Death" temporal selectors |
+| Branch of Army | Dropdown | With "At 1/8/39" and "At Death" temporal selectors |
 | Regiment, Corps, etc. | Hierarchical dropdown | Two levels: branch type → specific regiment (see E.2) |
 | Surname | Free text | Primary search field |
 | Christian Name(s) | Free text | Separate from surname |
@@ -1027,11 +1070,12 @@ The old system allowed browsing through results **one record at a time** from th
 
 ---
 
-**Document Version:** 1.1
+**Document Version:** 1.2
 **Last Updated:** 17 February 2026
 **Change Log:**
 
+- v1.2 (17 Feb 2026): Aligned with actual implementation (ENH-12). Updated tech stack, search fields (12), results per page (50), added sort/toggle/pills/breadcrumbs/CSV export/human dates/API endpoints/test suites to feature list. Updated acceptance criteria.
 - v1.1 (17 Feb 2026): Added Appendix E — Old System UI Analysis from Army Roll of Honour screenshots
 - v1.0 (16 Feb 2026): Initial document
 
-**Next Review:** Upon completion of Phase 1 implementation
+**Next Review:** After PRD D implementation begins

@@ -5,9 +5,9 @@
 
 ---
 
-## Project State: Phases A & B Complete, Phase C Ready to Start
+## Project State: Phases A, B & C Complete
 
-This is a WW1 military personnel database modernization project. A legacy Windows CD-ROM app ("Soldiers Died in the Great War 1914-1919") containing 703,806 records in an MS Access `.mdb` file has been extracted and migrated into SQLite, ready for a web UI.
+This is a WW1 military personnel database modernization project. A legacy Windows CD-ROM app ("Soldiers Died in the Great War 1914-1919") containing 703,806 records in an MS Access `.mdb` file has been extracted, migrated into SQLite, and served via a Flask web UI.
 
 ---
 
@@ -41,6 +41,35 @@ Loads CSVs into a normalized SQLite database with indexes for multi-parameter se
 **Key output:**
 
 - `data/sd_2011.db` — 257.3 MB SQLite database, fully indexed, ready for queries
+
+### Phase C: Flask Web UI (DONE)
+
+Multi-parameter search, paginated results, and detail view as a Flask web app.
+
+| File | What It Does |
+| ------ | ------------- |
+| `src/web_app.py` | Flask application — search form, results page, detail view, autocomplete API, filter-options API, 404 handler |
+| `src/templates/home.html` | Search form with Tom Select dropdowns, surname autocomplete, dynamic filter narrowing |
+| `src/templates/search_results.html` | Paginated results with card/table toggle, sort controls, filter pills, print support |
+| `src/templates/detail.html` | Full record view with related records, record-by-record navigation within search results |
+| `src/templates/404.html` | Friendly 404 error page |
+| `src/static/style.css` | Responsive CSS with WCAG AAA contrast, 18px+ fonts, 44px touch targets, print styles |
+| `tests/test_web_app.py` | 43 tests, all passing |
+
+**Features implemented:**
+
+- Multi-parameter search (surname, first name, service number, rank, battalion, birth town, enlistment location, decoration, death location, death date range, record type)
+- Surname autocomplete via `surname_lookup` table
+- Dynamic dropdown narrowing (filter options update based on current search criteria)
+- Paginated results (50 per page) with First/Previous/Next/Last navigation
+- 5 sort options (Name A-Z/Z-A, Death Date earliest/latest, Rank)
+- Card and Table view toggle (saved in sessionStorage)
+- Filter pills showing active search criteria
+- Record-by-record prev/next navigation within search results
+- Related records (same battalion, same death date, same birthplace)
+- Print support (single record and results list)
+- WCAG AAA accessibility (skip-to-main, ARIA landmarks, 7:1 contrast, keyboard navigable)
+- Friendly 404 error page
 
 ---
 
@@ -439,6 +468,10 @@ python3 src/scripts/validate_migration.py
 # Profile data for search UI design
 python3 src/scripts/profile_data.py
 
+# Phase C: Run Flask web app
+python3 src/web_app.py
+# Opens at http://127.0.0.1:5000
+
 # Run all tests
 python3 -m pytest tests/ -v
 ```
@@ -447,48 +480,9 @@ All commands run from project root: `/Users/erichook-marshall/Downloads/SDGW 191
 
 ---
 
-## What's Next: Phase C (UI)
+## What's Next: Phase D (Desktop App)
 
-Per `docs/05_PRD_C_BASIC_UI.md`, the UI should be a Flask web app.
-
-### Pages to Build
-
-1. **Home page** — multi-parameter search form + browse by battalion
-2. **Search results** — paginated list with sort/filter
-3. **Detail view** — full record display + related records
-
-### Tech Stack
-
-- **Backend:** Python Flask (`requirements.txt` already includes `Flask>=3.0`), querying `data/sd_2011.db` via `sqlite3`
-- **Frontend:** HTML5 + CSS3, minimal JS (progressive enhancement)
-- **Search:** Use the `build_search_query()` / `execute_search()` pattern documented above for ALL search routes
-- **Autocomplete:** `/api/autocomplete/<field>` endpoint using `surname_lookup` table and DISTINCT queries
-
-### Search Form Controls (informed by data profile)
-
-```text
-┌── SEARCH ─────────────────────────────────────────┐
-│ Surname:        [____________] (autocomplete)      │
-│ First Name:     [____________] (free text)         │
-│ Service Number: [____________] (free text)         │
-│ Rank:           [▼ searchable dropdown ]           │
-│ Battalion:      [▼ searchable dropdown ]           │
-│ Birth Town:     [____________] (autocomplete)      │
-│ Enlistment Loc: [____________] (autocomplete)      │
-│ Death Location: [▼ searchable dropdown, 137 vals]  │
-│ Death Date:     [from ____] to [____ ]             │
-│ Record Type:    ○ All  ○ Officers  ○ Soldiers      │
-│                                                    │
-│ [SEARCH]  [CLEAR]                                  │
-└────────────────────────────────────────────────────┘
-```
-
-### Design Requirements (from PRD C)
-
-- 18px+ base font, 44px min touch targets
-- WCAG AAA (7:1 contrast ratio)
-- Keyboard navigable, screen reader compatible
-- Target audience: 65+ year olds researching family history
+Per `docs/06_IMPLEMENTATION_PLAN.md`, the next phase is packaging as a desktop application.
 
 ---
 
@@ -518,7 +512,15 @@ SDGW 1914-1919/
 │   ├── __init__.py
 │   ├── data_access.py                     # DataExtractor class (Phase A)
 │   ├── data_migration.py                  # DataMigrator class (Phase B)
+│   ├── web_app.py                         # Flask web application (Phase C)
 │   ├── schema.sql                         # SQLite DDL (8 tables, 27 indexes)
+│   ├── static/
+│   │   └── style.css                      # WCAG AAA responsive styles
+│   ├── templates/
+│   │   ├── home.html                      # Search form with Tom Select
+│   │   ├── search_results.html            # Paginated results (card/table)
+│   │   ├── detail.html                    # Full record view
+│   │   └── 404.html                       # Friendly error page
 │   └── scripts/
 │       ├── __init__.py
 │       ├── export_data.py                 # MDB → CSV export runner
@@ -529,7 +531,8 @@ SDGW 1914-1919/
 │       └── validate_migration.py          # Post-migration validation
 ├── tests/
 │   ├── test_data_access.py                # 14 tests (all pass)
-│   └── test_migration.py                 # 25 tests (all pass)
+│   ├── test_migration.py                  # 25 tests (all pass)
+│   └── test_web_app.py                    # 43 tests (all pass)
 ├── logs/                                  # Runtime logs
 └── old_system/                            # Legacy Windows CD-ROM app (reference only)
 ```
@@ -541,7 +544,8 @@ SDGW 1914-1919/
 ```text
 tests/test_data_access.py    14 passed    (28.6s — includes live MDB reads)
 tests/test_migration.py      25 passed    (0.06s — unit + integration)
-TOTAL                        39 passed, 0 failed
+tests/test_web_app.py        43 passed    (~60s — uses real database)
+TOTAL                        82 passed, 0 failed
 ```
 
 ---

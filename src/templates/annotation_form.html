@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if annotation %}Edit{% else %}Add{% endif %} Supplemental Information - SDGW 1914-1919</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='SDGW1419.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <a href="#main-content" class="skip-to-main">Skip to main content</a>
+
+    <nav class="top-nav" aria-label="Main navigation">
+        <a href="{{ url_for('home') }}" class="nav-brand">
+            <img src="{{ url_for('static', filename='SDGW1419.ico') }}" alt="SDGW Icon" class="nav-brand-icon">
+            Soldiers Died in the Great War 1914-1919
+        </a>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+        <div class="nav-menu" id="nav-menu" role="navigation">
+            <a href="{{ url_for('home') }}" class="nav-link">Search</a>
+            <a href="{{ url_for('about') }}" class="nav-link">About</a>
+            <a href="{{ url_for('settings') }}" class="nav-link">Settings</a>
+        </div>
+        <div class="nav-backdrop" id="nav-backdrop"></div>
+    </nav>
+    <script>
+    (function(){
+        var btn=document.getElementById('hamburger-btn'),menu=document.getElementById('nav-menu'),bd=document.getElementById('nav-backdrop');
+        function toggle(){var o=menu.classList.toggle('open');btn.classList.toggle('open');bd.classList.toggle('open');btn.setAttribute('aria-expanded',o);}
+        function close(){menu.classList.remove('open');btn.classList.remove('open');bd.classList.remove('open');btn.setAttribute('aria-expanded','false');}
+        btn.addEventListener('click',toggle);bd.addEventListener('click',close);
+        document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+    })();
+    </script>
+
+    <div class="container">
+        <header role="banner">
+            <h1>{% if annotation %}Edit{% else %}Add{% endif %} Supplemental Information</h1>
+            <p class="subtitle">{{ record_type.capitalize() }} Record #{{ record_id }}</p>
+        </header>
+
+        <main id="main-content" role="main">
+            <nav class="breadcrumb" aria-label="Breadcrumb">
+                <ol>
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                    <li><a href="{{ url_for('detail', record_type=record_type, record_id=record_id) }}">Record</a></li>
+                    <li><span aria-current="page">{% if annotation %}Edit{% else %}Add{% endif %} Information</span></li>
+                </ol>
+            </nav>
+
+            <div class="detail-header">
+                <a href="{{ url_for('detail', record_type=record_type, record_id=record_id) }}" class="btn btn-secondary">&larr; Back to Record</a>
+            </div>
+
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
+
+            <div class="annotation-info-box">
+                <h3>About Supplemental Information</h3>
+                <p>Original record data cannot be modified. Use this form to add additional context, corrections, family stories, or research notes. All contributions are tracked with full history.</p>
+                <p>Fields left blank will not be saved. Fill in only the fields you have information for.</p>
+            </div>
+
+            <form action="{{ url_for('manage_annotation', record_type=record_type, record_id=record_id) }}" method="post" class="annotation-form" id="annotation-form">
+                <input type="hidden" name="action" value="{{ 'update' if annotation else 'create' }}">
+                {% if annotation %}
+                <input type="hidden" name="annotation_id" value="{{ annotation.annotation_id }}">
+                {% endif %}
+
+                <fieldset>
+                    <legend>Personal Details</legend>
+                    <div class="form-group">
+                        <label for="additional_names">Additional Names</label>
+                        <input type="text" id="additional_names" name="additional_names" 
+                               value="{{ annotation.additional_names if annotation and annotation.additional_names else '' }}"
+                               placeholder="Alternative spellings, nicknames, maiden names">
+                    </div>
+                    <div class="form-group">
+                        <label for="birth_date">Birth Date</label>
+                        <input type="text" id="birth_date" name="birth_date" 
+                               value="{{ annotation.birth_date if annotation and annotation.birth_date else '' }}"
+                               placeholder="e.g., 15 March 1890">
+                    </div>
+                    <div class="form-group">
+                        <label for="birth_place_detail">Birth Place Detail</label>
+                        <input type="text" id="birth_place_detail" name="birth_place_detail" 
+                               value="{{ annotation.birth_place_detail if annotation and annotation.birth_place_detail else '' }}"
+                               placeholder="More specific than the town in the official record">
+                    </div>
+                    <div class="form-group">
+                        <label for="family_info">Family Information</label>
+                        <textarea id="family_info" name="family_info" rows="3"
+                                  placeholder="Parents, siblings, spouse, children">{{ annotation.family_info if annotation and annotation.family_info else '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="pre_war_occupation">Pre-war Occupation</label>
+                        <input type="text" id="pre_war_occupation" name="pre_war_occupation" 
+                               value="{{ annotation.pre_war_occupation if annotation and annotation.pre_war_occupation else '' }}"
+                               placeholder="Civilian job before enlistment">
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Military Service</legend>
+                    <div class="form-group">
+                        <label for="enlistment_details">Enlistment Details</label>
+                        <textarea id="enlistment_details" name="enlistment_details" rows="3"
+                                  placeholder="Circumstances of joining, date, location">{{ annotation.enlistment_details if annotation and annotation.enlistment_details else '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="service_notes">Service Notes</label>
+                        <textarea id="service_notes" name="service_notes" rows="3"
+                                  placeholder="Additional service information, transfers, promotions">{{ annotation.service_notes if annotation and annotation.service_notes else '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="medals_honors">Medals &amp; Honours</label>
+                        <textarea id="medals_honors" name="medals_honors" rows="2"
+                                  placeholder="Additional decorations not in the main record">{{ annotation.medals_honors if annotation and annotation.medals_honors else '' }}</textarea>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Casualty &amp; Memorial</legend>
+                    <div class="form-group">
+                        <label for="casualty_details">Casualty Details</label>
+                        <textarea id="casualty_details" name="casualty_details" rows="3"
+                                  placeholder="Circumstances of death or injury">{{ annotation.casualty_details if annotation and annotation.casualty_details else '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="burial_memorial">Burial / Memorial</label>
+                        <textarea id="burial_memorial" name="burial_memorial" rows="3"
+                                  placeholder="Grave location, memorial inscription, cemetery details">{{ annotation.burial_memorial if annotation and annotation.burial_memorial else '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="personal_effects">Personal Effects</label>
+                        <textarea id="personal_effects" name="personal_effects" rows="2"
+                                  placeholder="Items returned to family">{{ annotation.personal_effects if annotation and annotation.personal_effects else '' }}</textarea>
+                    </div>
+                </fieldset>
+
+                <fieldset>
+                    <legend>Research &amp; Sources</legend>
+                    <div class="form-group">
+                        <label for="newspaper_mentions">Newspaper Mentions</label>
+                        <textarea id="newspaper_mentions" name="newspaper_mentions" rows="2"
+                                  placeholder="References in press, obituaries">{{ annotation.newspaper_mentions if annotation and annotation.newspaper_mentions else '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="family_stories">Family Stories</label>
+                        <textarea id="family_stories" name="family_stories" rows="4"
+                                  placeholder="Oral history, family memories, anecdotes">{{ annotation.family_stories if annotation and annotation.family_stories else '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="research_notes">Research Notes</label>
+                        <textarea id="research_notes" name="research_notes" rows="4"
+                                  placeholder="General notes from your research">{{ annotation.research_notes if annotation and annotation.research_notes else '' }}</textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="sources">Sources</label>
+                        <textarea id="sources" name="sources" rows="3"
+                                  placeholder="References for the information above (books, websites, archives)">{{ annotation.sources if annotation and annotation.sources else '' }}</textarea>
+                    </div>
+                </fieldset>
+
+                {% if annotation %}
+                <fieldset>
+                    <legend>Change Reason</legend>
+                    <div class="form-group">
+                        <label for="change_reason">Why are you making these changes?</label>
+                        <input type="text" id="change_reason" name="change_reason" 
+                               placeholder="Brief description of what changed and why">
+                    </div>
+                </fieldset>
+                {% endif %}
+
+                <fieldset class="confirmation-section">
+                    <legend>Confirmation</legend>
+                    <div class="form-group">
+                        <label for="user_name">Your Name <span class="required">*</span></label>
+                        <input type="text" id="user_name" name="user_name" required
+                               placeholder="Enter your name to identify your contribution">
+                    </div>
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="confirm-checkbox" name="confirmed" value="yes" required>
+                            <span>I confirm that the information I am providing is accurate to the best of my knowledge, and I understand that my name and the date will be recorded alongside this contribution.</span>
+                        </label>
+                    </div>
+                </fieldset>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn btn-primary" id="submit-btn" disabled>
+                        {% if annotation %}Save Changes{% else %}Add Information{% endif %}
+                    </button>
+                    <a href="{{ url_for('detail', record_type=record_type, record_id=record_id) }}" class="btn btn-secondary">Cancel</a>
+                </div>
+            </form>
+
+            {% if history %}
+            <section class="annotation-history">
+                <h2>Change History</h2>
+                <table class="history-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Date</th>
+                            <th scope="col">Field</th>
+                            <th scope="col">Changed By</th>
+                            <th scope="col">Previous Value</th>
+                            <th scope="col">New Value</th>
+                            <th scope="col">Reason</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for entry in history %}
+                        <tr>
+                            <td>{{ entry.changed_at }}</td>
+                            <td>{{ entry.field_name.replace('_', ' ').title() }}</td>
+                            <td>{{ entry.changed_by }}</td>
+                            <td>{{ entry.old_value or '(empty)' }}</td>
+                            <td>{{ entry.new_value or '(empty)' }}</td>
+                            <td>{{ entry.change_reason or '' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </section>
+            {% endif %}
+        </main>
+    </div>
+
+    <footer role="contentinfo">
+        <div class="footer-bottom">
+            &copy; 2026 SDGW 1914-1919 Personnel Database. All Rights Reserved.
+        </div>
+    </footer>
+
+    <script>
+    // Escape key navigation (PRD C §10B)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            window.location.href = "{{ url_for('home') }}";
+        }
+    });
+
+    // Enable submit button only when confirmation checkbox is checked and name filled
+    var checkbox = document.getElementById('confirm-checkbox');
+    var nameField = document.getElementById('user_name');
+    var submitBtn = document.getElementById('submit-btn');
+
+    function updateSubmitState() {
+        submitBtn.disabled = !(checkbox.checked && nameField.value.trim());
+    }
+
+    checkbox.addEventListener('change', updateSubmitState);
+    nameField.addEventListener('input', updateSubmitState);
+    </script>
+</body>
+</html>

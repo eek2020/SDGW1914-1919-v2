@@ -1002,7 +1002,7 @@ The old system presented all search fields on a single form screen:
 
 | Field | Control Type | SDGW Equivalent | Adopted in PRD D? |
 | --- | --- | --- | --- |
-| Branch of the Army | Dropdown (with temporal selector) | Not directly mapped — SDGW doesn't have branch field | N/A |
+| Branch of Army | Dropdown (with temporal selector) | Not directly mapped — SDGW doesn't have branch field | N/A |
 | Regiment, Corps, etc. | Hierarchical dropdown (2 levels) | `battalion` (721 values) | Yes — searchable dropdown, grouped (Section 7.2) |
 | Surname | Free text | `surname` | Yes — unified search bar (Section 7.1) |
 | Christian Name(s) | Free text | `christian_names` | **Added** — dedicated filter field (Section 7.2) |

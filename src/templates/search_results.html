@@ -4,56 +4,271 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Search Results - SDGW 1914-1919</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='SDGW1419.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/css/tom-select.css">
+    <style>
+        .quick-filter-field .ts-wrapper { width: 100% !important; display: block !important; }
+        .quick-filter-field .ts-wrapper .ts-control {
+            border: 1.5px solid #cbd5e1;
+            border-radius: var(--border-radius, 8px);
+            padding: 0 2rem 0 0.75rem;
+            height: var(--input-height, 40px);
+            font-size: inherit;
+            background: #fff;
+            display: flex;
+            align-items: center;
+            overflow: hidden;
+            flex-wrap: nowrap !important;
+            position: relative;
+        }
+        .quick-filter-field .ts-wrapper .ts-control > .item { white-space: nowrap; }
+        .quick-filter-field .ts-wrapper .ts-control input { font-size: inherit; min-height: 0; padding: 0; }
+        .quick-filter-field .ts-wrapper.has-items .ts-control > input { width: 0 !important; min-width: 0; opacity: 0; position: absolute; }
+        .quick-filter-field .ts-wrapper .ts-control .clear-button { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); font-size: 1.3rem; line-height: 1; cursor: pointer; color: #94a3b8; }
+        .quick-filter-field .ts-wrapper .ts-control .clear-button:hover { color: #dc2626; }
+        .quick-filter-field .ts-wrapper.focus .ts-control { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+    </style>
 </head>
 <body>
+    <a href="#main-content" class="skip-to-main">Skip to main content</a>
+
+    <nav class="top-nav" aria-label="Main navigation">
+        <a href="{{ url_for('home') }}" class="nav-brand">
+            <img src="{{ url_for('static', filename='SDGW1419.ico') }}" alt="SDGW Icon" class="nav-brand-icon">
+            Soldiers Died in the Great War 1914-1919
+        </a>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+        <div class="nav-menu" id="nav-menu" role="navigation">
+            <a href="{{ url_for('home') }}" class="nav-link">Search</a>
+            <a href="{{ url_for('about') }}" class="nav-link">About</a>
+            <a href="{{ url_for('settings') }}" class="nav-link">Settings</a>
+        </div>
+        <div class="nav-backdrop" id="nav-backdrop"></div>
+    </nav>
+    <script>
+    (function(){
+        var btn=document.getElementById('hamburger-btn'),menu=document.getElementById('nav-menu'),bd=document.getElementById('nav-backdrop');
+        function toggle(){var o=menu.classList.toggle('open');btn.classList.toggle('open');bd.classList.toggle('open');btn.setAttribute('aria-expanded',o);}
+        function close(){menu.classList.remove('open');btn.classList.remove('open');bd.classList.remove('open');btn.setAttribute('aria-expanded','false');}
+        btn.addEventListener('click',toggle);bd.addEventListener('click',close);
+        document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+    })();
+    </script>
+
     <div class="container">
-        <header>
-            <h1>Search Results</h1>
-            <p class="subtitle">{{ total }} records found</p>
+        <header role="banner">
+            <a href="{{ url_for('home') }}" class="back-link">&larr; Back to Search</a>
+            <h1>Search Results <span class="results-count">{{ "{:,}".format(total) }} record{{ 's' if total != 1 }}</span></h1>
         </header>
 
-        <main>
-            <div class="results-header">
-                <a href="{{ url_for('home') }}" class="btn btn-secondary">&larr; Back to Search</a>
+        <main id="main-content" role="main">
+
+            {# ── Active filter pills ── #}
+            {% if filter_labels %}
+            <div class="filter-pills" aria-label="Active search filters">
+                <strong>Filter by:</strong>
+                {% for label, value, remove_url in filter_labels %}
+                <span class="filter-pill">
+                    {{ label }}: {{ value }}
+                    <a href="{{ remove_url }}" 
+                       class="filter-remove" 
+                       aria-label="Remove {{ label }} filter"
+                       title="Remove this filter">&times;</a>
+                </span>
+                {% endfor %}
+                <a href="{{ url_for('home') }}" style="margin-left: 0.5rem; font-size: 0.85rem;">New Search</a>
             </div>
+            {% endif %}
+
+            <form action="{{ url_for('search') }}" method="get" class="results-quick-filters" aria-label="Refine search results">
+                {% for key, value in search_params.items() %}
+                    {% if key not in ('rank_name', 'battalion_id', 'regiment_id') %}
+                <input type="hidden" name="{{ key }}" value="{{ value }}">
+                    {% endif %}
+                {% endfor %}
+                <input type="hidden" name="sort" value="{{ sort }}">
+
+                <div class="quick-filter-field">
+                    <label for="results-regiment-id">Regiment</label>
+                    <select id="results-regiment-id" name="regiment_id">
+                        <option value="">All Regiments / Corps</option>
+                        {% for reg in quick_filter_data.regiments %}
+                        <option value="{{ reg.regiment_id }}" {{ 'selected' if q.regiment_id == reg.regiment_id|string }}>{{ reg.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="quick-filter-field">
+                    <label for="results-battalion-id">Battalion</label>
+                    <select id="results-battalion-id" name="battalion_id">
+                        <option value="">All Battalions</option>
+                        {% for battalion in quick_filter_data.battalions %}
+                        <option value="{{ battalion.battalion_id }}" {{ 'selected' if q.battalion_id == battalion.battalion_id|string }}>{{ battalion.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="quick-filter-field">
+                    <label for="results-rank-name">Rank</label>
+                    <select id="results-rank-name" name="rank_name">
+                        <option value="">All Ranks</option>
+                        {% for group in quick_filter_data.rank_groups %}
+                        <optgroup label="{{ group }}">
+                            {% for rank in quick_filter_data.ranks if rank.rank_group == group %}
+                            <option value="{{ rank.rank_new }}" {{ 'selected' if q.rank_name == rank.rank_new }}>{{ rank.rank_new }}</option>
+                            {% endfor %}
+                        </optgroup>
+                        {% endfor %}
+                    </select>
+                </div>
+            </form>
 
             {% if total > 0 %}
-            <div class="results-list">
+
+            {# ── Sort & view controls ── #}
+            <div class="results-controls">
+                <div class="view-toggle" role="radiogroup" aria-label="Results display mode">
+                    <button type="button" class="btn-toggle active" data-view="card" aria-pressed="true" onclick="setView('card')">&#9638; Cards</button>
+                    <button type="button" class="btn-toggle" data-view="table" aria-pressed="false" onclick="setView('table')">&#9776; Table</button>
+                </div>
+                <div class="sort-control">
+                    <label for="sort-select">Sort by:</label>
+                    <select id="sort-select" onchange="updateSort(this.value)">
+                        {% for key, (label, _, _) in sort_options.items() %}
+                        <option value="{{ key }}" {{ 'selected' if sort == key }}>{{ label }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="button" class="btn btn-secondary btn-print-list" onclick="window.print()">&#128424; Print All</button>
+                <a href="{{ export_csv_url }}" class="btn-export-csv" id="export-csv-btn">&#128229; Export{% if total > 10000 %} (10K){% endif %}</a>
+            </div>
+
+            {# ── Card view (2-column grid) ── #}
+            <div class="results-list" id="card-view">
                 {% for record in results %}
                 <article class="result-card">
-                    <a href="{{ url_for('detail', record_type=record['record_type'], record_id=record['id']) }}" class="result-link">
+                    <a href="{{ url_for('detail', record_type=record['record_type'], record_id=record['id'], pos=(page - 1) * per_page + loop.index0, **detail_params) }}" class="result-link">
                         <h3>{{ record['surname'] }}, {{ record['christian_names'] if record['christian_names'] else '' }}</h3>
+                        <div class="result-badges">
+                            {% if record['record_type'] == 'officer' %}
+                            <span class="badge badge-officer">Officer</span>
+                            {% else %}
+                            <span class="badge badge-type">Soldier</span>
+                            {% endif %}
+                        </div>
                         <div class="result-details">
-                            <p><strong>Type:</strong> {{ record['record_type'].capitalize() }}</p>
                             {% if record['rank_new'] %}
-                            <p><strong>Rank:</strong> {{ record['rank_new'] }}</p>
+                            <span class="detail-label">Rank</span>
+                            <span class="detail-value">{{ record['rank_new'] }}</span>
+                            {% endif %}
+                            {% if record['regiment_name'] %}
+                            <span class="detail-label">Regiment / Corps</span>
+                            <span class="detail-value">{{ record['regiment_name'] }}</span>
                             {% endif %}
                             {% if record['battalion_name'] %}
-                            <p><strong>Battalion:</strong> {{ record['battalion_name'] }}</p>
+                            <span class="detail-label">Battalion / Unit</span>
+                            <span class="detail-value">{{ record['battalion_name'] }}</span>
                             {% endif %}
                             {% if record['death_date'] %}
-                            <p><strong>Date of Death:</strong> {{ record['death_date'] }}</p>
+                            <span class="detail-label">Date of Death</span>
+                            <span class="detail-value death-date">&#128197; {{ record['death_date']|humandate_short }}</span>
                             {% endif %}
                             {% if record['death_location'] %}
-                            <p><strong>Death Location:</strong> {{ record['death_location'] }}</p>
+                            <span class="detail-label">Theatre of War</span>
+                            <span class="detail-value">{{ record['death_location'] }}</span>
                             {% endif %}
                         </div>
                     </a>
+                    <div class="result-card-footer">
+                        <span></span>
+                        <a href="{{ url_for('detail', record_type=record['record_type'], record_id=record['id'], pos=(page - 1) * per_page + loop.index0, **detail_params) }}" class="view-record-btn">View Full Record &rarr;</a>
+                    </div>
                 </article>
                 {% endfor %}
             </div>
 
+            {# ── Table view (hidden by default) ── #}
+            <div class="results-table-wrap" id="table-view" style="display: none;">
+                <table class="results-table">
+                    <thead>
+                        <tr>
+                            <th scope="col">Name</th>
+                            <th scope="col">Type</th>
+                            <th scope="col">Rank</th>
+                            <th scope="col">Regiment / Corps</th>
+                            <th scope="col">Battalion</th>
+                            <th scope="col">Date of Death</th>
+                            <th scope="col">Theatre of War</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for record in results %}
+                        <tr>
+                            <td>
+                                <a href="{{ url_for('detail', record_type=record['record_type'], record_id=record['id'], pos=(page - 1) * per_page + loop.index0, **detail_params) }}">
+                                    {{ record['surname'] }}, {{ record['christian_names'] if record['christian_names'] else '' }}
+                                </a>
+                            </td>
+                            <td>
+                                {% if record['record_type'] == 'officer' %}
+                                <span class="badge badge-officer">Officer</span>
+                                {% else %}
+                                <span class="badge badge-type">Soldier</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ record['rank_new'] or '' }}</td>
+                            <td>{{ record['regiment_name'] or '' }}</td>
+                            <td>{{ record['battalion_name'] or '' }}</td>
+                            <td>{{ record['death_date']|humandate_short }}</td>
+                            <td>{{ record['death_location'] or '' }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {# ── Pagination ── #}
             {% if total_pages > 1 %}
             <nav class="pagination" aria-label="Pagination">
                 {% if has_prev %}
-                <a href="{{ url_for('search', page=page - 1, **search_params) }}" class="btn btn-secondary">Previous</a>
+                <a href="{{ url_for('search', page=page - 1, sort=sort, **search_params) }}" class="btn btn-secondary" aria-label="Previous page">&larr; Previous Page</a>
+                {% else %}
+                <span class="btn btn-secondary btn-disabled">&larr; Previous Page</span>
                 {% endif %}
 
-                <span class="page-info">Page {{ page }} of {{ total_pages }}</span>
+                <div class="page-numbers">
+                    {% if page > 2 %}
+                    <a href="{{ url_for('search', page=1, sort=sort, **search_params) }}" class="page-num" aria-label="Page 1">1</a>
+                    {% endif %}
+                    {% if page > 3 %}
+                    <span class="page-ellipsis">...</span>
+                    {% endif %}
+
+                    {% for p in range([1, page - 1]|max, [total_pages, page + 1]|min + 1) %}
+                    {% if p == page %}
+                    <span class="page-num active" aria-current="page">{{ p }}</span>
+                    {% else %}
+                    <a href="{{ url_for('search', page=p, sort=sort, **search_params) }}" class="page-num" aria-label="Page {{ p }}">{{ p }}</a>
+                    {% endif %}
+                    {% endfor %}
+
+                    {% if page < total_pages - 2 %}
+                    <span class="page-ellipsis">...</span>
+                    {% endif %}
+                    {% if page < total_pages - 1 %}
+                    <a href="{{ url_for('search', page=total_pages, sort=sort, **search_params) }}" class="page-num" aria-label="Page {{ total_pages }}">{{ total_pages }}</a>
+                    {% endif %}
+                </div>
 
                 {% if has_next %}
-                <a href="{{ url_for('search', page=page + 1, **search_params) }}" class="btn btn-secondary">Next</a>
+                <a href="{{ url_for('search', page=page + 1, sort=sort, **search_params) }}" class="btn btn-primary" aria-label="Next page">Next Page &rarr;</a>
+                {% else %}
+                <span class="btn btn-primary btn-disabled">Next Page &rarr;</span>
                 {% endif %}
             </nav>
             {% endif %}
@@ -70,11 +285,318 @@
                 <a href="{{ url_for('home') }}" class="btn btn-primary">Start New Search</a>
             </div>
             {% endif %}
-        </main>
 
-        <footer>
-            <p>SDGW 1914-1919 Personnel Database &copy; 2026</p>
-        </footer>
+            {# ── Assistance section ── #}
+            <section class="assistance-section">
+                <h2>Need Assistance Researching?</h2>
+                <p>This archive contains records of personnel who served and died during the Great War 1914-1919.</p>
+                <div class="assistance-buttons">
+                    <a href="{{ url_for('home') }}" class="btn btn-secondary">&#10067; New Search</a>
+                </div>
+            </section>
+        </main>
     </div>
+
+    <footer role="contentinfo">
+        <div class="footer-inner">
+            <div>
+                <div class="footer-brand">
+                    <img src="{{ url_for('static', filename='SDGW1419.ico') }}" alt="SDGW Icon" class="footer-brand-icon">
+                    SDGW 1914-1919
+                </div>
+                <p class="footer-desc">Preserving the history and records of those who served in the Great War 1914-1919. An historical resource for veterans' families and researchers.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Search Records</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Research</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Search Records</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 SDGW 1914-1919 Personnel Database. All Rights Reserved.
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/js/tom-select.complete.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var form = document.querySelector('.results-quick-filters');
+        if (!form) return;
+
+        var tsInstances = {};
+        var submitting = false;
+
+        function submitFilters() {
+            if (submitting) return;
+            submitting = true;
+            form.submit();
+        }
+
+        ['results-regiment-id', 'results-battalion-id', 'results-rank-name'].forEach(function(id) {
+            tsInstances[id] = new TomSelect('#' + id, {
+                plugins: ['clear_button'],
+                maxItems: 1,
+                create: false,
+                sortField: [{ field: '$order' }],
+                onChange: function() {
+                    submitFilters();
+                }
+            });
+        });
+    });
+
+    // Escape key navigation (PRD C §10B)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            window.location.href = "{{ url_for('home') }}";
+        }
+    });
+
+    function updateSort(val) {
+        var params = new URLSearchParams(window.location.search);
+        params.set('sort', val);
+        params.set('page', '1');
+        window.location.search = params.toString();
+    }
+
+    function setView(mode) {
+        var cardView = document.getElementById('card-view');
+        var tableView = document.getElementById('table-view');
+        var buttons = document.querySelectorAll('.btn-toggle');
+
+        if (mode === 'table') {
+            cardView.style.display = 'none';
+            tableView.style.display = '';
+        } else {
+            cardView.style.display = '';
+            tableView.style.display = 'none';
+        }
+
+        buttons.forEach(function(btn) {
+            var isActive = btn.getAttribute('data-view') === mode;
+            btn.classList.toggle('active', isActive);
+            btn.setAttribute('aria-pressed', isActive ? 'true' : 'false');
+        });
+
+        try { sessionStorage.setItem('results_view', mode); } catch(e) {}
+    }
+
+    // Restore saved view preference
+    document.addEventListener('DOMContentLoaded', function() {
+        try {
+            var saved = sessionStorage.getItem('results_view');
+            if (saved === 'table') setView('table');
+        } catch(e) {}
+    });
+    </script>
+
+<!-- Settings Panel -->
+<button class="settings-toggle" id="settingsToggle" aria-label="Display settings" title="Display settings">&#9881;</button>
+<div class="settings-drawer" id="settingsDrawer" role="dialog" aria-label="Display settings">
+    <h3>&#9881; Quick Settings</h3>
+
+    <div class="setting-group">
+        <span class="setting-label">Theme</span>
+        <div class="setting-options" data-setting="theme">
+            <button data-value="light">&#9788; Light</button>
+            <button data-value="system" class="active">&#128187; System</button>
+            <button data-value="dark">&#9790; Dark</button>
+        </div>
+    </div>
+
+    <div class="setting-group">
+        <span class="setting-label">Form Density</span>
+        <div class="setting-options" data-setting="density">
+            <button data-value="compact">Compact</button>
+            <button data-value="normal" class="active">Normal</button>
+            <button data-value="comfortable">Comfortable</button>
+        </div>
+    </div>
+
+    <div class="setting-group">
+        <span class="setting-label">Record Density</span>
+        <div class="setting-options" data-setting="detail-density">
+            <button data-value="compact">Compact</button>
+            <button data-value="normal" class="active">Normal</button>
+            <button data-value="comfortable">Comfortable</button>
+        </div>
+    </div>
+
+    <div class="setting-group">
+        <span class="setting-label">Record Layout</span>
+        <div class="setting-options" data-setting="detail-layout">
+            <button data-value="split" class="active">Split</button>
+            <button data-value="stacked">Stacked</button>
+        </div>
+    </div>
+
+    <div class="setting-group">
+        <span class="setting-label">Font Size</span>
+        <div class="setting-options" data-setting="fontsize">
+            <button data-value="small">Small</button>
+            <button data-value="normal" class="active">Normal</button>
+            <button data-value="large">Large</button>
+            <button data-value="xlarge">X-Large</button>
+        </div>
+    </div>
+
+    <div class="setting-group">
+        <span class="setting-label">Corner Style</span>
+        <div class="setting-options" data-setting="corners">
+            <button data-value="sharp">Sharp</button>
+            <button data-value="normal" class="active">Normal</button>
+            <button data-value="round">Round</button>
+        </div>
+    </div>
+
+    <div class="setting-group">
+        <span class="setting-label">Options</span>
+        <div class="setting-toggle-switch" data-setting="focus-highlight">
+            <span>Focus highlights</span>
+            <div class="toggle-switch on" id="toggleFocusHighlight"></div>
+        </div>
+    </div>
+
+    <button class="settings-reset" id="settingsReset">Reset to Defaults</button>
+    <a href="{{ url_for('settings') }}" style="display:block;text-align:center;margin-top:0.5rem;font-size:0.8rem;font-weight:600;color:var(--text-link);">All Settings &rarr;</a>
+</div>
+
+<script>
+(function() {
+    const STORAGE_KEY = 'sdgw_display_settings';
+    const DEFAULTS = {
+        theme: 'system',
+        density: 'normal',
+        'detail-density': 'normal',
+        'detail-layout': 'split',
+        fontsize: 'normal',
+        corners: 'normal',
+        'focus-highlight': true,
+        'search-tips': true
+    };
+
+    function loadSettings() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? Object.assign({}, DEFAULTS, JSON.parse(raw)) : Object.assign({}, DEFAULTS);
+        } catch(e) { return Object.assign({}, DEFAULTS); }
+    }
+
+    function saveSettings(s) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e) {}
+    }
+
+    function applySettings(s) {
+        const html = document.documentElement;
+
+        // Theme
+        if (s.theme === 'light') html.setAttribute('data-theme', 'light');
+        else if (s.theme === 'dark') html.setAttribute('data-theme', 'dark');
+        else html.removeAttribute('data-theme');
+
+        if (s.density === 'normal') html.removeAttribute('data-density');
+        else html.setAttribute('data-density', s.density);
+
+        if (s['detail-density'] === 'normal') html.removeAttribute('data-detail-density');
+        else html.setAttribute('data-detail-density', s['detail-density']);
+
+        if (s['detail-layout'] === 'split') html.removeAttribute('data-detail-layout');
+        else html.setAttribute('data-detail-layout', s['detail-layout']);
+
+        if (s.fontsize === 'normal') html.removeAttribute('data-fontsize');
+        else html.setAttribute('data-fontsize', s.fontsize);
+
+        if (s.corners === 'sharp') {
+            html.style.setProperty('--border-radius', '2px');
+            html.style.setProperty('--card-radius', '4px');
+        } else if (s.corners === 'round') {
+            html.style.setProperty('--border-radius', '12px');
+            html.style.setProperty('--card-radius', '18px');
+        } else {
+            html.style.removeProperty('--border-radius');
+            html.style.removeProperty('--card-radius');
+        }
+
+        if (!s['focus-highlight']) {
+            html.style.setProperty('--focus-ring', 'none');
+        } else {
+            html.style.removeProperty('--focus-ring');
+        }
+
+        document.querySelectorAll('.setting-options').forEach(group => {
+            const key = group.dataset.setting;
+            group.querySelectorAll('button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.value === s[key]);
+            });
+        });
+
+        const fh = document.getElementById('toggleFocusHighlight');
+        if (fh) fh.classList.toggle('on', !!s['focus-highlight']);
+    }
+
+    let settings = loadSettings();
+    applySettings(settings);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('settingsToggle');
+        const drawer = document.getElementById('settingsDrawer');
+
+        applySettings(settings);
+
+        toggleBtn.addEventListener('click', function() {
+            const open = drawer.classList.toggle('visible');
+            toggleBtn.classList.toggle('open', open);
+        });
+
+        document.addEventListener('click', function(e) {
+            if (!drawer.contains(e.target) && e.target !== toggleBtn) {
+                drawer.classList.remove('visible');
+                toggleBtn.classList.remove('open');
+            }
+        });
+
+        document.querySelectorAll('.setting-options').forEach(group => {
+            group.addEventListener('click', function(e) {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const key = group.dataset.setting;
+                settings[key] = btn.dataset.value;
+                saveSettings(settings);
+                applySettings(settings);
+            });
+        });
+
+        document.querySelectorAll('.setting-toggle-switch').forEach(row => {
+            const toggle = row.querySelector('.toggle-switch');
+            if (!toggle) return;
+            const key = row.dataset.setting;
+            toggle.addEventListener('click', function() {
+                settings[key] = !settings[key];
+                saveSettings(settings);
+                applySettings(settings);
+            });
+        });
+
+        document.getElementById('settingsReset').addEventListener('click', function() {
+            settings = Object.assign({}, DEFAULTS);
+            saveSettings(settings);
+            applySettings(settings);
+        });
+    });
+})();
+</script>
 </body>
 </html>

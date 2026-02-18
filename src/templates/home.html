@@ -4,55 +4,287 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SDGW 1914-1919 - Personnel Database Search</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='SDGW1419.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/css/tom-select.css">
     <style>
-        .ts-wrapper { width: 100%; }
-        .ts-wrapper .ts-control { border: 1px solid #ccc; border-radius: 4px; padding: 6px 10px; min-height: 38px; font-size: inherit; }
-        .ts-wrapper .ts-control input { font-size: inherit; }
-        .ts-wrapper.focus .ts-control { border-color: #4a90d9; box-shadow: 0 0 0 2px rgba(74,144,217,0.2); }
-        .ts-dropdown { font-size: inherit; }
-        .ts-dropdown .optgroup-header { font-weight: 700; font-size: 0.85em; color: #666; padding: 6px 10px 2px; }
+        .ts-wrapper { flex: 1; }
+        .ts-wrapper .ts-control { border: 1.5px solid #cbd5e1; border-radius: var(--border-radius, 8px); padding: 0 2rem 0 0.75rem; height: var(--input-height, 40px); font-size: inherit; background: #fff; display: flex; align-items: center; overflow: hidden; flex-wrap: nowrap !important; position: relative; }
+        .ts-wrapper .ts-control > .item { white-space: nowrap; }
+        .ts-wrapper .ts-control input { font-size: inherit; min-height: 0; padding: 0; }
+        .ts-wrapper.has-items .ts-control > input { width: 0 !important; min-width: 0; opacity: 0; position: absolute; }
+        .ts-wrapper .ts-control .clear-button { position: absolute; right: 0.5rem; top: 50%; transform: translateY(-50%); font-size: 1.3rem; line-height: 1; cursor: pointer; color: #94a3b8; }
+        .ts-wrapper .ts-control .clear-button:hover { color: #dc2626; }
+        .ts-wrapper.focus .ts-control { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.15); }
+        .ts-dropdown { font-size: inherit; border-radius: 8px; border: 1px solid #e2e8f0; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .ts-dropdown .optgroup-header { font-weight: 700; font-size: 0.85em; color: #64748b; padding: 6px 10px 2px; text-transform: uppercase; letter-spacing: 0.04em; }
         .ts-dropdown .option { padding: 6px 10px; }
-        .ts-wrapper.loading .ts-control::after { content: ''; display: inline-block; width: 14px; height: 14px; border: 2px solid #ccc; border-top-color: #4a90d9; border-radius: 50%; animation: ts-spin 0.5s linear infinite; position: absolute; right: 10px; top: 50%; margin-top: -7px; }
+        .ts-dropdown .option.active { background: #eff6ff; color: #0a3d91; }
+        .ts-wrapper.loading .ts-control::after { content: ''; display: inline-block; width: 14px; height: 14px; border: 2px solid #cbd5e1; border-top-color: #3b82f6; border-radius: 50%; animation: ts-spin 0.5s linear infinite; position: absolute; right: 10px; top: 50%; margin-top: -7px; }
         @keyframes ts-spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body>
+    <a href="#main-content" class="skip-to-main">Skip to main content</a>
+
+    <nav class="top-nav" aria-label="Main navigation">
+        <a href="{{ url_for('home') }}" class="nav-brand">
+            <img src="{{ url_for('static', filename='SDGW1419.ico') }}" alt="SDGW Icon" class="nav-brand-icon">
+            Soldiers Died in the Great War 1914-1919
+        </a>
+        <button class="search-options-btn" id="searchOptionsBtn" aria-label="Toggle search options" aria-expanded="false" aria-controls="search-options-drawer">
+            <span class="search-options-dot" id="searchOptionsDot"></span>
+            <svg class="search-options-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="4" y1="8" x2="20" y2="8"/>
+                <line x1="4" y1="16" x2="20" y2="16"/>
+                <circle cx="10" cy="8" r="2.5" fill="currentColor"/>
+                <circle cx="16" cy="16" r="2.5" fill="currentColor"/>
+            </svg>
+            <svg class="search-options-icon-close" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <line x1="6" y1="6" x2="18" y2="18"/>
+                <line x1="18" y1="6" x2="6" y2="18"/>
+            </svg>
+            <span class="search-options-label">Search Options</span>
+        </button>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+        <div class="nav-menu" id="nav-menu" role="navigation">
+            <a href="{{ url_for('home') }}" class="nav-link">Search</a>
+            <a href="{{ url_for('about') }}" class="nav-link">About</a>
+            <a href="{{ url_for('settings') }}" class="nav-link">Settings</a>
+        </div>
+        <div class="nav-backdrop" id="nav-backdrop"></div>
+    </nav>
+
+    <!-- Search Options Drawer -->
+    <div class="search-options-drawer" id="searchOptionsDrawer" role="region" aria-label="Search options">
+        <div class="drawer-inner">
+            <div class="drawer-groups">
+                <div class="drawer-group">
+                    <span class="drawer-group-icon">&#8853;</span>
+                    <span class="drawer-group-label">Search Mode</span>
+                    <div class="drawer-toggle-group">
+                        <label class="drawer-toggle-option">
+                            <input type="radio" name="search_mode" value="basic" id="search_mode_basic">
+                            <span class="drawer-toggle-btn">Basic</span>
+                        </label>
+                        <label class="drawer-toggle-option">
+                            <input type="radio" name="search_mode" value="advanced" id="search_mode_advanced" checked>
+                            <span class="drawer-toggle-btn">Advanced</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="drawer-divider"></div>
+                <div class="drawer-group">
+                    <span class="drawer-group-icon">&#9638;&#9638;</span>
+                    <span class="drawer-group-label">Record Type</span>
+                    <div class="drawer-toggle-group">
+                        <label class="drawer-toggle-option">
+                            <input type="radio" name="record_type" value="all" form="search-form" {{ 'checked' if q.record_type == 'all' }}>
+                            <span class="drawer-toggle-btn">All</span>
+                        </label>
+                        <label class="drawer-toggle-option">
+                            <input type="radio" name="record_type" value="officers" form="search-form" {{ 'checked' if q.record_type == 'officers' }}>
+                            <span class="drawer-toggle-btn">Officers</span>
+                        </label>
+                        <label class="drawer-toggle-option">
+                            <input type="radio" name="record_type" value="soldiers" form="search-form" {{ 'checked' if q.record_type == 'soldiers' }}>
+                            <span class="drawer-toggle-btn">Soldiers</span>
+                        </label>
+                    </div>
+                </div>
+                <div class="drawer-divider"></div>
+                <div class="drawer-group">
+                    <span class="drawer-group-icon">&#9776;</span>
+                    <span class="drawer-group-label">Query Logic</span>
+                    <div class="drawer-toggle-group">
+                        <label class="drawer-toggle-option">
+                            <input type="radio" name="query_mode" value="and" form="search-form" {{ 'checked' if q.query_mode == 'and' }}>
+                            <span class="drawer-toggle-btn">AND</span>
+                        </label>
+                        <label class="drawer-toggle-option">
+                            <input type="radio" name="query_mode" value="or" form="search-form" {{ 'checked' if q.query_mode == 'or' }}>
+                            <span class="drawer-toggle-btn">OR</span>
+                        </label>
+                        <label class="drawer-toggle-option">
+                            <input type="radio" name="query_mode" value="not" form="search-form" {{ 'checked' if q.query_mode == 'not' }}>
+                            <span class="drawer-toggle-btn">NOT</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="drawer-footer">
+                <span class="drawer-summary" id="drawerSummary">
+                    Searching <strong>All Records</strong> in <strong>Advanced</strong> mode using <strong>AND</strong> logic
+                </span>
+                <span class="drawer-mode-hint" id="drawerModeHint">
+                    Dropdowns narrow automatically as you set filters
+                </span>
+                <a href="#" class="drawer-reset" id="drawerReset">Reset to defaults</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Active options strip (shown when drawer closed + non-default options) -->
+    <div class="active-options-strip" id="activeOptionsStrip" aria-label="Active search options"></div>
+
+    <script>
+    (function(){
+        var btn=document.getElementById('hamburger-btn'),menu=document.getElementById('nav-menu'),bd=document.getElementById('nav-backdrop');
+        function toggle(){var o=menu.classList.toggle('open');btn.classList.toggle('open');bd.classList.toggle('open');btn.setAttribute('aria-expanded',o);}
+        function close(){menu.classList.remove('open');btn.classList.remove('open');bd.classList.remove('open');btn.setAttribute('aria-expanded','false');}
+        btn.addEventListener('click',toggle);bd.addEventListener('click',close);
+        document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+    })();
+    </script>
+
+    <script>
+    (function() {
+        var DEFAULTS = { search_mode: 'advanced', record_type: 'all', query_mode: 'and' };
+        var LABELS = {
+            search_mode: { basic: 'Basic Mode', advanced: 'Advanced Mode' },
+            record_type: { all: 'All Records', officers: 'Officers', soldiers: 'Soldiers' },
+            query_mode: { and: 'AND Logic', or: 'OR Logic', not: 'NOT Logic' }
+        };
+
+        var soBtn = document.getElementById('searchOptionsBtn');
+        var drawer = document.getElementById('searchOptionsDrawer');
+        var dot = document.getElementById('searchOptionsDot');
+        var strip = document.getElementById('activeOptionsStrip');
+        var summary = document.getElementById('drawerSummary');
+        var resetBtn = document.getElementById('drawerReset');
+        var drawerOpen = false;
+
+        function getVal(name) {
+            var el = document.querySelector('input[name="' + name + '"]:checked');
+            return el ? el.value : DEFAULTS[name];
+        }
+
+        function isNonDefault() {
+            return getVal('search_mode') !== DEFAULTS.search_mode ||
+                   getVal('record_type') !== DEFAULTS.record_type ||
+                   getVal('query_mode') !== DEFAULTS.query_mode;
+        }
+
+        var modeHint = document.getElementById('drawerModeHint');
+
+        function updateSummary() {
+            var rt = getVal('record_type');
+            var rtLabel = rt === 'all' ? 'All Records' : rt === 'officers' ? 'Officers' : 'Soldiers';
+            var sm = getVal('search_mode') === 'advanced' ? 'Advanced' : 'Basic';
+            var qm = getVal('query_mode').toUpperCase();
+            summary.innerHTML = 'Searching <strong>' + rtLabel + '</strong> in <strong>' + sm + '</strong> mode using <strong>' + qm + '</strong> logic';
+            if (modeHint) {
+                modeHint.textContent = sm === 'Advanced'
+                    ? 'Dropdowns narrow automatically as you set filters'
+                    : 'All options shown, no automatic filtering';
+            }
+        }
+
+        function updateDot() {
+            dot.classList.toggle('visible', isNonDefault());
+        }
+
+        function updateStrip() {
+            strip.innerHTML = '';
+            if (drawerOpen || !isNonDefault()) {
+                strip.classList.remove('visible');
+                return;
+            }
+            strip.classList.add('visible');
+            ['search_mode', 'record_type', 'query_mode'].forEach(function(name) {
+                var val = getVal(name);
+                if (val === DEFAULTS[name]) return;
+                var chip = document.createElement('span');
+                chip.className = 'option-chip';
+                chip.innerHTML = LABELS[name][val] +
+                    '<button class="option-chip-dismiss" data-reset="' + name + '" aria-label="Reset ' + name + '">&times;</button>';
+                strip.appendChild(chip);
+            });
+        }
+
+        function toggleDrawer() {
+            drawerOpen = !drawerOpen;
+            drawer.classList.toggle('open', drawerOpen);
+            soBtn.classList.toggle('open', drawerOpen);
+            soBtn.setAttribute('aria-expanded', drawerOpen);
+            strip.classList.toggle('drawer-open', drawerOpen);
+            updateStrip();
+        }
+
+        function resetToDefaults(e) {
+            e.preventDefault();
+            Object.keys(DEFAULTS).forEach(function(name) {
+                var radio = document.querySelector('input[name="' + name + '"][value="' + DEFAULTS[name] + '"]');
+                if (radio) {
+                    radio.checked = true;
+                    radio.dispatchEvent(new Event('change', { bubbles: true }));
+                }
+            });
+            updateAll();
+        }
+
+        function resetSingle(name) {
+            var radio = document.querySelector('input[name="' + name + '"][value="' + DEFAULTS[name] + '"]');
+            if (radio) {
+                radio.checked = true;
+                radio.dispatchEvent(new Event('change', { bubbles: true }));
+            }
+            updateAll();
+        }
+
+        function updateAll() {
+            updateSummary();
+            updateDot();
+            updateStrip();
+        }
+
+        soBtn.addEventListener('click', toggleDrawer);
+        resetBtn.addEventListener('click', resetToDefaults);
+
+        strip.addEventListener('click', function(e) {
+            var btn = e.target.closest('.option-chip-dismiss');
+            if (btn) resetSingle(btn.dataset.reset);
+        });
+
+        // Listen for changes in drawer radio buttons
+        drawer.querySelectorAll('input[type="radio"]').forEach(function(radio) {
+            radio.addEventListener('change', updateAll);
+        });
+
+        // Close drawer on click outside
+        document.addEventListener('click', function(e) {
+            if (drawerOpen && !drawer.contains(e.target) && !soBtn.contains(e.target)) {
+                toggleDrawer();
+            }
+        });
+
+        // Close drawer on Escape
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && drawerOpen) toggleDrawer();
+        });
+
+        // Initial state
+        updateAll();
+    })();
+    </script>
+
     <div class="container">
-        <header>
-            <h1>Soldiers Died in the Great War 1914-1919</h1>
-            <p class="subtitle">Search military personnel records</p>
-        </header>
-
-        <main>
-            <form action="{{ url_for('search') }}" method="get" class="search-form">
+        <main id="main-content" role="main">
+            <form id="search-form" action="{{ url_for('search') }}" method="get" class="search-form" role="search" aria-label="Search personnel records">
                 <div class="form-section">
-                    <h2>Search Records</h2>
 
                     <div class="form-group">
-                        <label for="surname">Surname</label>
-                        <input type="text" id="surname" name="surname" placeholder="e.g., Smith" autocomplete="family-name">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="christian_names">First Name(s)</label>
-                        <input type="text" id="christian_names" name="christian_names" placeholder="e.g., John or J" autocomplete="given-name">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="service_number">Service Number</label>
-                        <input type="text" id="service_number" name="service_number" placeholder="e.g., 4493">
-                    </div>
-
-                    <div class="form-group">
-                        <label for="rank_name">Rank</label>
-                        <select id="rank_name" name="rank_name">
-                            <option value="">All Ranks</option>
-                            {% for group in rank_groups %}
+                        <label for="regiment_id">Branch of Army</label>
+                        <select id="regiment_id" name="regiment_id">
+                            <option value="">All Regiments / Corps</option>
+                            {% for group in regiment_groups %}
                             <optgroup label="{{ group }}">
-                                {% for rank in ranks if rank.rank_group == group %}
-                                <option value="{{ rank.rank_new }}">{{ rank.rank_new }}</option>
+                                {% for reg in regiments if reg.regiment_type == group %}
+                                <option value="{{ reg.regiment_id }}" {{ 'selected' if q.regiment_id == reg.regiment_id|string }}>{{ reg.name }}</option>
                                 {% endfor %}
                             </optgroup>
                             {% endfor %}
@@ -63,57 +295,141 @@
                         <label for="battalion_id">Battalion</label>
                         <select id="battalion_id" name="battalion_id">
                             <option value="">All Battalions</option>
-                            {% for battalion in battalions %}
-                            <option value="{{ battalion.battalion_id }}">{{ battalion.name }}</option>
+                            {% for group in battalion_groups %}
+                            <optgroup label="{{ group }}">
+                                {% for battalion in battalions if (battalion.regiment_name or 'Other') == group %}
+                                <option value="{{ battalion.battalion_id }}" {{ 'selected' if q.battalion_id == battalion.battalion_id|string }}>{{ battalion.name }}</option>
+                                {% endfor %}
+                            </optgroup>
                             {% endfor %}
                         </select>
                     </div>
 
                     <div class="form-group">
-                        <label for="birth_town">Birth Town</label>
-                        <input type="text" id="birth_town" name="birth_town" placeholder="e.g., London">
+                        <label for="surname">Surname</label>
+                        <input type="text" id="surname" name="surname" value="{{ q.surname }}" placeholder="e.g., Smith" autocomplete="family-name">
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="christian_names">First Name(s)</label>
+                            <select id="christian_names" name="christian_names">
+                                <option value="">Type to search...</option>
+                                {% if q.christian_names %}<option value="{{ q.christian_names }}" selected>{{ q.christian_names }}</option>{% endif %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="initials">Initials</label>
+                            <select id="initials" name="initials">
+                                <option value="">Type to search...</option>
+                                {% if q.initials %}<option value="{{ q.initials }}" selected>{{ q.initials }}</option>{% endif %}
+                            </select>
+                        </div>
                     </div>
 
                     <div class="form-group">
-                        <label for="death_location">Death Location</label>
-                        <select id="death_location" name="death_location">
-                            <option value="">All Locations</option>
-                            {% for location in death_locations %}
-                            <option value="{{ location }}">{{ location }}</option>
+                        <label for="service_number">Service Number</label>
+                        <select id="service_number" name="service_number">
+                            <option value="">Type to search...</option>
+                            {% if q.service_number %}<option value="{{ q.service_number }}" selected>{{ q.service_number }}</option>{% endif %}
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="rank_name">Rank</label>
+                        <select id="rank_name" name="rank_name">
+                            <option value="">All Ranks</option>
+                            {% for group in rank_groups %}
+                            <optgroup label="{{ group }}">
+                                {% for rank in ranks if rank.rank_group == group %}
+                                <option value="{{ rank.rank_new }}" {{ 'selected' if q.rank_name == rank.rank_new }}>{{ rank.rank_new }}</option>
+                                {% endfor %}
+                            </optgroup>
                             {% endfor %}
                         </select>
                     </div>
 
                     <div class="form-row">
                         <div class="form-group">
-                            <label for="death_date_from">Death Date From</label>
-                            <input type="date" id="death_date_from" name="death_date_from">
+                            <label for="birth_town">Born (Town)</label>
+                            <select id="birth_town" name="birth_town">
+                                <option value="">Type to search...</option>
+                                {% if q.birth_town %}<option value="{{ q.birth_town }}" selected>{{ q.birth_town }}</option>{% endif %}
+                            </select>
                         </div>
-
                         <div class="form-group">
-                            <label for="death_date_to">Death Date To</label>
-                            <input type="date" id="death_date_to" name="death_date_to">
+                            <label for="birth_region">Born (Region)</label>
+                            <select id="birth_region" name="birth_region">
+                                <option value="">All Regions</option>
+                                {% for region in birth_regions %}
+                                <option value="{{ region }}" {{ 'selected' if q.birth_region == region }}>{{ region }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="enlistment_loc">Residence</label>
+                            <select id="enlistment_loc" name="enlistment_loc">
+                                <option value="">Type to search...</option>
+                                {% if q.enlistment_loc %}<option value="{{ q.enlistment_loc }}" selected>{{ q.enlistment_loc }}</option>{% endif %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="enlistment_region">Residence (Region)</label>
+                            <select id="enlistment_region" name="enlistment_region">
+                                <option value="">All Regions</option>
+                                {% for region in enlistment_regions %}
+                                <option value="{{ region }}" {{ 'selected' if q.enlistment_region == region }}>{{ region }}</option>
+                                {% endfor %}
+                            </select>
                         </div>
                     </div>
 
                     <div class="form-group">
-                        <fieldset>
-                            <legend>Record Type</legend>
-                            <div class="radio-group">
-                                <label class="radio-label">
-                                    <input type="radio" name="record_type" value="all" checked>
-                                    <span>All Records</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="record_type" value="officers">
-                                    <span>Officers Only</span>
-                                </label>
-                                <label class="radio-label">
-                                    <input type="radio" name="record_type" value="soldiers">
-                                    <span>Soldiers Only</span>
-                                </label>
-                            </div>
-                        </fieldset>
+                        <label for="decoration">Decoration</label>
+                        <select id="decoration" name="decoration">
+                            <option value="">Type to search...</option>
+                            {% if q.decoration %}<option value="{{ q.decoration }}" selected>{{ q.decoration }}</option>{% endif %}
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="theatre_group">Theatre of War</label>
+                            <select id="theatre_group" name="theatre_group">
+                                <option value="">All Theatres</option>
+                                {% for tg in theatre_groups %}
+                                <option value="{{ tg }}" {{ 'selected' if q.theatre_group == tg }}>{{ tg }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="death_location">Specific Location</label>
+                            <select id="death_location" name="death_location">
+                                <option value="">All Locations</option>
+                                {% for group in death_location_groups %}
+                                <optgroup label="{{ group }}">
+                                    {% for loc in death_locations if loc.theatre_group == group %}
+                                    <option value="{{ loc.death_location }}" {{ 'selected' if q.death_location == loc.death_location }}>{{ loc.death_location }}</option>
+                                    {% endfor %}
+                                </optgroup>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="death_date_from">Died Date From</label>
+                            <input type="date" id="death_date_from" name="death_date_from" value="{{ q.death_date_from }}">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="death_date_to">Died Date To</label>
+                            <input type="date" id="death_date_to" name="death_date_to" value="{{ q.death_date_to }}">
+                        </div>
                     </div>
 
                     <div class="form-actions">
@@ -127,9 +443,14 @@
                 <h2>Search Tips</h2>
                 <ul>
                     <li>Enter a surname to search for all matching records</li>
-                    <li>Use first name to narrow down results</li>
+                    <li>Use first name or initials to narrow results</li>
                     <li>Service numbers are unique to soldiers</li>
-                    <li>Filter by battalion, rank, or death location for specific searches</li>
+                    <li>Decorations (DSO, MC, etc.) apply to officers only</li>
+                    <li><strong>Branch of Army</strong> filters by regiment or corps</li>
+                    <li><strong>Theatre of War</strong> groups locations (e.g. Western Front, Gallipoli)</li>
+                    <li><strong>Born / Residence Region</strong> filters by England, Scotland, Wales, Ireland, or Overseas</li>
+                    <li><strong>Query Options:</strong> AND = all criteria must match, OR = any can match, NOT = exclude matches</li>
+                    <li><strong>Search Mode:</strong> <em>Basic</em> shows all options in every dropdown; <em>Advanced</em> automatically narrows dropdowns based on your current filters</li>
                     <li>Leave fields blank to include all records</li>
                 </ul>
 
@@ -137,28 +458,113 @@
                 <p>This database contains 703,806 military personnel records from the First World War (1914-1919), including 41,846 officers and 661,960 soldiers.</p>
             </section>
         </main>
-
-        <footer>
-            <p>SDGW 1914-1919 Personnel Database &copy; 2026</p>
-        </footer>
     </div>
+
+    <footer role="contentinfo">
+        <div class="footer-inner">
+            <div>
+                <div class="footer-brand">
+                    <img src="{{ url_for('static', filename='SDGW1419.ico') }}" alt="SDGW Icon" class="footer-brand-icon">
+                    SDGW 1914-1919
+                </div>
+                <p class="footer-desc">Preserving the history and records of those who served in the Great War 1914-1919. An historical resource for veterans' families and researchers.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Search Records</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Research</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Search Records</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 SDGW 1914-1919 Personnel Database. All Rights Reserved.
+        </div>
+    </footer>
+
 <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/js/tom-select.complete.min.js"></script>
 <script>
 (function() {
     const FILTER_OPTIONS_URL = '{{ url_for("filter_options") }}';
     const SURNAME_SUGGEST_URL = '{{ url_for("surname_suggest") }}';
-    const textFields = ['christian_names', 'service_number', 'birth_town'];
-    const selectFields = ['surname', 'rank_name', 'battalion_id', 'death_location'];
+    const FUZZY_SUGGEST_URL = '{{ url_for("fuzzy_suggest") }}';
+    const SEARCH_MODE_KEY = 'sdgw_search_mode';
+
+    function getSearchMode() {
+        return document.querySelector('input[name="search_mode"]:checked')?.value || 'advanced';
+    }
+
+    function isAdvancedMode() {
+        return getSearchMode() === 'advanced';
+    }
+
+    function saveSearchMode(mode) {
+        try { localStorage.setItem(SEARCH_MODE_KEY, mode); } catch(e) {}
+    }
+
+    function loadSearchMode() {
+        try { return localStorage.getItem(SEARCH_MODE_KEY) || 'advanced'; } catch(e) { return 'advanced'; }
+    }
+
+    function updateModeIndicator() {
+        // Mode hint is now inside the drawer footer - handled by updateSummary in drawer script
+    }
+
+    function restoreFullOptions() {
+        updateGroupedTomSelect('rank_name', fullOptions.ranks, fullOptions.rank_groups,
+            'rank_new', 'rank_new', 'rank_group', tsInstances.rank_name ? tsInstances.rank_name.getValue() : '');
+        updateGroupedTomSelect('battalion_id', fullOptions.battalions, fullOptions.battalion_groups,
+            'battalion_id', 'name', 'regiment_name', tsInstances.battalion_id ? tsInstances.battalion_id.getValue() : '');
+        updateGroupedTomSelect('regiment_id', fullOptions.regiments, fullOptions.regiment_groups,
+            'regiment_id', 'name', 'regiment_type', tsInstances.regiment_id ? tsInstances.regiment_id.getValue() : '');
+        updateGroupedTomSelect('death_location', fullOptions.death_locations, fullOptions.death_location_groups,
+            'location', 'location', 'theatre_group', tsInstances.death_location ? tsInstances.death_location.getValue() : '');
+        updateFlatTomSelect('theatre_group',
+            fullOptions.theatre_groups.map(function(t) { return { value: t, text: t }; }),
+            tsInstances.theatre_group ? tsInstances.theatre_group.getValue() : '');
+        updateFlatTomSelect('birth_region',
+            fullOptions.birth_regions.map(function(r) { return { value: r, text: r }; }),
+            tsInstances.birth_region ? tsInstances.birth_region.getValue() : '');
+        updateFlatTomSelect('enlistment_region',
+            fullOptions.enlistment_regions.map(function(r) { return { value: r, text: r }; }),
+            tsInstances.enlistment_region ? tsInstances.enlistment_region.getValue() : '');
+        updateDeathDateBounds({ min: '', max: '' });
+    }
+
+    // All fields now use Tom Select
+    const fuzzyTextFields = ['christian_names', 'initials', 'service_number', 'birth_town', 'enlistment_loc', 'decoration'];
+    const groupedSelectFields = ['rank_name', 'battalion_id', 'death_location', 'regiment_id'];
+    const flatSelectFields = ['theatre_group', 'birth_region', 'enlistment_region'];
+    const allTsFields = ['surname', ...groupedSelectFields, ...flatSelectFields, ...fuzzyTextFields];
     const dateFields = ['death_date_from', 'death_date_to'];
     const radioName = 'record_type';
 
-    // Tom Select instances
     const tsInstances = {};
 
     // Full (unfiltered) option sets from initial page load
-    const fullOptions = { ranks: [], rank_groups: [], battalions: [], death_locations: [] };
+    const fullOptions = {
+        ranks: [], rank_groups: [],
+        battalions: [], battalion_groups: [],
+        death_locations: [], death_location_groups: [],
+        regiments: [], regiment_groups: [],
+        theatre_groups: [],
+        birth_regions: [],
+        enlistment_regions: []
+    };
 
     function storeInitialOptions() {
+        // Rank (grouped)
         document.getElementById('rank_name').querySelectorAll('optgroup').forEach(og => {
             const group = og.label;
             if (!fullOptions.rank_groups.includes(group)) fullOptions.rank_groups.push(group);
@@ -166,195 +572,349 @@
                 fullOptions.ranks.push({ rank_new: opt.value, rank_group: group });
             });
         });
-        document.getElementById('battalion_id').querySelectorAll('option').forEach(opt => {
-            if (opt.value) fullOptions.battalions.push({ battalion_id: String(opt.value), name: opt.textContent.trim() });
+        // Battalion (grouped by regiment)
+        document.getElementById('battalion_id').querySelectorAll('optgroup').forEach(og => {
+            const group = og.label;
+            if (!fullOptions.battalion_groups.includes(group)) fullOptions.battalion_groups.push(group);
+            og.querySelectorAll('option').forEach(opt => {
+                fullOptions.battalions.push({ battalion_id: String(opt.value), name: opt.textContent.trim(), regiment_name: group });
+            });
         });
-        document.getElementById('death_location').querySelectorAll('option').forEach(opt => {
-            if (opt.value) fullOptions.death_locations.push(opt.value);
+        // Regiment (grouped by type)
+        document.getElementById('regiment_id').querySelectorAll('optgroup').forEach(og => {
+            const group = og.label;
+            if (!fullOptions.regiment_groups.includes(group)) fullOptions.regiment_groups.push(group);
+            og.querySelectorAll('option').forEach(opt => {
+                fullOptions.regiments.push({ regiment_id: String(opt.value), name: opt.textContent.trim(), regiment_type: group });
+            });
+        });
+        // Death location (grouped by theatre)
+        document.getElementById('death_location').querySelectorAll('optgroup').forEach(og => {
+            const group = og.label;
+            if (!fullOptions.death_location_groups.includes(group)) fullOptions.death_location_groups.push(group);
+            og.querySelectorAll('option').forEach(opt => {
+                fullOptions.death_locations.push({ location: opt.value, theatre_group: group });
+            });
+        });
+        // Flat selects
+        document.getElementById('theatre_group').querySelectorAll('option').forEach(opt => {
+            if (opt.value) fullOptions.theatre_groups.push(opt.value);
+        });
+        document.getElementById('birth_region').querySelectorAll('option').forEach(opt => {
+            if (opt.value) fullOptions.birth_regions.push(opt.value);
+        });
+        document.getElementById('enlistment_region').querySelectorAll('option').forEach(opt => {
+            if (opt.value) fullOptions.enlistment_regions.push(opt.value);
         });
     }
 
+    // Generic grouped Tom Select update
+    function updateGroupedTomSelect(id, items, groups, valueKey, textKey, groupKey, currentValue) {
+        const ts = tsInstances[id];
+        if (!ts) return;
+        ts.lock();
+        ts.clearOptionGroups();
+        ts.clearOptions();
+        groups.forEach(g => ts.addOptionGroup(g, { value: g, label: g }));
+        items.forEach(item => {
+            const opt = { value: String(item[valueKey]), text: item[textKey] };
+            opt[groupKey] = item[groupKey];
+            ts.addOption(opt);
+        });
+        if (currentValue && items.some(i => String(i[valueKey]) === String(currentValue))) {
+            ts.setValue(currentValue, true);
+        } else {
+            ts.clear(true);
+        }
+        ts.unlock();
+    }
+
+    function updateFlatTomSelect(id, options, currentValue) {
+        const ts = tsInstances[id];
+        if (!ts) return;
+        ts.lock();
+        ts.clearOptions();
+        options.forEach(opt => ts.addOption(opt));
+        if (currentValue && options.some(o => o.value === currentValue)) {
+            ts.setValue(currentValue, true);
+        } else {
+            ts.clear(true);
+        }
+        ts.unlock();
+    }
+
     function initTomSelect() {
+        const MAX_OPTS = 10000;
+        const scrollReset = function(dropdown) { setTimeout(function() { dropdown.scrollTop = 0; }, 0); };
+
         // Surname - remote autocomplete
         tsInstances.surname = new TomSelect('#surname', {
-            create: true,
-            maxItems: 1,
-            valueField: 'value',
-            labelField: 'text',
-            searchField: 'text',
+            create: true, maxItems: 1, maxOptions: MAX_OPTS,
+            valueField: 'value', labelField: 'text', searchField: 'text',
             placeholder: 'Type to search surnames...',
             shouldLoad: function(query) { return query.length >= 2; },
             load: function(query, callback) {
-                this.clearOptions();
-                this.loadedSearches = {};
-                fetch(SURNAME_SUGGEST_URL + '?q=' + encodeURIComponent(query))
+                this.clearOptions(); this.loadedSearches = {};
+                var params;
+                if (isAdvancedMode()) {
+                    params = getFormValues(); params.surname = ''; params.q = query;
+                } else {
+                    params = { q: query };
+                }
+                fetch(SURNAME_SUGGEST_URL + '?' + buildQueryParams(params).toString())
                     .then(r => r.json())
                     .then(items => callback(items.map(s => ({ value: s, text: s }))))
                     .catch(() => callback());
             },
-            onType: function(query) {
-                if (query.length < 2) { this.clearOptions(); }
-            },
+            onType: function(query) { if (query.length < 2) this.clearOptions(); },
             onClear: function() { this.clearOptions(); },
             onChange: () => refreshDropdowns(true)
         });
 
-        // Rank - with optgroups
+        // Rank - grouped by rank_group
         tsInstances.rank_name = new TomSelect('#rank_name', {
-            placeholder: 'Type to search ranks...',
-            allowEmptyOption: true,
+            placeholder: 'All Ranks', plugins: ['clear_button'], maxOptions: MAX_OPTS,
             sortField: [{ field: '$order' }],
             optgroupField: 'rank_group',
             optgroups: fullOptions.rank_groups.map(g => ({ value: g, label: g })),
-            onChange: () => refreshDropdowns(true)
+            onChange: () => refreshDropdowns(true), onDropdownOpen: scrollReset
         });
 
-        // Battalion
+        // Battalion - grouped by regiment_name
         tsInstances.battalion_id = new TomSelect('#battalion_id', {
-            placeholder: 'Type to search battalions...',
-            allowEmptyOption: true,
+            placeholder: 'All Battalions', plugins: ['clear_button'], maxOptions: MAX_OPTS,
             sortField: [{ field: '$order' }],
-            onChange: () => refreshDropdowns(true)
+            optgroupField: 'regiment_name',
+            optgroups: fullOptions.battalion_groups.map(g => ({ value: g, label: g })),
+            onChange: () => refreshDropdowns(true), onDropdownOpen: scrollReset
         });
 
-        // Death Location
-        tsInstances.death_location = new TomSelect('#death_location', {
-            placeholder: 'Type to search locations...',
-            allowEmptyOption: true,
+        // Regiment - grouped by regiment_type
+        tsInstances.regiment_id = new TomSelect('#regiment_id', {
+            placeholder: 'All Regiments / Corps', plugins: ['clear_button'], maxOptions: MAX_OPTS,
             sortField: [{ field: '$order' }],
-            onChange: () => refreshDropdowns(true)
+            optgroupField: 'regiment_type',
+            optgroups: fullOptions.regiment_groups.map(g => ({ value: g, label: g })),
+            onChange: () => refreshDropdowns(true), onDropdownOpen: scrollReset
+        });
+
+        // Death Location - grouped by theatre_group
+        tsInstances.death_location = new TomSelect('#death_location', {
+            placeholder: 'All Locations', plugins: ['clear_button'], maxOptions: MAX_OPTS,
+            sortField: [{ field: '$order' }],
+            optgroupField: 'theatre_group',
+            optgroups: fullOptions.death_location_groups.map(g => ({ value: g, label: g })),
+            onChange: () => refreshDropdowns(true), onDropdownOpen: scrollReset
+        });
+
+        // Theatre of War (flat)
+        tsInstances.theatre_group = new TomSelect('#theatre_group', {
+            placeholder: 'All Theatres', plugins: ['clear_button'], maxOptions: MAX_OPTS,
+            sortField: [{ field: '$order' }],
+            onChange: () => refreshDropdowns(true), onDropdownOpen: scrollReset
+        });
+
+        // Birth Region (flat)
+        tsInstances.birth_region = new TomSelect('#birth_region', {
+            placeholder: 'All Regions', plugins: ['clear_button'], maxOptions: MAX_OPTS,
+            sortField: [{ field: '$order' }],
+            onChange: () => refreshDropdowns(true), onDropdownOpen: scrollReset
+        });
+
+        // Enlistment Region (flat)
+        tsInstances.enlistment_region = new TomSelect('#enlistment_region', {
+            placeholder: 'All Regions', plugins: ['clear_button'], maxOptions: MAX_OPTS,
+            sortField: [{ field: '$order' }],
+            onChange: () => refreshDropdowns(true), onDropdownOpen: scrollReset
+        });
+
+        // Text fields with fuzzy remote search + create
+        var textFieldConfig = {
+            christian_names: { placeholder: 'e.g., John or J', minChars: 2 },
+            initials:        { placeholder: 'e.g., J W', minChars: 1 },
+            service_number:  { placeholder: 'e.g., 4493', minChars: 2 },
+            birth_town:      { placeholder: 'e.g., Liverpool', minChars: 2 },
+            enlistment_loc:  { placeholder: 'e.g., Woolwich', minChars: 2 },
+            decoration:      { placeholder: 'e.g., DSO, MC', minChars: 1 }
+        };
+
+        fuzzyTextFields.forEach(function(id) {
+            var cfg = textFieldConfig[id];
+            tsInstances[id] = new TomSelect('#' + id, {
+                create: true,
+                maxItems: 1,
+                maxOptions: MAX_OPTS,
+                valueField: 'value',
+                labelField: 'value',
+                searchField: 'value',
+                placeholder: cfg.placeholder,
+                optgroupField: '_group',
+                optgroupLabelField: 'label',
+                optgroupValueField: 'value',
+                lockOptgroupOrder: true,
+                sortField: [{ field: '$order' }],
+                shouldLoad: function(query) { return query.length >= cfg.minChars; },
+                load: function(query, callback) {
+                    this.clearOptions();
+                    this.clearOptionGroups();
+                    this.loadedSearches = {};
+                    fetch(FUZZY_SUGGEST_URL + '?field=' + id + '&q=' + encodeURIComponent(query))
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            var opts = [];
+                            // Add exact match optgroup
+                            if (data.exact && data.exact.length) {
+                                this.addOptionGroup('exact_matches', { value: 'exact_matches', label: 'Matches' });
+                                data.exact.forEach(function(item) {
+                                    opts.push({ value: item.value, _group: 'exact_matches' });
+                                });
+                            }
+                            // Add fuzzy match optgroup
+                            if (data.fuzzy && data.fuzzy.length) {
+                                this.addOptionGroup('similar_matches', { value: 'similar_matches', label: 'Similar Matches' });
+                                data.fuzzy.forEach(function(item) {
+                                    opts.push({ value: item.value, _group: 'similar_matches' });
+                                });
+                            }
+                            callback(opts);
+                        }.bind(this))
+                        .catch(function() { callback(); });
+                },
+                onType: function(query) {
+                    if (query.length < cfg.minChars) { this.clearOptions(); this.clearOptionGroups(); }
+                },
+                onClear: function() { this.clearOptions(); this.clearOptionGroups(); },
+                onChange: function() { refreshDropdowns(true); }
+            });
         });
     }
 
     function getFormValues() {
-        const vals = {};
-        textFields.forEach(id => { vals[id] = document.getElementById(id).value.trim(); });
-        selectFields.forEach(id => {
-            vals[id] = tsInstances[id] ? tsInstances[id].getValue() : document.getElementById(id).value;
+        var vals = {};
+        allTsFields.forEach(function(id) {
+            vals[id] = tsInstances[id] ? tsInstances[id].getValue() : '';
         });
-        dateFields.forEach(id => { vals[id] = document.getElementById(id).value; });
-        const checked = document.querySelector('input[name="' + radioName + '"]:checked');
+        dateFields.forEach(function(id) { vals[id] = document.getElementById(id).value; });
+        var checked = document.querySelector('input[name="' + radioName + '"]:checked');
         vals.record_type = checked ? checked.value : 'all';
+        var qmChecked = document.querySelector('input[name="query_mode"]:checked');
+        vals.query_mode = qmChecked ? qmChecked.value : 'and';
         return vals;
     }
 
-    function updateTomSelect(id, options, currentValue) {
-        const ts = tsInstances[id];
-        if (!ts) return;
-
-        // Disable change handler while rebuilding
-        ts.lock();
-        ts.clearOptions();
-
-        // Add the "All" empty option
-        ts.addOption({ value: '', text: ts.settings.placeholder || 'All' });
-
-        options.forEach(opt => ts.addOption(opt));
-
-        // Restore value if still valid, otherwise clear
-        if (currentValue && options.some(o => o.value === currentValue)) {
-            ts.setValue(currentValue, true);
-        } else {
-            ts.setValue('', true);
-        }
-        ts.unlock();
+    function buildQueryParams(values) {
+        var params = new URLSearchParams();
+        Object.entries(values).forEach(function(kv) {
+            if (kv[1] !== undefined && kv[1] !== null && String(kv[1]).length > 0) {
+                params.set(kv[0], kv[1]);
+            }
+        });
+        return params;
     }
 
-    function updateRankTomSelect(ranks, rankGroups, currentValue) {
-        const ts = tsInstances.rank_name;
-        if (!ts) return;
-
-        ts.lock();
-        ts.clearOptionGroups();
-        ts.clearOptions();
-
-        // Add optgroups
-        rankGroups.forEach(g => ts.addOptionGroup(g, { value: g, label: g }));
-
-        // Add empty option
-        ts.addOption({ value: '', text: 'All Ranks' });
-
-        // Add rank options with group
-        ranks.forEach(r => {
-            ts.addOption({ value: r.rank_new, text: r.rank_new, rank_group: r.rank_group });
-        });
-
-        if (currentValue && ranks.some(r => r.rank_new === currentValue)) {
-            ts.setValue(currentValue, true);
-        } else {
-            ts.setValue('', true);
-        }
-        ts.unlock();
+    function updateDeathDateBounds(bounds) {
+        var fromEl = document.getElementById('death_date_from');
+        var toEl = document.getElementById('death_date_to');
+        if (!fromEl || !toEl) return;
+        if (bounds && bounds.min) { fromEl.min = bounds.min; toEl.min = bounds.min; }
+        else { fromEl.removeAttribute('min'); toEl.removeAttribute('min'); }
+        if (bounds && bounds.max) { fromEl.max = bounds.max; toEl.max = bounds.max; }
+        else { fromEl.removeAttribute('max'); toEl.removeAttribute('max'); }
     }
 
     function setLoading(loading) {
-        selectFields.forEach(id => {
-            if (id === 'surname') return;
-            const wrapper = tsInstances[id] && tsInstances[id].wrapper;
-            if (wrapper) {
-                wrapper.classList.toggle('loading', loading);
-            }
+        groupedSelectFields.concat(flatSelectFields).forEach(function(id) {
+            var wrapper = tsInstances[id] && tsInstances[id].wrapper;
+            if (wrapper) wrapper.classList.toggle('loading', loading);
         });
     }
 
-    let fetchController = null;
-    let debounceTimer = null;
+    var fetchController = null;
+    var debounceTimer = null;
 
     function refreshDropdowns(immediate) {
         clearTimeout(debounceTimer);
-        const delay = immediate ? 0 : 300;
+        if (!isAdvancedMode()) return;
+        var delay = immediate ? 0 : 500;
 
-        debounceTimer = setTimeout(() => {
-            const vals = getFormValues();
+        debounceTimer = setTimeout(function() {
+            var vals = getFormValues();
 
-            const hasFilter = textFields.some(f => vals[f].length > 0) ||
-                              selectFields.some(f => vals[f]) ||
-                              dateFields.some(f => vals[f]);
+            var hasFilter = allTsFields.some(function(f) { return !!vals[f]; }) ||
+                            vals.record_type !== 'all' ||
+                            dateFields.some(function(f) { return !!vals[f]; });
 
             if (!hasFilter) {
-                updateRankTomSelect(fullOptions.ranks, fullOptions.rank_groups, '');
-                updateTomSelect('battalion_id',
-                    fullOptions.battalions.map(b => ({ value: b.battalion_id, text: b.name })), '');
-                updateTomSelect('death_location',
-                    fullOptions.death_locations.map(l => ({ value: l, text: l })), '');
+                // Reset to full options
+                updateGroupedTomSelect('rank_name', fullOptions.ranks, fullOptions.rank_groups,
+                    'rank_new', 'rank_new', 'rank_group', '');
+                updateGroupedTomSelect('battalion_id', fullOptions.battalions, fullOptions.battalion_groups,
+                    'battalion_id', 'name', 'regiment_name', '');
+                updateGroupedTomSelect('regiment_id', fullOptions.regiments, fullOptions.regiment_groups,
+                    'regiment_id', 'name', 'regiment_type', '');
+                updateGroupedTomSelect('death_location', fullOptions.death_locations, fullOptions.death_location_groups,
+                    'location', 'location', 'theatre_group', '');
+                updateFlatTomSelect('theatre_group',
+                    fullOptions.theatre_groups.map(function(t) { return { value: t, text: t }; }), '');
+                updateFlatTomSelect('birth_region',
+                    fullOptions.birth_regions.map(function(r) { return { value: r, text: r }; }), '');
+                updateFlatTomSelect('enlistment_region',
+                    fullOptions.enlistment_regions.map(function(r) { return { value: r, text: r }; }), '');
+                updateDeathDateBounds({ min: '', max: '' });
                 return;
             }
 
-            const textActive = textFields.some(f => vals[f].length >= 3);
-            const otherActive = selectFields.some(f => vals[f]) || dateFields.some(f => vals[f]);
-            if (!textActive && !otherActive) return;
+            var textActive = fuzzyTextFields.some(function(f) { return vals[f] && vals[f].length >= 3; });
+            var selectActive = groupedSelectFields.concat(flatSelectFields).some(function(f) { return !!vals[f]; }) ||
+                               vals.record_type !== 'all' || dateFields.some(function(f) { return !!vals[f]; }) || !!vals.surname;
+            if (!textActive && !selectActive) return;
 
             if (fetchController) fetchController.abort();
             fetchController = new AbortController();
 
-            const params = new URLSearchParams();
-            Object.entries(vals).forEach(([k, v]) => { if (v) params.set(k, v); });
-
             setLoading(true);
 
-            fetch(FILTER_OPTIONS_URL + '?' + params.toString(), { signal: fetchController.signal })
-                .then(r => r.json())
-                .then(data => {
+            fetch(FILTER_OPTIONS_URL + '?' + buildQueryParams(vals).toString(), { signal: fetchController.signal })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
                     setLoading(false);
                     if (data.unfiltered) {
-                        updateRankTomSelect(fullOptions.ranks, fullOptions.rank_groups, vals.rank_name);
-                        updateTomSelect('battalion_id',
-                            fullOptions.battalions.map(b => ({ value: b.battalion_id, text: b.name })),
-                            vals.battalion_id);
-                        updateTomSelect('death_location',
-                            fullOptions.death_locations.map(l => ({ value: l, text: l })),
-                            vals.death_location);
+                        updateGroupedTomSelect('rank_name', fullOptions.ranks, fullOptions.rank_groups,
+                            'rank_new', 'rank_new', 'rank_group', vals.rank_name);
+                        updateGroupedTomSelect('battalion_id', fullOptions.battalions, fullOptions.battalion_groups,
+                            'battalion_id', 'name', 'regiment_name', vals.battalion_id);
+                        updateGroupedTomSelect('regiment_id', fullOptions.regiments, fullOptions.regiment_groups,
+                            'regiment_id', 'name', 'regiment_type', vals.regiment_id);
+                        updateGroupedTomSelect('death_location', fullOptions.death_locations, fullOptions.death_location_groups,
+                            'location', 'location', 'theatre_group', vals.death_location);
+                        updateFlatTomSelect('theatre_group',
+                            fullOptions.theatre_groups.map(function(t) { return { value: t, text: t }; }), vals.theatre_group);
+                        updateFlatTomSelect('birth_region',
+                            fullOptions.birth_regions.map(function(r) { return { value: r, text: r }; }), vals.birth_region);
+                        updateFlatTomSelect('enlistment_region',
+                            fullOptions.enlistment_regions.map(function(r) { return { value: r, text: r }; }), vals.enlistment_region);
+                        updateDeathDateBounds(data.death_date_bounds || { min: '', max: '' });
                     } else {
-                        updateRankTomSelect(data.ranks, data.rank_groups, vals.rank_name);
-                        updateTomSelect('battalion_id',
-                            data.battalions.map(b => ({ value: String(b.battalion_id), text: b.name })),
-                            vals.battalion_id);
-                        updateTomSelect('death_location',
-                            data.death_locations.map(l => ({ value: l, text: l })),
-                            vals.death_location);
+                        updateGroupedTomSelect('rank_name', data.ranks, data.rank_groups,
+                            'rank_new', 'rank_new', 'rank_group', vals.rank_name);
+                        updateGroupedTomSelect('battalion_id', data.battalions, data.battalion_groups || [],
+                            'battalion_id', 'name', 'regiment_name', vals.battalion_id);
+                        updateGroupedTomSelect('regiment_id', data.regiments, data.regiment_groups || [],
+                            'regiment_id', 'name', 'regiment_type', vals.regiment_id);
+                        // Death locations from API are objects with location + theatre_group
+                        var dlGroups = data.death_location_groups || [];
+                        updateGroupedTomSelect('death_location', data.death_locations, dlGroups,
+                            'location', 'location', 'theatre_group', vals.death_location);
+                        updateFlatTomSelect('theatre_group',
+                            (data.theatre_groups || []).map(function(t) { return { value: t, text: t }; }), vals.theatre_group);
+                        updateFlatTomSelect('birth_region',
+                            (data.birth_regions || []).map(function(r) { return { value: r, text: r }; }), vals.birth_region);
+                        updateFlatTomSelect('enlistment_region',
+                            (data.enlistment_regions || []).map(function(r) { return { value: r, text: r }; }), vals.enlistment_region);
+                        updateDeathDateBounds(data.death_date_bounds || { min: '', max: '' });
                     }
                 })
-                .catch(err => {
+                .catch(function(err) {
                     if (err.name !== 'AbortError') {
                         setLoading(false);
                         console.error('Filter options error:', err);
@@ -367,26 +927,289 @@
         storeInitialOptions();
         initTomSelect();
 
-        textFields.forEach(id => {
-            document.getElementById(id).addEventListener('input', () => refreshDropdowns(false));
+        // Restore saved search mode
+        var savedMode = loadSearchMode();
+        var modeRadio = document.getElementById('search_mode_' + savedMode);
+        if (modeRadio) modeRadio.checked = true;
+        updateModeIndicator();
+
+        // Search mode toggle handler
+        document.querySelectorAll('input[name="search_mode"]').forEach(function(radio) {
+            radio.addEventListener('change', function() {
+                saveSearchMode(this.value);
+                updateModeIndicator();
+                if (this.value === 'basic') {
+                    restoreFullOptions();
+                } else {
+                    refreshDropdowns(true);
+                }
+            });
         });
-        dateFields.forEach(id => {
-            document.getElementById(id).addEventListener('change', () => refreshDropdowns(true));
+
+        dateFields.forEach(function(id) {
+            document.getElementById(id).addEventListener('change', function() { refreshDropdowns(true); });
         });
-        document.querySelectorAll('input[name="' + radioName + '"]').forEach(radio => {
-            radio.addEventListener('change', () => refreshDropdowns(true));
+        document.querySelectorAll('input[name="query_mode"]').forEach(function(radio) {
+            radio.addEventListener('change', function() { refreshDropdowns(false); });
+        });
+        document.querySelectorAll('input[name="' + radioName + '"]').forEach(function(radio) {
+            radio.addEventListener('change', function() { refreshDropdowns(true); });
         });
 
         // Handle form reset
-        document.querySelector('.search-form').addEventListener('reset', () => {
-            setTimeout(() => {
-                if (tsInstances.surname) { tsInstances.surname.clear(); tsInstances.surname.clearOptions(); }
-                updateRankTomSelect(fullOptions.ranks, fullOptions.rank_groups, '');
-                updateTomSelect('battalion_id',
-                    fullOptions.battalions.map(b => ({ value: b.battalion_id, text: b.name })), '');
-                updateTomSelect('death_location',
-                    fullOptions.death_locations.map(l => ({ value: l, text: l })), '');
+        document.querySelector('.search-form').addEventListener('reset', function() {
+            setTimeout(function() {
+                allTsFields.forEach(function(id) {
+                    if (tsInstances[id]) {
+                        tsInstances[id].clear(true);
+                        if (id === 'surname' || fuzzyTextFields.includes(id)) {
+                            tsInstances[id].clearOptions();
+                            tsInstances[id].clearOptionGroups && tsInstances[id].clearOptionGroups();
+                        }
+                    }
+                });
+                // Restore full options for grouped/flat selects
+                updateGroupedTomSelect('rank_name', fullOptions.ranks, fullOptions.rank_groups,
+                    'rank_new', 'rank_new', 'rank_group', '');
+                updateGroupedTomSelect('battalion_id', fullOptions.battalions, fullOptions.battalion_groups,
+                    'battalion_id', 'name', 'regiment_name', '');
+                updateGroupedTomSelect('regiment_id', fullOptions.regiments, fullOptions.regiment_groups,
+                    'regiment_id', 'name', 'regiment_type', '');
+                updateGroupedTomSelect('death_location', fullOptions.death_locations, fullOptions.death_location_groups,
+                    'location', 'location', 'theatre_group', '');
+                updateFlatTomSelect('theatre_group',
+                    fullOptions.theatre_groups.map(function(t) { return { value: t, text: t }; }), '');
+                updateFlatTomSelect('birth_region',
+                    fullOptions.birth_regions.map(function(r) { return { value: r, text: r }; }), '');
+                updateFlatTomSelect('enlistment_region',
+                    fullOptions.enlistment_regions.map(function(r) { return { value: r, text: r }; }), '');
+                updateDeathDateBounds({ min: '', max: '' });
+                // Reset nav-bar radios
+                var qmDefault = document.querySelector('input[name="query_mode"][value="and"]');
+                if (qmDefault) qmDefault.checked = true;
+                var rtDefault = document.querySelector('input[name="record_type"][value="all"]');
+                if (rtDefault) rtDefault.checked = true;
             }, 10);
+        });
+    });
+})();
+</script>
+<!-- Settings Panel -->
+<button class="settings-toggle" id="settingsToggle" aria-label="Display settings" title="Display settings">&#9881;</button>
+<div class="settings-drawer" id="settingsDrawer" role="dialog" aria-label="Display settings">
+    <h3>&#9881; Quick Settings</h3>
+
+    <div class="setting-group">
+        <span class="setting-label">Theme</span>
+        <div class="setting-options" data-setting="theme">
+            <button data-value="light">&#9788; Light</button>
+            <button data-value="system" class="active">&#128187; System</button>
+            <button data-value="dark">&#9790; Dark</button>
+        </div>
+    </div>
+
+    <div class="setting-group">
+        <span class="setting-label">Form Density</span>
+        <div class="setting-options" data-setting="density">
+            <button data-value="compact">Compact</button>
+            <button data-value="normal" class="active">Normal</button>
+            <button data-value="comfortable">Comfortable</button>
+        </div>
+    </div>
+
+    <div class="setting-group">
+        <span class="setting-label">Record Density</span>
+        <div class="setting-options" data-setting="detail-density">
+            <button data-value="compact">Compact</button>
+            <button data-value="normal" class="active">Normal</button>
+            <button data-value="comfortable">Comfortable</button>
+        </div>
+    </div>
+
+    <div class="setting-group">
+        <span class="setting-label">Record Layout</span>
+        <div class="setting-options" data-setting="detail-layout">
+            <button data-value="split" class="active">Split</button>
+            <button data-value="stacked">Stacked</button>
+        </div>
+    </div>
+
+    <div class="setting-group">
+        <span class="setting-label">Font Size</span>
+        <div class="setting-options" data-setting="fontsize">
+            <button data-value="small">Small</button>
+            <button data-value="normal" class="active">Normal</button>
+            <button data-value="large">Large</button>
+            <button data-value="xlarge">X-Large</button>
+        </div>
+    </div>
+
+    <div class="setting-group">
+        <span class="setting-label">Corner Style</span>
+        <div class="setting-options" data-setting="corners">
+            <button data-value="sharp">Sharp</button>
+            <button data-value="normal" class="active">Normal</button>
+            <button data-value="round">Round</button>
+        </div>
+    </div>
+
+    <div class="setting-group">
+        <span class="setting-label">Options</span>
+        <div class="setting-toggle-switch" data-setting="focus-highlight">
+            <span>Focus highlights</span>
+            <div class="toggle-switch on" id="toggleFocusHighlight"></div>
+        </div>
+        <div class="setting-toggle-switch" data-setting="search-tips">
+            <span>Show search tips</span>
+            <div class="toggle-switch on" id="toggleSearchTips"></div>
+        </div>
+    </div>
+
+    <button class="settings-reset" id="settingsReset">Reset to Defaults</button>
+    <a href="{{ url_for('settings') }}" style="display:block;text-align:center;margin-top:0.5rem;font-size:0.8rem;font-weight:600;color:var(--text-link);">All Settings &rarr;</a>
+</div>
+
+<script>
+(function() {
+    const STORAGE_KEY = 'sdgw_display_settings';
+    const DEFAULTS = {
+        theme: 'system',
+        density: 'normal',
+        'detail-density': 'normal',
+        'detail-layout': 'split',
+        fontsize: 'normal',
+        corners: 'normal',
+        'focus-highlight': true,
+        'search-tips': true
+    };
+
+    function loadSettings() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? Object.assign({}, DEFAULTS, JSON.parse(raw)) : Object.assign({}, DEFAULTS);
+        } catch(e) { return Object.assign({}, DEFAULTS); }
+    }
+
+    function saveSettings(s) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e) {}
+    }
+
+    function applySettings(s) {
+        const html = document.documentElement;
+
+        // Theme
+        if (s.theme === 'light') html.setAttribute('data-theme', 'light');
+        else if (s.theme === 'dark') html.setAttribute('data-theme', 'dark');
+        else html.removeAttribute('data-theme');
+
+        // Density
+        if (s.density === 'normal') html.removeAttribute('data-density');
+        else html.setAttribute('data-density', s.density);
+
+        // Detail density (record screen)
+        if (s['detail-density'] === 'normal') html.removeAttribute('data-detail-density');
+        else html.setAttribute('data-detail-density', s['detail-density']);
+
+        // Detail layout (record screen)
+        if (s['detail-layout'] === 'split') html.removeAttribute('data-detail-layout');
+        else html.setAttribute('data-detail-layout', s['detail-layout']);
+
+        // Font size
+        if (s.fontsize === 'normal') html.removeAttribute('data-fontsize');
+        else html.setAttribute('data-fontsize', s.fontsize);
+
+        // Corners
+        if (s.corners === 'sharp') {
+            html.style.setProperty('--border-radius', '2px');
+            html.style.setProperty('--card-radius', '4px');
+        } else if (s.corners === 'round') {
+            html.style.setProperty('--border-radius', '12px');
+            html.style.setProperty('--card-radius', '18px');
+        } else {
+            html.style.removeProperty('--border-radius');
+            html.style.removeProperty('--card-radius');
+        }
+
+        // Focus highlight
+        if (!s['focus-highlight']) {
+            html.style.setProperty('--focus-ring', 'none');
+        } else {
+            html.style.removeProperty('--focus-ring');
+        }
+
+        // Search tips
+        const tips = document.querySelector('.help-section');
+        if (tips) tips.style.display = s['search-tips'] ? '' : 'none';
+
+        // Update UI buttons
+        document.querySelectorAll('.setting-options').forEach(group => {
+            const key = group.dataset.setting;
+            group.querySelectorAll('button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.value === s[key]);
+            });
+        });
+
+        // Update toggles
+        const fh = document.getElementById('toggleFocusHighlight');
+        if (fh) fh.classList.toggle('on', !!s['focus-highlight']);
+        const st = document.getElementById('toggleSearchTips');
+        if (st) st.classList.toggle('on', !!s['search-tips']);
+    }
+
+    let settings = loadSettings();
+
+    // Apply on page load (before DOMContentLoaded for instant effect)
+    applySettings(settings);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const toggleBtn = document.getElementById('settingsToggle');
+        const drawer = document.getElementById('settingsDrawer');
+
+        // Re-apply after DOM ready so tips visibility works
+        applySettings(settings);
+
+        toggleBtn.addEventListener('click', function() {
+            const open = drawer.classList.toggle('visible');
+            toggleBtn.classList.toggle('open', open);
+        });
+
+        // Close drawer on outside click
+        document.addEventListener('click', function(e) {
+            if (!drawer.contains(e.target) && e.target !== toggleBtn) {
+                drawer.classList.remove('visible');
+                toggleBtn.classList.remove('open');
+            }
+        });
+
+        // Option buttons (theme, density, fontsize, corners)
+        document.querySelectorAll('.setting-options').forEach(group => {
+            group.addEventListener('click', function(e) {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const key = group.dataset.setting;
+                settings[key] = btn.dataset.value;
+                saveSettings(settings);
+                applySettings(settings);
+            });
+        });
+
+        // Toggle switches
+        document.querySelectorAll('.setting-toggle-switch').forEach(row => {
+            const toggle = row.querySelector('.toggle-switch');
+            if (!toggle) return;
+            const key = row.dataset.setting;
+            toggle.addEventListener('click', function() {
+                settings[key] = !settings[key];
+                saveSettings(settings);
+                applySettings(settings);
+            });
+        });
+
+        // Reset
+        document.getElementById('settingsReset').addEventListener('click', function() {
+            settings = Object.assign({}, DEFAULTS);
+            saveSettings(settings);
+            applySettings(settings);
         });
     });
 })();

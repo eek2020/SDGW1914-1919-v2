@@ -2,10 +2,12 @@
 
 ## Product Requirements Document – SDGW 1914-1919 Modernization
 
-**Version:** 1.0  
-**Date:** 16 February 2026  
-**Status:** Ready for Implementation  
+**Version:** 1.1  
+**Date:** 17 February 2026  
+**Status:** Complete — Schema Aligned with Implementation  
 **Audience:** Engineering Team & Stakeholders
+
+> **v1.1 Changelog (17 Feb 2026):** Updated §5.2 schema to match actual implementation. Documented column name mappings (PRD → actual). Noted `created_at`/`updated_at` not implemented (read-only data). Updated index count from 7 to 27. Added `surname_lookup` table. Split `regiment_battalion_associations` into `_sd` and `_od` tables. See ENH-11 in `11_PRD_E_ENHANCEMENTS.md`.
 
 ---
 
@@ -122,12 +124,12 @@ Reference data for military ranks
 
 ```sql
 CREATE TABLE ranks (
-    rank_id INTEGER PRIMARY KEY,
-    rank_original TEXT NOT NULL UNIQUE,     -- e.g., "ARMR./PTE."
-    rank_normalized TEXT NOT NULL UNIQUE,   -- e.g., "Armourer, Private"
-    rank_group TEXT NOT NULL,               -- e.g., "Privates", "Officers"
-    rank_code TEXT,                         -- Short code if applicable
-    sort_order INTEGER                      -- Display order
+    rank_id       INTEGER PRIMARY KEY,
+    new_rank_id   INTEGER,
+    rank_group    TEXT NOT NULL,          -- e.g. "Privates", "Officers" (4 values)
+    rank_new      TEXT NOT NULL,          -- Normalized name e.g. "Armourer" (114 values)
+    rank_original TEXT NOT NULL,          -- Original e.g. "ARMR./PTE." (539 values)
+    my_rank_id    INTEGER
 );
 ```
 
@@ -135,13 +137,20 @@ CREATE TABLE ranks (
 **Row Count:** 547  
 **Validation:** No duplicates; all rank_group values documented
 
+> **v1.1 Column Name Mapping:**
+>
+> - PRD `rank_normalized` → actual `rank_new`
+> - PRD `rank_code` → not implemented
+> - PRD `sort_order` → not implemented
+> - Added: `new_rank_id`, `my_rank_id` (carried from legacy schema)
+
 **Sample Data:**
 
 ```text
-rank_id | rank_original    | rank_normalized | rank_group       | sort_order
---------|------------------|-----------------|------------------|----------
-1       | ARMR./PTE.       | Armourer, Private | Privates        | 1
-2       | CAPT (TP)        | Captain (TP)    | Officers         | 15
+rank_id | rank_original    | rank_new         | rank_group       
+--------|------------------|------------------|------------------
+1       | ARMR./PTE.       | Armourer         | Privates        
+2       | CAPT (TP)        | Captain (TP)     | Officers         
 ```
 
 ---
@@ -189,26 +198,43 @@ CREATE TABLE battalions_od (
 
 ---
 
-#### Table 4: `regiment_battalion_associations` (REGBATS)
+#### Table 4a: `regiment_battalion_sd` (REGBATS)
 
-Maps regiments to battalions (one-to-many)
+Maps regiments to Scottish Division battalions (one-to-many)
 
 ```sql
-CREATE TABLE regiment_battalion_associations (
-    association_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    regiment_id INTEGER NOT NULL,
-    battalion_id INTEGER NOT NULL,
-    sort_order INTEGER,
-    association_type TEXT DEFAULT 'sd',      -- 'sd' or 'od'
-    UNIQUE(regiment_id, battalion_id, association_type)
+CREATE TABLE regiment_battalion_sd (
+    regiment_id   INTEGER NOT NULL,
+    battalion_id  INTEGER NOT NULL,
+    sort_order    REAL,
+    PRIMARY KEY (regiment_id, battalion_id),
+    FOREIGN KEY (battalion_id) REFERENCES battalions_sd(battalion_id)
 );
-
-CREATE INDEX idx_regbat_regiment ON regiment_battalion_associations(regiment_id);
-CREATE INDEX idx_regbat_battalion ON regiment_battalion_associations(battalion_id);
 ```
 
-**Data Source:** REGBATS + OD_REGBATS tables  
-**Row Count:** 1,987 + 1,662 = 3,649  
+**Data Source:** REGBATS table
+**Row Count:** 1,987
+
+#### Table 4b: `regiment_battalion_od` (OD_REGBATS)
+
+Maps regiments to Other District battalions (one-to-many)
+
+```sql
+CREATE TABLE regiment_battalion_od (
+    regiment_id   INTEGER NOT NULL,
+    battalion_id  INTEGER NOT NULL,
+    sort_order    REAL,
+    PRIMARY KEY (regiment_id, battalion_id),
+    FOREIGN KEY (battalion_id) REFERENCES battalions_od(battalion_id)
+);
+```
+
+**Data Source:** OD_REGBATS table
+**Row Count:** 1,662
+
+> **v1.1 Note:** PRD v1.0 specified a single `regiment_battalion_associations` table with an `association_type` column. Actual implementation uses two separate tables (`regiment_battalion_sd` and `regiment_battalion_od`) with composite primary keys, matching the original legacy data structure more closely.
+
+**Combined Row Count:** 1,987 + 1,662 = 3,649
 
 ---
 
@@ -218,37 +244,28 @@ Commissioned officer records
 
 ```sql
 CREATE TABLE officers (
-    officer_id INTEGER PRIMARY KEY,
-    surname TEXT NOT NULL,
-    christian_names TEXT,                   -- "W C" or full names
-    initials TEXT,
-    regiment_id INTEGER,                    -- Foreign key to conceptual regiment table
-    battalion_id INTEGER NOT NULL,          -- FK to battalion
-    rank_id INTEGER,                        -- FK to ranks table
-    rank_text TEXT,                         -- Denormalized for speed
-    decoration TEXT,                        -- E.g., "DSO", "MC", etc.
-    death_date DATE,                        -- ISO 8601 format
-    death_location TEXT,
-    additional_notes TEXT,
-    
-    -- Metadata
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Foreign keys
+    officer_id      INTEGER PRIMARY KEY,
+    reg_sort        REAL,
+    regiment_id     REAL,
+    battalion_id    INTEGER NOT NULL,
+    surname         TEXT NOT NULL,
+    christian_names TEXT,
+    initials        TEXT,
+    decoration      TEXT,                -- e.g. "DSO", "MC" (90.7% null)
+    rank_text       TEXT,                -- Denormalized original rank string
+    rank_id         INTEGER,
+    dc_id           REAL,                -- Death cause ID
+    death_date_raw  TEXT,                -- Original text e.g. "05/09/15"
+    death_date      TEXT,                -- Parsed ISO date e.g. "1915-09-05"
+    additional_text TEXT,                -- Free text notes (64.4% null)
+    rnk_id          INTEGER,             -- Secondary rank reference
     FOREIGN KEY (battalion_id) REFERENCES battalions_sd(battalion_id),
     FOREIGN KEY (rank_id) REFERENCES ranks(rank_id)
 );
-
--- Indexes for common queries
-CREATE INDEX idx_officers_surname ON officers(surname);
-CREATE INDEX idx_officers_battalion ON officers(battalion_id);
-CREATE INDEX idx_officers_rank ON officers(rank_id);
-CREATE INDEX idx_officers_death_date ON officers(death_date);
 ```
 
-**Data Source:** OFFICERS table  
-**Row Count:** 41,846  
+**Data Source:** OFFICERS table
+**Row Count:** 41,846
 **Key Mappings:**
 
 - `O_ID` → `officer_id`
@@ -256,13 +273,14 @@ CREATE INDEX idx_officers_death_date ON officers(death_date);
 - `CHRST_NAME` → `christian_names`
 - `BAT_ID` → `battalion_id`
 - `RANK_ID` → `rank_id`
-- `DEATH_DATE` (text) + `D_TRUEDATE` (datetime) → `death_date` (standardized)
+- `DEATH_DATE` (text DD/MM/YY) → `death_date_raw` (preserved) + `death_date` (parsed ISO 8601)
 
-**Data Consolidation Notes:**
-
-- Combine DEATH_DATE + D_TRUEDATE into single DEATH_DATE (datetime)
-- Use D_TRUEDATE as primary source if valid, else parse DEATH_DATE
-- Handle null/empty dates as NULL
+> **v1.1 Column Name Mapping:**
+>
+> - PRD `additional_notes` → actual `additional_text`
+> - PRD `death_location` on officers → not present (officers have no death_location column)
+> - PRD `created_at`/`updated_at` → not implemented (read-only historical data; no audit trail needed)
+> - Added: `reg_sort`, `dc_id`, `death_date_raw`, `rnk_id` (carried from legacy schema)
 
 ---
 
@@ -272,51 +290,37 @@ Enlisted soldier records
 
 ```sql
 CREATE TABLE soldiers (
-    soldier_id INTEGER PRIMARY KEY,
-    service_number TEXT,                    -- Service number (may not be unique across regiments)
-    surname TEXT NOT NULL,
-    christian_names TEXT,
-    initials TEXT,
-    
-    -- Military assignment
-    regiment_id INTEGER,                    -- Conceptual regiment
-    battalion_id INTEGER NOT NULL,          -- FK to battalion
-    rank_id INTEGER,                        -- FK to ranks table
-    rank_text TEXT,                         -- Denormalized for speed
-    
-    -- Birth & enlistment info
-    birth_town TEXT,
-    enlistment_location TEXT,               -- Location of enlistment
-    enlistment_place TEXT,                  -- More specific place (if different from location)
-    
-    -- Casualty information
-    death_date DATE,                        -- ISO 8601
-    death_location TEXT,
-    
-    -- Additional info
-    additional_notes TEXT,
-    
-    -- Metadata
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    
-    -- Foreign keys
+    soldier_id       INTEGER PRIMARY KEY,
+    reg_sort         REAL,
+    regiment_id      REAL,
+    battalion_id     INTEGER NOT NULL,
+    surname          TEXT NOT NULL,
+    christian_names  TEXT,
+    initials         TEXT,
+    birth_town       TEXT,                -- e.g. "NORWICH, NORFOLK" (10.8% null)
+    enlistment_loc   TEXT,                -- e.g. "WOOLWICH" (0.2% null)
+    enlistment_place TEXT,                -- More specific place (51.7% null)
+    number_prefix    TEXT,
+    service_number   TEXT,                -- e.g. "4493" (250K unique values)
+    rank_text        TEXT,                -- Denormalized original rank string
+    dc_id            REAL,
+    death_date_raw   TEXT,                -- Original text
+    death_date       TEXT,                -- Parsed ISO date
+    additional_text  TEXT,                -- (78.9% null)
+    number_sort      INTEGER,
+    death_loc_id     REAL,
+    death_location   TEXT,               -- e.g. "France & Flanders" (137 unique values)
+    town_id          REAL,
+    rank_id          INTEGER,
+    rnk_old          REAL,
+    rnk_id           INTEGER,
     FOREIGN KEY (battalion_id) REFERENCES battalions_sd(battalion_id),
     FOREIGN KEY (rank_id) REFERENCES ranks(rank_id)
 );
-
--- Indexes for common queries
-CREATE INDEX idx_soldiers_surname ON soldiers(surname);
-CREATE INDEX idx_soldiers_service_number ON soldiers(service_number);
-CREATE INDEX idx_soldiers_battalion ON soldiers(battalion_id);
-CREATE INDEX idx_soldiers_birth_town ON soldiers(birth_town);
-CREATE INDEX idx_soldiers_death_date ON soldiers(death_date);
--- Full-text search via FTS5 virtual table (created separately)
--- CREATE VIRTUAL TABLE soldiers_fts USING fts5(surname, christian_names, birth_town, content='soldiers', content_rowid='soldier_id');
 ```
 
-**Data Source:** SOLDIERS table  
-**Row Count:** 661,960  
+**Data Source:** SOLDIERS table
+**Row Count:** 661,960
 **Key Mappings:**
 
 - `S_ID` → `soldier_id`
@@ -324,13 +328,40 @@ CREATE INDEX idx_soldiers_death_date ON soldiers(death_date);
 - `CHRST_NAME` → `christian_names`
 - `NUMBER` → `service_number`
 - `RANK_ID` → `rank_id`
-- `DEATH_DATE` (text) + `D_TRUEDATE` (datetime) → `death_date`
+- `DEATH_DATE` (text DD/MM/YY) → `death_date_raw` (preserved) + `death_date` (parsed ISO 8601)
+- `ENLST_LOC` → `enlistment_loc`
+- `ENLST_PLC` → `enlistment_place`
 
-**Data Consolidation Notes:**
+> **v1.1 Column Name Mapping:**
+>
+> - PRD `enlistment_location` → actual `enlistment_loc`
+> - PRD `additional_notes` → actual `additional_text`
+> - PRD `created_at`/`updated_at` → not implemented (read-only historical data)
+> - Added: `reg_sort`, `number_prefix`, `number_sort`, `dc_id`, `death_date_raw`, `death_loc_id`, `town_id`, `rnk_old`, `rnk_id` (carried from legacy schema)
+> - FTS5 virtual table not created (deferred to PRD D Phase D3 for fuzzy search)
 
-- Combine ENLST_LOC + ENLST_PLC into enlistment_location (prefer ENLST_PLC if different)
-- Remove TOW_ID_OLD; use TOW_ID only
-- Consolidate rank fields: use RANK_ID, store RANK as text
+---
+
+#### Table 7: `surname_lookup` (v1.1 — new)
+
+Materialised distinct surnames for autocomplete performance
+
+```sql
+CREATE TABLE surname_lookup AS
+    SELECT DISTINCT surname FROM (
+        SELECT surname FROM soldiers
+        UNION
+        SELECT surname FROM officers
+    ) ORDER BY surname;
+
+CREATE INDEX idx_surname_lookup ON surname_lookup(surname);
+```
+
+**Data Source:** Union of `officers.surname` + `soldiers.surname`
+**Row Count:** 50,323
+**Note:** Recreated automatically during migration. Used by `/api/surname-suggest` endpoint for autocomplete (returns prefix matches, LIMIT 50).
+
+> **v1.1 Note:** This table was not in PRD v1.0. It was added during Phase C implementation to support fast surname autocomplete. If data is re-migrated, this table is recreated automatically by `schema.sql`.
 
 ---
 
@@ -339,10 +370,10 @@ CREATE INDEX idx_soldiers_death_date ON soldiers(death_date);
 1. **Normalization:** Ranks and references are separate tables (no duplication)
 2. **Denormalization:** Store `rank_text` in officers/soldiers for UI performance
 3. **Type Consistency:** All IDs are INTEGER PRIMARY KEY; all foreign keys are INTEGER to match
-4. **Dates:** Always stored as ISO 8601 DATE; no text dates
+4. **Dates:** Stored as ISO 8601 TEXT in `death_date`; original text preserved in `death_date_raw`
 5. **Null Policy:** NULL allowed for optional fields; NOT NULL for required
-6. **Indexing:** Indexes on foreign keys + frequently searched columns
-7. **Audit Trail:** `created_at`, `updated_at` timestamps on all person records
+6. **Indexing:** 27 indexes covering single-column search, composite multi-parameter queries, and lookup tables
+7. **Legacy Fidelity:** All legacy columns carried forward (e.g. `reg_sort`, `dc_id`, `rnk_id`) even if not used in UI, to preserve data completeness
 
 ---
 
@@ -632,28 +663,53 @@ python src/scripts/validate_migration.py
 | Full-text search (name contains), 50K+ records | < 2 second | Full-text index or prefix search |
 | Complex join (officers by regiment → battalion → rank) | < 1 second | Composite indexes |
 
-### Index Strategy
+### Index Strategy (27 indexes total)
+
+> **v1.1 Note:** PRD v1.0 listed 7 indexes. Actual implementation has 27 indexes optimized for multi-parameter search UI.
 
 ```sql
--- Primary Indexes (Foreign Keys & Lookup)
-CREATE INDEX idx_officers_battalion ON officers(battalion_id);
-CREATE INDEX idx_soldiers_battalion ON soldiers(battalion_id);
-CREATE INDEX idx_officers_rank ON officers(rank_id);
-CREATE INDEX idx_soldiers_rank ON soldiers(rank_id);
-
--- Secondary Indexes (Search)
+-- Primary search indexes (free text fields)
 CREATE INDEX idx_officers_surname ON officers(surname);
+CREATE INDEX idx_officers_christian_names ON officers(christian_names);
 CREATE INDEX idx_soldiers_surname ON soldiers(surname);
+CREATE INDEX idx_soldiers_christian_names ON soldiers(christian_names);
 CREATE INDEX idx_soldiers_service_number ON soldiers(service_number);
 
--- Tertiary Indexes (Filtering)
+-- Filter indexes (dropdown/searchable dropdown fields)
+CREATE INDEX idx_officers_battalion ON officers(battalion_id);
+CREATE INDEX idx_officers_rank ON officers(rank_id);
+CREATE INDEX idx_officers_decoration ON officers(decoration);
+CREATE INDEX idx_soldiers_battalion ON soldiers(battalion_id);
+CREATE INDEX idx_soldiers_rank ON soldiers(rank_id);
+CREATE INDEX idx_soldiers_death_location ON soldiers(death_location);
+
+-- Location search indexes (autocomplete fields)
+CREATE INDEX idx_soldiers_birth_town ON soldiers(birth_town);
+CREATE INDEX idx_soldiers_enlistment_loc ON soldiers(enlistment_loc);
+
+-- Date range indexes
 CREATE INDEX idx_officers_death_date ON officers(death_date);
 CREATE INDEX idx_soldiers_death_date ON soldiers(death_date);
-CREATE INDEX idx_soldiers_birth_town ON soldiers(birth_town);
 
--- Composite Indexes (Common Multi-Column Queries)
-CREATE INDEX idx_officers_battalion_rank ON officers(battalion_id, rank_id);
+-- Composite indexes for common multi-parameter queries
+CREATE INDEX idx_officers_surname_battalion ON officers(surname, battalion_id);
+CREATE INDEX idx_soldiers_surname_battalion ON soldiers(surname, battalion_id);
+CREATE INDEX idx_soldiers_surname_rank ON soldiers(surname, rank_id);
+CREATE INDEX idx_soldiers_battalion_rank ON soldiers(battalion_id, rank_id);
 CREATE INDEX idx_soldiers_battalion_death ON soldiers(battalion_id, death_date);
+
+-- Regiment association indexes
+CREATE INDEX idx_regbat_sd_regiment ON regiment_battalion_sd(regiment_id);
+CREATE INDEX idx_regbat_sd_battalion ON regiment_battalion_sd(battalion_id);
+CREATE INDEX idx_regbat_od_regiment ON regiment_battalion_od(regiment_id);
+CREATE INDEX idx_regbat_od_battalion ON regiment_battalion_od(battalion_id);
+
+-- Rank reference indexes
+CREATE INDEX idx_ranks_group ON ranks(rank_group);
+CREATE INDEX idx_ranks_new ON ranks(rank_new);
+
+-- Surname autocomplete lookup
+CREATE INDEX idx_surname_lookup ON surname_lookup(surname);
 ```
 
 ### Query Examples
@@ -686,7 +742,7 @@ ORDER BY r.sort_order;
 
 ### Acceptance Criteria: Schema Design
 
-- [ ] All 7 source tables mapped to normalized schema
+- [x] All 8 tables mapped to normalized schema (7 data + 1 lookup)
 - [ ] No data loss in mapping
 - [ ] Schema validated by data steward
 - [ ] Schema documented with ER diagram
@@ -807,6 +863,6 @@ ORDER BY r.sort_order;
 
 ---
 
-**Document Version:** 1.0  
-**Last Updated:** 16 February 2026  
-**Next Review:** Week 2 of implementation
+**Document Version:** 1.1  
+**Last Updated:** 17 February 2026  
+**Next Review:** After PRD D implementation begins

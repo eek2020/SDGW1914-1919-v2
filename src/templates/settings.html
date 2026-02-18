@@ -1,0 +1,497 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - SDGW 1914-1919</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='SDGW1419.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <style>
+        .settings-page { max-width: 800px; margin: 0 auto; }
+
+        .settings-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-default);
+            border-radius: var(--card-radius);
+            padding: 2rem;
+            margin-bottom: 1.5rem;
+            box-shadow: var(--shadow-card);
+        }
+
+        .settings-card h2 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--text-heading);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.75rem;
+            border-bottom: 2px solid var(--border-default);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .settings-card h2 .card-icon {
+            font-size: 1.3rem;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 1rem 0;
+            border-bottom: 1px solid var(--border-default);
+            gap: 1.5rem;
+        }
+
+        .settings-row:last-child { border-bottom: none; }
+
+        .settings-row-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .settings-row-label {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-heading);
+            margin-bottom: 0.2rem;
+        }
+
+        .settings-row-desc {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            line-height: 1.4;
+        }
+
+        .settings-row-control {
+            flex-shrink: 0;
+        }
+
+        /* Segmented control for settings page (larger than drawer) */
+        .seg-control {
+            display: flex;
+            background: var(--bg-segmented);
+            padding: 0.25rem;
+            border-radius: 8px;
+            gap: 0.2rem;
+        }
+
+        .seg-control button {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-muted);
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+
+        .seg-control button:hover { color: var(--text-primary); }
+
+        .seg-control button.active {
+            background: var(--bg-segmented-active);
+            color: var(--accent-primary);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        /* Theme icons inside buttons */
+        .seg-control button .theme-icon { margin-right: 0.3rem; }
+
+        /* Large toggle */
+        .lg-toggle {
+            position: relative;
+            width: 48px;
+            height: 26px;
+            background: #cbd5e1;
+            border-radius: 13px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .lg-toggle.on { background: var(--accent-primary); }
+
+        .lg-toggle::after {
+            content: '';
+            position: absolute;
+            top: 3px;
+            left: 3px;
+            width: 20px;
+            height: 20px;
+            background: #fff;
+            border-radius: 50%;
+            transition: transform 0.2s;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+        }
+
+        .lg-toggle.on::after { transform: translateX(22px); }
+
+        /* Preview strip */
+        .theme-preview {
+            display: flex;
+            gap: 0.75rem;
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-default);
+            background: var(--bg-card-alt);
+        }
+
+        .theme-preview-swatch {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid var(--border-default);
+        }
+
+        .settings-footer {
+            display: flex;
+            gap: 0.75rem;
+            justify-content: flex-end;
+            padding-top: 1rem;
+        }
+
+        .settings-footer .btn { min-width: 140px; }
+
+        /* Current theme indicator */
+        .current-theme-label {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            background: var(--bg-segmented);
+            padding: 0.2rem 0.6rem;
+            border-radius: 4px;
+            margin-left: 0.5rem;
+        }
+    </style>
+</head>
+<body>
+    <a href="#main-content" class="skip-to-main">Skip to main content</a>
+
+    <nav class="top-nav" aria-label="Main navigation">
+        <a href="{{ url_for('home') }}" class="nav-brand">
+            <img src="{{ url_for('static', filename='SDGW1419.ico') }}" alt="SDGW Icon" class="nav-brand-icon">
+            Soldiers Died in the Great War 1914-1919
+        </a>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+        <div class="nav-menu" id="nav-menu" role="navigation">
+            <a href="{{ url_for('home') }}" class="nav-link">Search</a>
+            <a href="{{ url_for('about') }}" class="nav-link">About</a>
+            <a href="{{ url_for('settings') }}" class="nav-link">Settings</a>
+        </div>
+        <div class="nav-backdrop" id="nav-backdrop"></div>
+    </nav>
+    <script>
+    (function(){
+        var btn=document.getElementById('hamburger-btn'),menu=document.getElementById('nav-menu'),bd=document.getElementById('nav-backdrop');
+        function toggle(){var o=menu.classList.toggle('open');btn.classList.toggle('open');bd.classList.toggle('open');btn.setAttribute('aria-expanded',o);}
+        function close(){menu.classList.remove('open');btn.classList.remove('open');bd.classList.remove('open');btn.setAttribute('aria-expanded','false');}
+        btn.addEventListener('click',toggle);bd.addEventListener('click',close);
+        document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+    })();
+    </script>
+
+    <div class="container">
+        <header role="banner">
+            <h1>Display Settings</h1>
+            <p class="subtitle">Customise your viewing experience. All preferences are saved in your browser.</p>
+        </header>
+
+        <main id="main-content" role="main" class="settings-page">
+
+            <!-- Theme -->
+            <div class="settings-card">
+                <h2><span class="card-icon">&#9788;</span> Appearance</h2>
+
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <div class="settings-row-label">Theme</div>
+                        <div class="settings-row-desc">Choose light, dark, or follow your operating system preference.</div>
+                    </div>
+                    <div class="settings-row-control">
+                        <div class="seg-control" data-setting="theme">
+                            <button data-value="light"><span class="theme-icon">&#9788;</span>Light</button>
+                            <button data-value="system" class="active"><span class="theme-icon">&#128187;</span>System</button>
+                            <button data-value="dark"><span class="theme-icon">&#9790;</span>Dark</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <div class="settings-row-label">Font Size</div>
+                        <div class="settings-row-desc">Adjust the base text size across the application.</div>
+                    </div>
+                    <div class="settings-row-control">
+                        <div class="seg-control" data-setting="fontsize">
+                            <button data-value="small">Small</button>
+                            <button data-value="normal" class="active">Normal</button>
+                            <button data-value="large">Large</button>
+                            <button data-value="xlarge">X-Large</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <div class="settings-row-label">Corner Style</div>
+                        <div class="settings-row-desc">Control the roundness of buttons, cards, and inputs.</div>
+                    </div>
+                    <div class="settings-row-control">
+                        <div class="seg-control" data-setting="corners">
+                            <button data-value="sharp">Sharp</button>
+                            <button data-value="normal" class="active">Normal</button>
+                            <button data-value="round">Round</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <div class="settings-row-label">Record Density</div>
+                        <div class="settings-row-desc">Adjust spacing on the record detail screen, including section padding and card gaps.</div>
+                    </div>
+                    <div class="settings-row-control">
+                        <div class="seg-control" data-setting="detail-density">
+                            <button data-value="compact">Compact</button>
+                            <button data-value="normal" class="active">Normal</button>
+                            <button data-value="comfortable">Comfortable</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <div class="settings-row-label">Record Layout</div>
+                        <div class="settings-row-desc">Choose whether detail cards appear in a two-column split layout or a single stacked column.</div>
+                    </div>
+                    <div class="settings-row-control">
+                        <div class="seg-control" data-setting="detail-layout">
+                            <button data-value="split" class="active">Split</button>
+                            <button data-value="stacked">Stacked</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Layout -->
+            <div class="settings-card">
+                <h2><span class="card-icon">&#9638;</span> Layout</h2>
+
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <div class="settings-row-label">Form Density</div>
+                        <div class="settings-row-desc">Controls spacing between fields, padding, and input sizes in the search form.</div>
+                    </div>
+                    <div class="settings-row-control">
+                        <div class="seg-control" data-setting="density">
+                            <button data-value="compact">Compact</button>
+                            <button data-value="normal" class="active">Normal</button>
+                            <button data-value="comfortable">Comfortable</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Behaviour -->
+            <div class="settings-card">
+                <h2><span class="card-icon">&#9881;</span> Behaviour</h2>
+
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <div class="settings-row-label">Focus Highlights</div>
+                        <div class="settings-row-desc">Show a blue ring around focused fields for accessibility.</div>
+                    </div>
+                    <div class="settings-row-control">
+                        <div class="lg-toggle on" data-toggle="focus-highlight" id="pgToggleFocusHighlight"></div>
+                    </div>
+                </div>
+
+                <div class="settings-row">
+                    <div class="settings-row-info">
+                        <div class="settings-row-label">Search Tips</div>
+                        <div class="settings-row-desc">Display helpful tips on the home search page.</div>
+                    </div>
+                    <div class="settings-row-control">
+                        <div class="lg-toggle on" data-toggle="search-tips" id="pgToggleSearchTips"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="settings-footer">
+                <button class="btn btn-secondary" id="pgSettingsReset">Reset to Defaults</button>
+                <a href="{{ url_for('home') }}" class="btn btn-primary">Back to Search</a>
+            </div>
+
+        </main>
+    </div>
+
+    <footer role="contentinfo">
+        <div class="footer-inner">
+            <div>
+                <div class="footer-brand">
+                    <img src="{{ url_for('static', filename='SDGW1419.ico') }}" alt="SDGW Icon" class="footer-brand-icon">
+                    SDGW 1914-1919
+                </div>
+                <p class="footer-desc">Preserving the history and records of those who served in the Great War 1914-1919.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Search Records</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Information</h4>
+                <ul>
+                    <li><a href="{{ url_for('about') }}">About</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 SDGW 1914-1919 Personnel Database. All Rights Reserved.
+        </div>
+    </footer>
+
+<script>
+(function() {
+    const STORAGE_KEY = 'sdgw_display_settings';
+    const DEFAULTS = {
+        theme: 'system',
+        density: 'normal',
+        'detail-density': 'normal',
+        'detail-layout': 'split',
+        fontsize: 'normal',
+        corners: 'normal',
+        'focus-highlight': true,
+        'search-tips': true
+    };
+
+    function loadSettings() {
+        try {
+            const raw = localStorage.getItem(STORAGE_KEY);
+            return raw ? Object.assign({}, DEFAULTS, JSON.parse(raw)) : Object.assign({}, DEFAULTS);
+        } catch(e) { return Object.assign({}, DEFAULTS); }
+    }
+
+    function saveSettings(s) {
+        try { localStorage.setItem(STORAGE_KEY, JSON.stringify(s)); } catch(e) {}
+    }
+
+    function applySettings(s) {
+        const html = document.documentElement;
+
+        // Theme
+        if (s.theme === 'light') html.setAttribute('data-theme', 'light');
+        else if (s.theme === 'dark') html.setAttribute('data-theme', 'dark');
+        else html.removeAttribute('data-theme'); // system
+
+        // Density
+        if (s.density === 'normal') html.removeAttribute('data-density');
+        else html.setAttribute('data-density', s.density);
+
+        // Detail density (record screen)
+        if (s['detail-density'] === 'normal') html.removeAttribute('data-detail-density');
+        else html.setAttribute('data-detail-density', s['detail-density']);
+
+        // Detail layout (record screen)
+        if (s['detail-layout'] === 'split') html.removeAttribute('data-detail-layout');
+        else html.setAttribute('data-detail-layout', s['detail-layout']);
+
+        // Font size
+        if (s.fontsize === 'normal') html.removeAttribute('data-fontsize');
+        else html.setAttribute('data-fontsize', s.fontsize);
+
+        // Corners
+        if (s.corners === 'sharp') {
+            html.style.setProperty('--border-radius', '2px');
+            html.style.setProperty('--card-radius', '4px');
+        } else if (s.corners === 'round') {
+            html.style.setProperty('--border-radius', '12px');
+            html.style.setProperty('--card-radius', '18px');
+        } else {
+            html.style.removeProperty('--border-radius');
+            html.style.removeProperty('--card-radius');
+        }
+
+        // Focus highlight
+        if (!s['focus-highlight']) {
+            html.style.setProperty('--focus-ring', 'none');
+        } else {
+            html.style.removeProperty('--focus-ring');
+        }
+
+        // Search tips (only on home page)
+        const tips = document.querySelector('.help-section');
+        if (tips) tips.style.display = s['search-tips'] ? '' : 'none';
+
+        // Update segmented controls
+        document.querySelectorAll('.seg-control').forEach(group => {
+            const key = group.dataset.setting;
+            group.querySelectorAll('button').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.value === s[key]);
+            });
+        });
+
+        // Update toggles
+        document.querySelectorAll('.lg-toggle[data-toggle]').forEach(toggle => {
+            const key = toggle.dataset.toggle;
+            toggle.classList.toggle('on', !!s[key]);
+        });
+    }
+
+    let settings = loadSettings();
+    applySettings(settings);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        applySettings(settings);
+
+        // Segmented controls
+        document.querySelectorAll('.seg-control').forEach(group => {
+            group.addEventListener('click', function(e) {
+                const btn = e.target.closest('button');
+                if (!btn) return;
+                const key = group.dataset.setting;
+                settings[key] = btn.dataset.value;
+                saveSettings(settings);
+                applySettings(settings);
+            });
+        });
+
+        // Toggle switches
+        document.querySelectorAll('.lg-toggle[data-toggle]').forEach(toggle => {
+            toggle.addEventListener('click', function() {
+                const key = toggle.dataset.toggle;
+                settings[key] = !settings[key];
+                saveSettings(settings);
+                applySettings(settings);
+            });
+        });
+
+        // Reset
+        document.getElementById('pgSettingsReset').addEventListener('click', function() {
+            settings = Object.assign({}, DEFAULTS);
+            saveSettings(settings);
+            applySettings(settings);
+        });
+    });
+})();
+</script>
+</body>
+</html>

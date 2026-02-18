@@ -4,121 +4,445 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{{ record['surname'] }}, {{ record['christian_names'] if record['christian_names'] else '' }} - SDGW 1914-1919</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='SDGW1419.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-    <div class="container">
-        <header>
-            <h1>Personnel Record</h1>
-            <p class="subtitle">{{ record_type.capitalize() }}</p>
-        </header>
+    <a href="#main-content" class="skip-to-main">Skip to main content</a>
 
-        <main>
-            <div class="detail-header">
-                <a href="{{ url_for('home') }}" class="btn btn-secondary">&larr; Back to Search</a>
-                <button onclick="window.print()" class="btn btn-secondary">Print Record</button>
+    <nav class="top-nav" aria-label="Main navigation">
+        <a href="{{ url_for('home') }}" class="nav-brand">
+            <img src="{{ url_for('static', filename='SDGW1419.ico') }}" alt="SDGW Icon" class="nav-brand-icon">
+            Soldiers Died in the Great War 1914-1919
+        </a>
+        <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
+            <span class="bar"></span>
+            <span class="bar"></span>
+            <span class="bar"></span>
+        </button>
+        <div class="nav-menu" id="nav-menu" role="navigation">
+            <a href="{{ url_for('home') }}" class="nav-link">Search</a>
+            <a href="{{ url_for('about') }}" class="nav-link">About</a>
+            <a href="{{ url_for('settings') }}" class="nav-link">Settings</a>
+        </div>
+        <div class="nav-backdrop" id="nav-backdrop"></div>
+    </nav>
+    <script>
+    (function(){
+        var btn=document.getElementById('hamburger-btn'),menu=document.getElementById('nav-menu'),bd=document.getElementById('nav-backdrop');
+        function toggle(){var o=menu.classList.toggle('open');btn.classList.toggle('open');bd.classList.toggle('open');btn.setAttribute('aria-expanded',o);}
+        function close(){menu.classList.remove('open');btn.classList.remove('open');bd.classList.remove('open');btn.setAttribute('aria-expanded','false');}
+        btn.addEventListener('click',toggle);bd.addEventListener('click',close);
+        document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+    })();
+    </script>
+
+    <div class="container">
+
+        <main id="main-content" role="main">
+
+            {# ── Detail Top Bar (Back, record counter, nav arrows, print, copy) ── #}
+            <div class="detail-top-bar">
+                {% if nav.get('back_to_results') %}
+                <a href="{{ nav['back_to_results'] }}" class="back-link">&larr; Back to Results</a>
+                {% else %}
+                <a href="{{ url_for('home') }}" class="back-link">&larr; Back to Search</a>
+                {% endif %}
+
+                {% if nav.get('total') %}
+                <span class="record-counter">Record {{ nav['pos'] }} of {{ "{:,}".format(nav['total']) }}</span>
+                <div class="nav-arrows">
+                    {% if nav.get('prev') %}
+                    <a href="{{ nav['prev'] }}" aria-label="Previous record">&lt;</a>
+                    {% else %}
+                    <span style="opacity:0.3">&lt;</span>
+                    {% endif %}
+                    {% if nav.get('next') %}
+                    <a href="{{ nav['next'] }}" aria-label="Next record">&gt;</a>
+                    {% else %}
+                    <span style="opacity:0.3">&gt;</span>
+                    {% endif %}
+                </div>
+                {% endif %}
+
+                <div class="detail-actions">
+                    <button onclick="window.print()" class="btn btn-secondary">&#128424; Print</button>
+                    <button onclick="copyRecordToClipboard()" class="btn btn-primary" id="copy-btn">&#128203; Copy Link</button>
+                </div>
             </div>
 
-            <article class="record-detail">
-                <h2>{{ record['surname'] }}, {{ record['christian_names'] if record['christian_names'] else '' }}</h2>
+            {# ── Flash Messages ── #}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+            <div class="flash-messages">
+                {% for category, message in messages %}
+                <div class="flash-message flash-{{ category }}">{{ message }}</div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            {% endwith %}
 
-                <div class="record-section">
-                    <h3>Personal Information</h3>
-                    <dl>
-                        <dt>Name</dt>
-                        <dd>{{ record['surname'] }}, {{ record['christian_names'] if record['christian_names'] else '' }}</dd>
+            {# ── Hero Section ── #}
+            <div class="record-hero">
+                <div class="record-hero-photo">
+                    {% if images %}
+                    {% set primary = images|selectattr('is_primary')|first %}
+                    {% if primary %}
+                    <img src="{{ url_for('serve_image', image_id=primary.image_id) }}" alt="Photo of {{ record['surname'] }}">
+                    {% elif images[0] %}
+                    <img src="{{ url_for('serve_image', image_id=images[0].image_id) }}" alt="Photo of {{ record['surname'] }}">
+                    {% else %}
+                    &#9786;
+                    {% endif %}
+                    {% else %}
+                    &#9786;
+                    {% endif %}
+                </div>
+                <div class="record-hero-info">
+                    <h2>{{ record['christian_names'] if record['christian_names'] else '' }} {{ record['surname'] }}</h2>
+                    <p class="record-hero-subtitle">
+                        {% if record['rank_new'] %}{{ record['rank_new'] }}{% endif %}
+                        {% if record['regiment_name'] %}<span> &middot; </span>{{ record['regiment_name'] }}{% endif %}
+                        {% if record['battalion_name'] %}<span> &middot; </span>{{ record['battalion_name'] }}{% endif %}
+                    </p>
+                    {% if record['service_number'] %}
+                    <p class="record-hero-service-no">Service No: {{ record['service_number'] }}</p>
+                    {% endif %}
 
-                        {% if record['initials'] %}
-                        <dt>Initials</dt>
-                        <dd>{{ record['initials'] }}</dd>
+                    <div class="hero-badges">
+                        {% if record_type == 'officer' %}
+                        <span class="hero-badge hero-badge-type">Officer</span>
+                        {% else %}
+                        <span class="hero-badge hero-badge-type">Soldier</span>
                         {% endif %}
+                        <span class="hero-badge hero-badge-veteran">WWI</span>
+                    </div>
 
+                    <div class="hero-stats">
+                        {% if record['death_date'] %}
+                        <div class="hero-stat">
+                            <span class="hero-stat-label">Date of Death</span>
+                            <span class="hero-stat-value">{{ record['death_date']|humandate }}</span>
+                        </div>
+                        {% endif %}
                         {% if record['birth_town'] %}
-                        <dt>Birth Town</dt>
-                        <dd>{{ record['birth_town'] }}</dd>
+                        <div class="hero-stat">
+                            <span class="hero-stat-label">Birth Town</span>
+                            <span class="hero-stat-value">{{ record['birth_town'] }}</span>
+                        </div>
                         {% endif %}
+                        {% if record['death_location'] %}
+                        <div class="hero-stat">
+                            <span class="hero-stat-label">Theatre of War</span>
+                            <span class="hero-stat-value">{{ record['death_location'] }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
 
+            {# ── Card Sections Grid ── #}
+            <div class="detail-grid">
+                {# ── Personal Information ── #}
+                <div class="record-section">
+                    <h3><span class="section-icon section-icon-blue">&#128100;</span> Personal Information</h3>
+                    <dl>
+                        <div class="dl-item">
+                            <dt>Full Name</dt>
+                            <dd>{{ record['surname'] }}, {{ record['christian_names'] if record['christian_names'] else '' }}</dd>
+                        </div>
+                        {% if record['initials'] %}
+                        <div class="dl-item">
+                            <dt>Initials</dt>
+                            <dd>{{ record['initials'] }}</dd>
+                        </div>
+                        {% endif %}
+                        {% if record['birth_town'] %}
+                        <div class="dl-item">
+                            <dt>Birth Town</dt>
+                            <dd>{{ record['birth_town'] }}</dd>
+                        </div>
+                        {% endif %}
                         {% if record['enlistment_loc'] %}
-                        <dt>Enlistment Location</dt>
-                        <dd>{{ record['enlistment_loc'] }}</dd>
+                        <div class="dl-item">
+                            <dt>Enlistment Location</dt>
+                            <dd>{{ record['enlistment_loc'] }}</dd>
+                        </div>
                         {% endif %}
-
                         {% if record['enlistment_place'] %}
-                        <dt>Enlistment Place</dt>
-                        <dd>{{ record['enlistment_place'] }}</dd>
+                        <div class="dl-item">
+                            <dt>Enlistment Place</dt>
+                            <dd>{{ record['enlistment_place'] }}</dd>
+                        </div>
                         {% endif %}
                     </dl>
                 </div>
 
+                {# ── Military Service ── #}
                 <div class="record-section">
-                    <h3>Military Service</h3>
+                    <h3><span class="section-icon section-icon-purple">&#9733;</span> Military Service</h3>
                     <dl>
                         {% if record['rank_new'] %}
-                        <dt>Rank</dt>
-                        <dd>{{ record['rank_new'] }}</dd>
+                        <div class="dl-item">
+                            <dt>Rank</dt>
+                            <dd>{{ record['rank_new'] }}</dd>
+                        </div>
                         {% endif %}
-
                         {% if record['rank_group'] %}
-                        <dt>Rank Group</dt>
-                        <dd>{{ record['rank_group'] }}</dd>
+                        <div class="dl-item">
+                            <dt>Rank Group</dt>
+                            <dd>{{ record['rank_group'] }}</dd>
+                        </div>
                         {% endif %}
-
+                        {% if record['regiment_name'] %}
+                        <div class="dl-item">
+                            <dt>Regiment / Corps</dt>
+                            <dd>{{ record['regiment_name'] }}</dd>
+                        </div>
+                        {% endif %}
                         {% if record['battalion_name'] %}
-                        <dt>Battalion</dt>
-                        <dd>{{ record['battalion_name'] }}</dd>
+                        <div class="dl-item">
+                            <dt>Battalion / Unit</dt>
+                            <dd>{{ record['battalion_name'] }}</dd>
+                        </div>
                         {% endif %}
-
                         {% if record['service_number'] %}
-                        <dt>Service Number</dt>
-                        <dd>{{ record['service_number'] }}</dd>
-                        {% endif %}
-
-                        {% if record['decoration'] %}
-                        <dt>Decorations</dt>
-                        <dd>{{ record['decoration'] }}</dd>
+                        <div class="dl-item">
+                            <dt>Service Number</dt>
+                            <dd>{{ record['service_number'] }}</dd>
+                        </div>
                         {% endif %}
                     </dl>
+                    {% if record['decoration'] %}
+                    <div class="record-section-meta">
+                        <dt class="record-section-meta-label">Decorations</dt>
+                        <div class="decoration-tags">
+                            {% for dec in record['decoration'].split(',') %}
+                            <span class="decoration-tag">{{ dec.strip() }}</span>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
 
-                <div class="record-section">
-                    <h3>Casualty Information</h3>
+                {# ── Casualty Information (full width) ── #}
+                <div class="record-section section-casualty detail-grid-full">
+                    <h3><span class="section-icon section-icon-red">&#10084;</span> Casualty Information</h3>
                     <dl>
                         {% if record['death_date'] %}
-                        <dt>Date of Death</dt>
-                        <dd>{{ record['death_date'] }}</dd>
+                        <div class="dl-item">
+                            <dt>Date of Death</dt>
+                            <dd class="highlight-red">{{ record['death_date']|humandate }}</dd>
+                        </div>
                         {% endif %}
-
                         {% if record['death_location'] %}
-                        <dt>Death Location</dt>
-                        <dd>{{ record['death_location'] }}</dd>
+                        <div class="dl-item">
+                            <dt>Theatre of War</dt>
+                            <dd>{{ record['death_location'] }}</dd>
+                        </div>
                         {% endif %}
-
                         {% if record['death_date_raw'] %}
-                        <dt>Original Death Date</dt>
-                        <dd>{{ record['death_date_raw'] }}</dd>
+                        <div class="dl-item">
+                            <dt>Original Death Date</dt>
+                            <dd>{{ record['death_date_raw'] }}</dd>
+                        </div>
                         {% endif %}
                     </dl>
                 </div>
 
+                {# ── Additional Information ── #}
                 {% if record['additional_text'] %}
-                <div class="record-section">
+                <div class="record-section detail-grid-full">
                     <h3>Additional Information</h3>
                     <p>{{ record['additional_text'] }}</p>
                 </div>
                 {% endif %}
 
-                <div class="record-section">
+                {# ── Record Details (small) ── #}
+                <div class="record-section detail-grid-full">
                     <h3>Record Details</h3>
                     <dl>
-                        <dt>Record Type</dt>
-                        <dd>{{ record_type.capitalize() }}</dd>
-
-                        <dt>Record ID</dt>
-                        <dd>{{ record['officer_id'] if record_type == 'officer' else record['soldier_id'] }}</dd>
+                        <div class="dl-item">
+                            <dt>Record Type</dt>
+                            <dd>{{ record_type.capitalize() }}</dd>
+                        </div>
+                        <div class="dl-item">
+                            <dt>Record ID</dt>
+                            <dd>{{ record['officer_id'] if record_type == 'officer' else record['soldier_id'] }}</dd>
+                        </div>
                     </dl>
                 </div>
-            </article>
+            </div>
 
+            {# ── Images Section ── #}
+            <section class="images-section">
+                <h2>Images &amp; Documents{% if images %} ({{ images|length }}){% endif %}</h2>
+
+                {% if images %}
+                <div class="image-gallery">
+                    {% for img in images %}
+                    <div class="image-card{% if img.is_primary %} image-primary{% endif %}">
+                        <a href="{{ url_for('serve_image', image_id=img.image_id) }}" target="_blank">
+                            <img src="{{ url_for('serve_image', image_id=img.image_id) }}" 
+                                 alt="{{ img.title or 'Image for record' }}" 
+                                 loading="lazy">
+                        </a>
+                        <div class="image-meta">
+                            {% if img.title %}<strong>{{ img.title }}</strong>{% endif %}
+                            {% if img.description %}<p>{{ img.description }}</p>{% endif %}
+                            {% if img.image_category and img.image_category != 'other' %}
+                            <span class="image-category-badge">{{ img.image_category.capitalize() }}</span>
+                            {% endif %}
+                            {% if img.is_primary %}<span class="image-primary-badge">Primary</span>{% endif %}
+                            <span class="image-size">{{ (img.file_size / 1024)|round(0)|int }} KB</span>
+                            <span class="image-uploader">Uploaded by {{ img.uploaded_by }}, {{ img.uploaded_at }}</span>
+                        </div>
+                        <div class="image-actions">
+                            {% if not img.is_primary %}
+                            <form action="{{ url_for('set_primary_image', image_id=img.image_id) }}" method="post" style="display:inline">
+                                <button type="submit" class="btn-small">Set as Primary</button>
+                            </form>
+                            {% endif %}
+                            <form action="{{ url_for('delete_image', image_id=img.image_id) }}" method="post" style="display:inline" 
+                                  onsubmit="return confirm('Are you sure you want to delete this image?')">
+                                <input type="hidden" name="confirmed" value="yes">
+                                <input type="hidden" name="user_name" value="User">
+                                <button type="submit" class="btn-small btn-danger">Delete</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="no-content">No images have been uploaded for this record yet.</p>
+                {% endif %}
+
+                <details class="upload-section">
+                    <summary class="btn btn-secondary">Upload Image or Document</summary>
+                    <form action="{{ url_for('upload_image', record_type=record_type, record_id=record['officer_id'] if record_type == 'officer' else record['soldier_id']) }}" 
+                          method="post" enctype="multipart/form-data" class="upload-form">
+                        <div class="form-group">
+                            <label for="image_file">Select File <span class="required">*</span></label>
+                            <input type="file" id="image_file" name="image_file" accept="image/jpeg,image/png,image/gif,image/webp,image/tiff" required>
+                            <small>JPEG, PNG, GIF, WebP, or TIFF. Maximum 10 MB.</small>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="image_title">Title</label>
+                                <input type="text" id="image_title" name="image_title" placeholder="Short description of the image">
+                            </div>
+                            <div class="form-group">
+                                <label for="image_category">Category</label>
+                                <select id="image_category" name="image_category">
+                                    <option value="portrait">Portrait / Photo</option>
+                                    <option value="document">Document / Record</option>
+                                    <option value="memorial">Memorial / Grave</option>
+                                    <option value="family">Family Photo</option>
+                                    <option value="location">Location / Map</option>
+                                    <option value="artifact">Medal / Artifact</option>
+                                    <option value="other" selected>Other</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="image_description">Description</label>
+                            <textarea id="image_description" name="image_description" rows="2" placeholder="Detailed caption or context"></textarea>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="image_source">Source</label>
+                                <input type="text" id="image_source" name="image_source" placeholder="Where this image came from">
+                            </div>
+                            <div class="form-group">
+                                <label for="copyright_info">Copyright</label>
+                                <input type="text" id="copyright_info" name="copyright_info" placeholder="Usage rights / attribution">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="upload_user_name">Your Name <span class="required">*</span></label>
+                            <input type="text" id="upload_user_name" name="user_name" required placeholder="Your name">
+                        </div>
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="confirmed" value="yes" required id="upload-confirm">
+                                <span>I confirm I have the right to upload this image and the information is accurate.</span>
+                            </label>
+                        </div>
+                        <button type="submit" class="btn btn-primary" id="upload-submit-btn" disabled>Upload Image</button>
+                    </form>
+                </details>
+            </section>
+
+            {# ── Supplemental Information Section ── #}
+            <section class="annotation-section">
+                <h2>Supplemental Information</h2>
+
+                {% if annotation %}
+                <div class="annotation-display">
+                    <p class="annotation-meta">
+                        Contributed by <strong>{{ annotation.created_by }}</strong> on {{ annotation.created_at }}
+                        {% if annotation.modified_at != annotation.created_at %}
+                        &middot; Last updated {{ annotation.modified_at }} by {{ annotation.modified_by }}
+                        {% endif %}
+                    </p>
+
+                    {% if annotation.additional_names %}
+                    <div class="annotation-field"><dt>Additional Names</dt><dd>{{ annotation.additional_names }}</dd></div>
+                    {% endif %}
+                    {% if annotation.birth_date %}
+                    <div class="annotation-field"><dt>Birth Date</dt><dd>{{ annotation.birth_date }}</dd></div>
+                    {% endif %}
+                    {% if annotation.birth_place_detail %}
+                    <div class="annotation-field"><dt>Birth Place Detail</dt><dd>{{ annotation.birth_place_detail }}</dd></div>
+                    {% endif %}
+                    {% if annotation.family_info %}
+                    <div class="annotation-field"><dt>Family Information</dt><dd>{{ annotation.family_info }}</dd></div>
+                    {% endif %}
+                    {% if annotation.pre_war_occupation %}
+                    <div class="annotation-field"><dt>Pre-war Occupation</dt><dd>{{ annotation.pre_war_occupation }}</dd></div>
+                    {% endif %}
+                    {% if annotation.enlistment_details %}
+                    <div class="annotation-field"><dt>Enlistment Details</dt><dd>{{ annotation.enlistment_details }}</dd></div>
+                    {% endif %}
+                    {% if annotation.service_notes %}
+                    <div class="annotation-field"><dt>Service Notes</dt><dd>{{ annotation.service_notes }}</dd></div>
+                    {% endif %}
+                    {% if annotation.casualty_details %}
+                    <div class="annotation-field"><dt>Casualty Details</dt><dd>{{ annotation.casualty_details }}</dd></div>
+                    {% endif %}
+                    {% if annotation.burial_memorial %}
+                    <div class="annotation-field"><dt>Burial / Memorial</dt><dd>{{ annotation.burial_memorial }}</dd></div>
+                    {% endif %}
+                    {% if annotation.medals_honors %}
+                    <div class="annotation-field"><dt>Medals &amp; Honours</dt><dd>{{ annotation.medals_honors }}</dd></div>
+                    {% endif %}
+                    {% if annotation.personal_effects %}
+                    <div class="annotation-field"><dt>Personal Effects</dt><dd>{{ annotation.personal_effects }}</dd></div>
+                    {% endif %}
+                    {% if annotation.newspaper_mentions %}
+                    <div class="annotation-field"><dt>Newspaper Mentions</dt><dd>{{ annotation.newspaper_mentions }}</dd></div>
+                    {% endif %}
+                    {% if annotation.family_stories %}
+                    <div class="annotation-field"><dt>Family Stories</dt><dd>{{ annotation.family_stories }}</dd></div>
+                    {% endif %}
+                    {% if annotation.research_notes %}
+                    <div class="annotation-field"><dt>Research Notes</dt><dd>{{ annotation.research_notes }}</dd></div>
+                    {% endif %}
+                    {% if annotation.sources %}
+                    <div class="annotation-field"><dt>Sources</dt><dd>{{ annotation.sources }}</dd></div>
+                    {% endif %}
+
+                    <a href="{{ url_for('manage_annotation', record_type=record_type, record_id=record['officer_id'] if record_type == 'officer' else record['soldier_id']) }}" 
+                       class="btn btn-secondary annotation-edit-link">Edit Supplemental Information</a>
+                </div>
+                {% else %}
+                <p class="no-content">No supplemental information has been added for this record.</p>
+                <a href="{{ url_for('manage_annotation', record_type=record_type, record_id=record['officer_id'] if record_type == 'officer' else record['soldier_id']) }}" 
+                   class="btn btn-primary">Add Supplemental Information</a>
+                {% endif %}
+            </section>
+
+            {# ── Related Records ── #}
             {% if related %}
             <section class="related-records">
                 <h2>Explore Related Records</h2>
@@ -141,7 +465,7 @@
 
                 {% if related.get('death_date') %}
                 <div class="related-group">
-                    <h3>Others who died on {{ record['death_date'] }}</h3>
+                    <h3>Others who died on {{ record['death_date']|humandate }}</h3>
                     <ul>
                         {% for r in related['death_date'] %}
                         <li>
@@ -173,10 +497,123 @@
             </section>
             {% endif %}
         </main>
-
-        <footer>
-            <p>SDGW 1914-1919 Personnel Database &copy; 2026</p>
-        </footer>
     </div>
+
+    <footer role="contentinfo">
+        <div class="footer-inner">
+            <div>
+                <div class="footer-brand">
+                    <img src="{{ url_for('static', filename='SDGW1419.ico') }}" alt="SDGW Icon" class="footer-brand-icon">
+                    SDGW 1914-1919
+                </div>
+                <p class="footer-desc">Preserving the history and records of those who served in the Great War 1914-1919.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Search Records</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Research</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Search Records</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Support</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Home</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 SDGW 1914-1919 Personnel Database. All Rights Reserved.
+        </div>
+    </footer>
+
+    <script>
+    // Escape key navigation (PRD C §10B)
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            window.location.href = "{{ url_for('home') }}";
+        }
+    });
+
+    function copyRecordToClipboard() {
+        const record = {
+            name: "{{ record['surname'] }}, {{ record['christian_names'] if record['christian_names'] else '' }}",
+            rank: "{{ record['rank_new'] if record['rank_new'] else '' }}",
+            rankGroup: "{{ record['rank_group'] if record['rank_group'] else '' }}",
+            battalion: "{{ record['battalion_name'] if record['battalion_name'] else '' }}",
+            serviceNumber: "{{ record['service_number'] if record['service_number'] else '' }}",
+            birthTown: "{{ record['birth_town'] if record['birth_town'] else '' }}",
+            enlistmentPlace: "{{ record['enlistment_place'] if record['enlistment_place'] else '' }}",
+            decoration: "{{ record['decoration'] if record['decoration'] else '' }}",
+            deathDate: "{{ record['death_date']|humandate if record['death_date'] else '' }}",
+            deathLocation: "{{ record['death_location'] if record['death_location'] else '' }}",
+            recordType: "{{ record_type.capitalize() }}"
+        };
+
+        let text = `SDGW 1914-1919 Personnel Record\n\n`;
+        text += `Name: ${record.name}\n`;
+        if (record.rank) text += `Rank: ${record.rank}\n`;
+        if (record.rankGroup) text += `Rank Group: ${record.rankGroup}\n`;
+        if (record.battalion) text += `Battalion: ${record.battalion}\n`;
+        if (record.serviceNumber) text += `Service Number: ${record.serviceNumber}\n`;
+        if (record.birthTown) text += `Birth Town: ${record.birthTown}\n`;
+        if (record.enlistmentPlace) text += `Enlistment Place: ${record.enlistmentPlace}\n`;
+        if (record.decoration) text += `Decorations: ${record.decoration}\n`;
+        if (record.deathDate) text += `Date of Death: ${record.deathDate}\n`;
+        if (record.deathLocation) text += `Death Location: ${record.deathLocation}\n`;
+        text += `Record Type: ${record.recordType}\n`;
+
+        navigator.clipboard.writeText(text).then(() => {
+            const btn = document.getElementById('copy-btn');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '&#10003; Copied!';
+            btn.style.backgroundColor = '#22c55e';
+            btn.style.borderColor = '#22c55e';
+            setTimeout(() => {
+                btn.innerHTML = originalText;
+                btn.style.backgroundColor = '';
+                btn.style.borderColor = '';
+            }, 2000);
+        }).catch(err => {
+            alert('Failed to copy to clipboard. Please try again.');
+            console.error('Clipboard error:', err);
+        });
+    }
+
+    // Upload form confirmation checkbox
+    var uploadConfirm = document.getElementById('upload-confirm');
+    var uploadName = document.getElementById('upload_user_name');
+    var uploadBtn = document.getElementById('upload-submit-btn');
+
+    if (uploadConfirm && uploadName && uploadBtn) {
+        function updateUploadState() {
+            uploadBtn.disabled = !(uploadConfirm.checked && uploadName.value.trim());
+        }
+        uploadConfirm.addEventListener('change', updateUploadState);
+        uploadName.addEventListener('input', updateUploadState);
+    }
+    </script>
+<script>
+(function() {
+    try {
+        var s = JSON.parse(localStorage.getItem('sdgw_display_settings') || '{}');
+        var html = document.documentElement;
+        if (s.theme === 'light') html.setAttribute('data-theme', 'light');
+        else if (s.theme === 'dark') html.setAttribute('data-theme', 'dark');
+        if (s.density && s.density !== 'normal') html.setAttribute('data-density', s.density);
+        if (s['detail-density'] && s['detail-density'] !== 'normal') html.setAttribute('data-detail-density', s['detail-density']);
+        if (s['detail-layout'] && s['detail-layout'] !== 'split') html.setAttribute('data-detail-layout', s['detail-layout']);
+        if (s.fontsize && s.fontsize !== 'normal') html.setAttribute('data-fontsize', s.fontsize);
+        if (s.corners === 'sharp') { html.style.setProperty('--border-radius','2px'); html.style.setProperty('--card-radius','4px'); }
+        else if (s.corners === 'round') { html.style.setProperty('--border-radius','12px'); html.style.setProperty('--card-radius','18px'); }
+        if (s['focus-highlight'] === false) html.style.setProperty('--focus-ring', 'none');
+    } catch(e) {}
+})();
+</script>
 </body>
 </html>

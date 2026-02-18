@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>About - SDGW 1914-1919</title>
+    <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='SDGW1419.ico') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+    <script src="https://unpkg.com/lucide@latest"></script>
+</head>
+<body>
+    <header role="banner">
+        <nav class="top-nav" aria-label="Main navigation">
+            <a href="{{ url_for('home') }}" class="nav-brand">
+                <img src="{{ url_for('static', filename='SDGW1419.ico') }}" alt="SDGW Icon" class="nav-brand-icon">
+                Soldiers Died in the Great War 1914-1919
+            </a>
+            <button class="hamburger-btn" id="hamburger-btn" aria-label="Open menu" aria-expanded="false" aria-controls="nav-menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+            <div class="nav-menu" id="nav-menu" role="navigation">
+                <a href="{{ url_for('home') }}" class="nav-link">Search</a>
+                <a href="{{ url_for('about') }}" class="nav-link">About</a>
+                <a href="{{ url_for('settings') }}" class="nav-link">Settings</a>
+            </div>
+            <div class="nav-backdrop" id="nav-backdrop"></div>
+        </nav>
+    </header>
+    <script>
+    (function(){
+        var btn=document.getElementById('hamburger-btn'),menu=document.getElementById('nav-menu'),bd=document.getElementById('nav-backdrop');
+        function toggle(){var o=menu.classList.toggle('open');btn.classList.toggle('open');bd.classList.toggle('open');btn.setAttribute('aria-expanded',o);}
+        function close(){menu.classList.remove('open');btn.classList.remove('open');bd.classList.remove('open');btn.setAttribute('aria-expanded','false');}
+        btn.addEventListener('click',toggle);bd.addEventListener('click',close);
+        document.addEventListener('keydown',function(e){if(e.key==='Escape')close();});
+    })();
+    </script>
+
+    <div class="container">
+        <main role="main">
+            <section class="page-header">
+                <div class="header-icon-badge">
+                    <i data-lucide="info"></i>
+                </div>
+                <h1>About This Project</h1>
+                <p class="subtitle">Preserving historical military records through modern technology</p>
+            </section>
+
+            <div class="about-grid">
+                <div class="about-main">
+                    <section class="content-section card">
+                        <div class="section-header">
+                            <i data-lucide="book-open" class="text-primary"></i>
+                            <h2>Project Overview</h2>
+                        </div>
+                        <p>This web application modernizes access to the <strong>Soldiers Died in the Great War 1914-1919</strong> dataset, transforming a legacy Windows CD-ROM application into a modern, searchable web interface.</p>
+                        <p>The database contains <strong>703,806 military personnel records</strong> from World War I, including both officers and soldiers who served during the Great War.</p>
+                    </section>
+
+                    <section class="content-section card">
+                        <div class="section-header">
+                            <i data-lucide="database" class="text-primary"></i>
+                            <h2>Original Work: The Access Database Era</h2>
+                        </div>
+                        <div class="history-content">
+                            <p><strong>Publisher:</strong> The Naval & Military Press Ltd.</p>
+                            <div class="platform-badge">
+                                <i data-lucide="monitor"></i>
+                                <span>Windows CD-ROM</span>
+                            </div>
+                            <p>The original application was distributed as a commercial CD-ROM package that included a Microsoft Access database (<code>sd_2011.mdb</code>), custom Windows runtime environment, and a compiled help system.</p>
+                        </div>
+                    </section>
+
+                    <section class="content-section card">
+                        <div class="section-header">
+                            <i data-lucide="git-branch" class="text-primary"></i>
+                            <h2>Modernization Journey</h2>
+                        </div>
+                        <div class="migration-timeline">
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <h3>Phase A: Data Extraction</h3>
+                                    <p>Extraction from original MDB files using <code>mdbtools</code>, ensuring 100% data fidelity.</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <h3>Phase B: Migration to SQLite</h3>
+                                    <p>Preservation of all 7 tables with 26 performance indexes for sub-second searching.</p>
+                                </div>
+                            </div>
+                            <div class="timeline-item">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <h3>Phase C: Modern Interface</h3>
+                                    <p>Development of this responsive, accessible web portal for researchers and families.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+
+                <div class="about-sidebar">
+                    <div class="stats-card card">
+                        <h3>Key Statistics</h3>
+                        <div class="stat-row">
+                            <span class="stat-label">Records</span>
+                            <span class="stat-value">703,806</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Indexes</span>
+                            <span class="stat-value">26</span>
+                        </div>
+                        <div class="stat-row">
+                            <span class="stat-label">Tables</span>
+                            <span class="stat-value">7</span>
+                        </div>
+                    </div>
+
+                    <div class="tech-card card">
+                        <h3>Tech Stack</h3>
+                        <div class="tech-tags">
+                            <span class="tag">Python 3</span>
+                            <span class="tag">Flask</span>
+                            <span class="tag">SQLite</span>
+                            <span class="tag">Tailwind-inspired CSS</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <section class="content-section card mt-4">
+                <div class="section-header">
+                    <i data-lucide="heart" class="text-primary"></i>
+                    <h2>Acknowledgments</h2>
+                </div>
+                <ul class="acknowledgments-list">
+                    <li><strong>The Naval & Military Press Ltd.</strong> - Original database compilation</li>
+                    <li><strong>Commonwealth War Graves Commission</strong> - Source historical records</li>
+                    <li><strong>mdbtools project</strong> - Open-source database accessibility</li>
+                </ul>
+            </section>
+
+            <div class="action-buttons">
+                <a href="{{ url_for('home') }}" class="btn btn-primary btn-lg">
+                    <i data-lucide="search"></i> Start Searching
+                </a>
+                <a href="https://github.com/eek2020/SDGW1914-1919" class="btn btn-outline btn-lg" target="_blank">
+                    <i data-lucide="github"></i> GitHub
+                </a>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        lucide.createIcons();
+    </script>
+    <footer role="contentinfo">
+        <div class="footer-inner">
+            <div>
+                <div class="footer-brand">
+                    <img src="{{ url_for('static', filename='SDGW1419.ico') }}" alt="SDGW Icon" class="footer-brand-icon">
+                    SDGW 1914-1919
+                </div>
+                <p class="footer-desc">Preserving the history and records of those who served in the Great War 1914-1919. A modern web interface built upon the original Access database foundation.</p>
+            </div>
+            <div class="footer-col">
+                <h4>Explore</h4>
+                <ul>
+                    <li><a href="{{ url_for('home') }}">Search Records</a></li>
+                    <li><a href="{{ url_for('about') }}">About Project</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Technical</h4>
+                <ul>
+                    <li><a href="https://github.com/eek2020/SDGW1914-1919" target="_blank">Source Code</a></li>
+                    <li><a href="https://github.com/eek2020/SDGW1914-1919/blob/main/docs/07_LEGACY_SYSTEM_ANALYSIS.md" target="_blank">Legacy Analysis</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 SDGW 1914-1919 Personnel Database. All Rights Reserved.
+        </div>
+    </footer>
+<script>
+(function() {
+    try {
+        var s = JSON.parse(localStorage.getItem('sdgw_display_settings') || '{}');
+        var html = document.documentElement;
+        if (s.theme === 'light') html.setAttribute('data-theme', 'light');
+        else if (s.theme === 'dark') html.setAttribute('data-theme', 'dark');
+        if (s.density && s.density !== 'normal') html.setAttribute('data-density', s.density);
+        if (s.fontsize && s.fontsize !== 'normal') html.setAttribute('data-fontsize', s.fontsize);
+        if (s.corners === 'sharp') { html.style.setProperty('--border-radius','2px'); html.style.setProperty('--card-radius','4px'); }
+        else if (s.corners === 'round') { html.style.setProperty('--border-radius','12px'); html.style.setProperty('--card-radius','18px'); }
+    } catch(e) {}
+})();
+</script>
+</body>
+</html>

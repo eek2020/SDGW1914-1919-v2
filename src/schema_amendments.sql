@@ -35,14 +35,15 @@ CREATE TABLE IF NOT EXISTS record_annotations (
     created_by TEXT NOT NULL,        -- User identifier (name or email)
     modified_at TEXT NOT NULL DEFAULT (datetime('now')),
     modified_by TEXT NOT NULL,
-    is_active INTEGER NOT NULL DEFAULT 1,  -- Soft delete flag
-    
-    -- Ensure one active annotation per record
-    UNIQUE(record_type, record_id, is_active)
+    is_active INTEGER NOT NULL DEFAULT 1   -- Soft delete flag
 );
 
 CREATE INDEX idx_annotations_record ON record_annotations(record_type, record_id);
 CREATE INDEX idx_annotations_created ON record_annotations(created_at);
+-- Ensure at most one active annotation per record (allows multiple soft-deleted rows)
+CREATE UNIQUE INDEX IF NOT EXISTS idx_one_active_annotation
+    ON record_annotations(record_type, record_id)
+    WHERE is_active = 1;
 
 -- ══════════════════════════════════════════════════════════════════════════════
 -- ANNOTATION HISTORY TABLE

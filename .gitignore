@@ -52,6 +52,9 @@ data/exports/OFFICERS.csv
 .coverage
 htmlcov/
 
+# Environment files
+.env
+
 # Temporary files
 *.tmp
 *.temp

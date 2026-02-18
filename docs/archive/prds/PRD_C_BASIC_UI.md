@@ -51,7 +51,6 @@
 > - `src/static/style.css` — Styling
 > - `src/schema_amendments.sql`, `src/reference_data.sql` — Extended schema
 > - `tests/test_web_app.py`, `tests/test_ui.py` — Test suites
-
 > **v1.2 Changelog (17 Feb 2026):** Updated to match actual implementation. Key changes: 12 search fields (was 2), 50 results per page (was 10), Tom Select CDN dependency added, card/table view toggle, 5 sort options, filter pills, record-by-record navigation, breadcrumb navigation, CSV export, human-readable death dates, API endpoints documented, test suites documented. See ENH-12 in `11_PRD_E_ENHANCEMENTS.md`.
 
 ---

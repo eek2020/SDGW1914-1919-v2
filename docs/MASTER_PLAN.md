@@ -52,7 +52,7 @@ Transform the legacy "Soldiers Died in the Great War 1914-19" CD-ROM application
 | Frontend | HTML5 / CSS3 / JavaScript | Server-rendered Jinja2 templates; Tom Select for dropdowns |
 | Data Extraction | mdbtools v1.0.1 | One-time CSV export from legacy `.mdb` file |
 | Testing | pytest / BeautifulSoup | 120 tests across 4 test files |
-| Server | `server.sh` | Bash script; port 5001; PID file at `/tmp/sdgw_server.pid` |
+| Server | `server.sh` | Bash script; port 5001; logs to `logs/sdgw_server.log` |
 
 ### Database Schema
 
@@ -180,6 +180,42 @@ Flask web application with multi-parameter search, paginated results, and detail
 - **Templates:** `src/templates/annotation_form.html` created
 - **Status:** Backend complete; UI integration in detail page pending polish
 
+### Code Review (18 Feb 2026) — ALL ACTIONABLE ITEMS RESOLVED
+
+24 issues identified; 20 resolved immediately, 4 deferred to roadmap as architectural items.
+
+**Resolved (20 issues):**
+
+- **#1 (Critical):** Hardcoded secret key → env var `FLASK_SECRET_KEY` with auto-generation in `server.sh`
+- **#2 (Critical):** No write auth → `_check_write_auth()` passphrase gate on all write endpoints
+- **#4 (High):** Dead `_build_where` function → deleted
+- **#5 (High):** Duplicate annotation fields dict → extracted `ANNOTATION_FORM_FIELDS` + `_annotation_fields_from_form()`
+- **#7 (Medium):** Thread-unsafe filter cache → added `threading.Lock`
+- **#9 (Medium):** Arbitrary column names in `update_annotation` → `VALID_ANNOTATION_FIELDS` allowlist
+- **#10 (Medium):** f-string column interpolation → `_SAFE_TEXT_COLUMNS` assertion guards
+- **#12 (Medium):** N+1 query in `_with_group` → single IN-clause queries
+- **#13 (Medium):** `get_row_count` dead code → warning docstring added
+- **#14 (Medium):** `validate_export` OOM risk → streaming row count
+- **#15 (Medium):** Incorrect UNIQUE constraint → partial unique index `WHERE is_active = 1`
+- **#16 (Low):** Unpinned requirements → pinned to exact versions
+- **#17 (Low):** Logs to `/tmp` → `$APP_DIR/logs/sdgw_server.log`
+- **#18 (Low):** Duplicate date filters → extracted `_format_date()` helper
+- **#19 (Low):** Overlapping dropdown classifiers → clarifying docstrings added
+- **#20 (Low):** Duplicate battalion SQL → extracted `_lookup_battalions_by_ids()` helper
+- **#21 (Low):** Hardcoded page size → `RESULTS_PER_PAGE` constant
+- **#22 (Low):** No image cache headers → ETag + Cache-Control on `serve_image`
+- **#24 (Low):** Misleading mdbtools check → `shutil.which()` idiom
+
+**Deferred to Roadmap (4 issues):**
+
+- **#3 (High):** Migrate image storage from BLOBs to filesystem
+- **#6 (High):** Reduce detail page navigation from 10 queries to 2
+- **#8 (Medium):** Refactor AnnotationManager to share Flask request-scoped DB connection
+- **#11 (Medium):** Add caching/query reduction to fuzzy_suggest
+- **#23 (Low):** Add fixture-based test database for unit test isolation
+
+- **Archived review:** `docs/archive/CODE_REVIEW_2026-02-18_PART1.md`, `docs/archive/CODE_REVIEW_2026-02-18_PART2.md`
+
 ---
 
 ## 5. Active Initiatives
@@ -217,10 +253,14 @@ Standalone Windows 11 `.exe` for non-technical end users. Fully specified in arc
 | Item | Severity | Description |
 | --- | --- | --- |
 | Annotation UI integration | Medium | Backend complete but detail page doesn't fully display annotations/images |
-| No authentication | Low | Single-user desktop app; multi-user web deployment would need auth |
+| Images stored as SQLite BLOBs | Medium | Should migrate to filesystem paths (Code Review #3) |
+| 10 queries per detail page nav | Medium | Should use 3-record window query (Code Review #6) |
+| AnnotationManager per-call DB connections | Medium | Should share Flask request-scoped connection (Code Review #8) |
+| fuzzy_suggest 22+ queries | Medium | Should add caching and query reduction (Code Review #11) |
+| Tests use production database | Low | Should add fixture-based conftest.py for CI (Code Review #23) |
 | `reference_data.sql` not auto-applied | Low | Regiment names, theatre groups exist but must be manually loaded |
 | `enhance_search.py` / `optimize_filter_performance.py` | Low | Utility scripts without documentation or tests |
-| Large `web_app.py` (1,691 lines) | Low | Could benefit from route blueprints for maintainability |
+| Large `web_app.py` (~1,700 lines) | Low | Could benefit from route blueprints for maintainability |
 | No CI/CD pipeline | Low | Tests run manually via `pytest`; no GitHub Actions or similar |
 
 ---

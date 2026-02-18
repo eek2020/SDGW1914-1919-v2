@@ -5,42 +5,53 @@ Phase C: Basic UI - Multi-parameter search and record viewing
 """
 
 import csv
+import hashlib
 import io
+import os
 import sqlite3
+import threading
 import time
 from datetime import datetime
-from flask import Flask, render_template, request, g, jsonify, url_for, Response, redirect, flash, send_file
+from flask import Flask, render_template, request, g, jsonify, url_for, Response, redirect, flash, send_file, make_response
 from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).parent))
 from annotations import AnnotationManager
 
 app = Flask(__name__)
-app.secret_key = 'sdgw-1914-1919-secret-key-change-in-production'  # For flash messages
+app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-only-fallback-key')
+
+WRITE_PASSPHRASE = os.environ.get('SDGW_WRITE_PASSPHRASE', '')
+
+
+def _check_write_auth():
+    """Check write-access passphrase if one is configured."""
+    if WRITE_PASSPHRASE and request.form.get('passphrase') != WRITE_PASSPHRASE:
+        flash('Incorrect passphrase.', 'error')
+        return False
+    return True
+
+
+def _format_date(value, fmt):
+    """Shared date formatting helper."""
+    if not value:
+        return ''
+    try:
+        return datetime.strptime(str(value), '%Y-%m-%d').strftime(fmt)
+    except (ValueError, TypeError):
+        return str(value)
 
 
 @app.template_filter('humandate')
 def human_date(value):
     """Convert ISO date to '5 September 1915' format."""
-    if not value:
-        return ''
-    try:
-        dt = datetime.strptime(str(value), '%Y-%m-%d')
-        return dt.strftime('%-d %B %Y')
-    except (ValueError, TypeError):
-        return str(value)
+    return _format_date(value, '%-d %B %Y')
 
 
 @app.template_filter('humandate_short')
 def human_date_short(value):
     """Convert ISO date to '5 Sep 1915' format."""
-    if not value:
-        return ''
-    try:
-        dt = datetime.strptime(str(value), '%Y-%m-%d')
-        return dt.strftime('%-d %b %Y')
-    except (ValueError, TypeError):
-        return str(value)
+    return _format_date(value, '%-d %b %Y')
 
 
 # Database path
@@ -73,6 +84,9 @@ FILTER_OPTIONS_CACHE_TTL_SECONDS = 20
 FILTER_OPTIONS_CACHE_MAX_ENTRIES = 256
 FILTER_OPTIONS_SLOW_LOG_MS = 250
 _filter_options_cache = {}
+_filter_options_cache_lock = threading.Lock()
+
+RESULTS_PER_PAGE = 20
 
 
 def get_db():
@@ -323,29 +337,35 @@ def _cache_key_for_params(params):
 
 def _get_cached_filter_payload(cache_key):
     """Return cached filter payload if still fresh."""
-    cached = _filter_options_cache.get(cache_key)
-    if not cached:
-        return None
-
-    cached_at, payload = cached
-    if (time.monotonic() - cached_at) > FILTER_OPTIONS_CACHE_TTL_SECONDS:
-        _filter_options_cache.pop(cache_key, None)
-        return None
-    return payload
+    with _filter_options_cache_lock:
+        cached = _filter_options_cache.get(cache_key)
+        if not cached:
+            return None
+        cached_at, payload = cached
+        if (time.monotonic() - cached_at) > FILTER_OPTIONS_CACHE_TTL_SECONDS:
+            _filter_options_cache.pop(cache_key, None)
+            return None
+        return payload
 
 
 def _set_cached_filter_payload(cache_key, payload):
     """Store payload in bounded in-memory cache."""
-    _filter_options_cache[cache_key] = (time.monotonic(), payload)
+    with _filter_options_cache_lock:
+        _filter_options_cache[cache_key] = (time.monotonic(), payload)
+        while len(_filter_options_cache) > FILTER_OPTIONS_CACHE_MAX_ENTRIES:
+            oldest_key = min(_filter_options_cache, key=lambda k: _filter_options_cache[k][0])
+            _filter_options_cache.pop(oldest_key, None)
 
-    while len(_filter_options_cache) > FILTER_OPTIONS_CACHE_MAX_ENTRIES:
-        oldest_key = min(_filter_options_cache, key=lambda k: _filter_options_cache[k][0])
-        _filter_options_cache.pop(oldest_key, None)
+
+_SAFE_TEXT_COLUMNS = frozenset(FILTER_TEXT_SUGGEST_FIELDS) | {
+    'surname', 'regiment_id', 'battalion_id', 'rank_id'
+}
 
 
 def _collect_distinct_text_values(db, params, field_name, search_officers, search_soldiers,
                                   limit=FILTER_TEXT_SUGGESTION_LIMIT):
     """Collect cascaded distinct values for a text field, excluding that field itself."""
+    assert field_name in _SAFE_TEXT_COLUMNS, f"Unsafe column name: {field_name!r}"
     base = dict(params)
     base[field_name] = ''
     values = set()
@@ -380,6 +400,7 @@ def _collect_distinct_text_values(db, params, field_name, search_officers, searc
 
 def _collect_cascaded_surnames(db, params, q_prefix, search_officers, search_soldiers, limit=50):
     """Collect surnames constrained by all active filters except surname itself."""
+    assert 'surname' in _SAFE_TEXT_COLUMNS, "surname not in safe columns"
     base = dict(params)
     base['surname'] = ''
     values = set()
@@ -479,7 +500,12 @@ def _active_filter_labels(params):
 
 
 def _is_dropdown_only_filter_request(params):
-    """Return True when only dropdown/radio filters are active (no free text/date)."""
+    """Return True when only dropdown/radio filters are active (no free text/date).
+
+    Broader check than _is_simple_dropdown_only_request: includes regiment_id,
+    birth_region, enlistment_region, and theatre_group as dropdown keys.
+    Used to select the EXISTS-based fast path in /api/filter-options.
+    """
     free_text_keys = (
         'surname', 'christian_names', 'initials',
         'service_number', 'birth_town', 'enlistment_loc', 'decoration'
@@ -497,7 +523,12 @@ def _is_dropdown_only_filter_request(params):
 
 
 def _is_simple_dropdown_only_request(params):
-    """Return True when only rank/battalion/location/record-type are active."""
+    """Return True when only rank/battalion/location/record-type are active.
+
+    Narrower check than _is_dropdown_only_filter_request: only considers
+    rank_name, battalion_id, and death_location as simple keys.
+    Used to skip expensive faceting when only basic dropdowns are set.
+    """
     simple_keys = {'rank_name', 'battalion_id', 'death_location'}
     for key in FILTER_ACTIVE_FIELDS:
         if key in simple_keys:
@@ -507,8 +538,25 @@ def _is_simple_dropdown_only_request(params):
     return params.get('query_mode', 'and') == 'and'
 
 
+def _lookup_battalions_by_ids(db, battalion_ids):
+    """Shared helper: look up battalion display info by a set of IDs."""
+    if not battalion_ids:
+        return []
+    ph = ','.join('?' * len(battalion_ids))
+    return [{'battalion_id': r[0], 'name': r[1], 'regiment_name': r[2] or 'Other'} for r in db.execute(
+        f"SELECT bs.battalion_id, bs.name, rg.name AS regiment_name "
+        f"FROM battalions_sd bs "
+        f"LEFT JOIN regiment_battalion_sd rb ON rb.battalion_id = bs.battalion_id "
+        f"LEFT JOIN regiments rg ON rg.regiment_id = rb.regiment_id "
+        f"WHERE bs.battalion_id IN ({ph}) "
+        f"ORDER BY COALESCE(rg.name, 'Other'), bs.name",
+        list(battalion_ids)
+    )]
+
+
 def _collect_distinct_ids(db, params, target_column, clear_keys, search_officers, search_soldiers):
     """Collect distinct IDs for a target column across officer/soldier sets."""
+    assert target_column in _SAFE_TEXT_COLUMNS, f"Unsafe column name: {target_column!r}"
     base = dict(params)
     for key in clear_keys:
         base[key] = ''
@@ -707,7 +755,7 @@ def search():
     params = _parse_search_params(request.args)
     sort = request.args.get('sort', DEFAULT_SORT)
     page = max(1, int(request.args.get('page', 1)))
-    per_page = 20  # Reduced from 50 for senior users (PRD D)
+    per_page = RESULTS_PER_PAGE
     offset = (page - 1) * per_page
 
     results, total, sort_key = _run_search(db, params, sort, per_page, offset)
@@ -902,7 +950,7 @@ def detail(record_type, record_id):
             back_params[k] = v
     # Determine which results page this record is on
     if pos is not None:
-        results_page = (int(pos) // 20) + 1  # 20 per page
+        results_page = (int(pos) // RESULTS_PER_PAGE) + 1
         back_params['page'] = str(results_page)
     nav['back_to_results'] = url_for('search', **back_params) if has_search else None
 
@@ -1131,18 +1179,7 @@ def filter_options():
                 list(rank_ids)
             )]
 
-        battalions = []
-        if battalion_ids:
-            ph = ','.join('?' * len(battalion_ids))
-            battalions = [{'battalion_id': r[0], 'name': r[1], 'regiment_name': r[2] or 'Other'} for r in db.execute(
-                f"SELECT bs.battalion_id, bs.name, rg.name AS regiment_name "
-                f"FROM battalions_sd bs "
-                f"LEFT JOIN regiment_battalion_sd rb ON rb.battalion_id = bs.battalion_id "
-                f"LEFT JOIN regiments rg ON rg.regiment_id = rb.regiment_id "
-                f"WHERE bs.battalion_id IN ({ph}) "
-                f"ORDER BY COALESCE(rg.name, 'Other'), bs.name",
-                list(battalion_ids)
-            )]
+        battalions = _lookup_battalions_by_ids(db, battalion_ids)
 
         regiments = []
         if regiment_ids:
@@ -1343,21 +1380,29 @@ def fuzzy_suggest():
     # Add group info for fields that have it
     def _with_group(values, field_name):
         if field_name == 'birth_town':
-            grouped = []
-            for v in sorted(values):
-                row = db.execute(
-                    "SELECT region FROM birth_town_region WHERE birth_town = ? LIMIT 1", (v,)
-                ).fetchone()
-                grouped.append({'value': v, 'group': row[0] if row else 'Other'})
-            return grouped
+            sorted_vals = sorted(values)
+            if not sorted_vals:
+                return []
+            ph = ','.join('?' * len(sorted_vals))
+            region_map = {
+                r[0]: r[1] for r in db.execute(
+                    f"SELECT birth_town, region FROM birth_town_region WHERE birth_town IN ({ph})",
+                    sorted_vals
+                )
+            }
+            return [{'value': v, 'group': region_map.get(v, 'Other')} for v in sorted_vals]
         elif field_name == 'enlistment_loc':
-            grouped = []
-            for v in sorted(values):
-                row = db.execute(
-                    "SELECT region FROM enlistment_region WHERE enlistment_loc = ? LIMIT 1", (v,)
-                ).fetchone()
-                grouped.append({'value': v, 'group': row[0] if row else 'Other'})
-            return grouped
+            sorted_vals = sorted(values)
+            if not sorted_vals:
+                return []
+            ph = ','.join('?' * len(sorted_vals))
+            region_map = {
+                r[0]: r[1] for r in db.execute(
+                    f"SELECT enlistment_loc, region FROM enlistment_region WHERE enlistment_loc IN ({ph})",
+                    sorted_vals
+                )
+            }
+            return [{'value': v, 'group': region_map.get(v, 'Other')} for v in sorted_vals]
         return [{'value': v} for v in sorted(values)]
 
     return jsonify({
@@ -1367,34 +1412,6 @@ def fuzzy_suggest():
 
 
 # ── Internal helpers for filter-options ─────────────────────────────────
-
-def _build_where(table, surname, christian_names, service_number,
-                 birth_town, death_date_from, death_date_to):
-    """Build WHERE clause using only index-friendly conditions for fast DB scan."""
-    conditions = ["1=1"]
-    params = []
-
-    if surname:
-        conditions.append("surname LIKE ?")
-        params.append(f"{surname.upper()}%")
-    if christian_names:
-        conditions.append("(christian_names LIKE ? OR initials LIKE ?)")
-        params.append(f"%{christian_names.upper()}%")
-        params.append(f"%{christian_names.upper()}%")
-    if service_number and table == 'soldiers':
-        conditions.append("service_number = ?")
-        params.append(service_number)
-    if birth_town and table == 'soldiers':
-        conditions.append("birth_town LIKE ?")
-        params.append(f"%{birth_town.upper()}%")
-    if death_date_from:
-        conditions.append("death_date >= ?")
-        params.append(death_date_from)
-    if death_date_to:
-        conditions.append("death_date <= ?")
-        params.append(death_date_to)
-
-    return " AND ".join(conditions), params
 
 
 def _exists_clause(tables, column, conditions_map):
@@ -1499,12 +1516,29 @@ def get_annotation_manager():
     return g.annotation_manager
 
 
+ANNOTATION_FORM_FIELDS = (
+    'additional_names', 'birth_date', 'birth_place_detail', 'family_info',
+    'pre_war_occupation', 'enlistment_details', 'service_notes',
+    'casualty_details', 'burial_memorial', 'medals_honors',
+    'personal_effects', 'newspaper_mentions', 'family_stories',
+    'research_notes', 'sources',
+)
+
+
+def _annotation_fields_from_form():
+    """Extract annotation fields from the current request form."""
+    return {f: request.form.get(f) for f in ANNOTATION_FORM_FIELDS}
+
+
 @app.route('/record/<record_type>/<int:record_id>/annotation', methods=['GET', 'POST'])
 def manage_annotation(record_type, record_id):
     """View or edit annotation for a record."""
     manager = get_annotation_manager()
     
     if request.method == 'POST':
+        if not _check_write_auth():
+            return redirect(url_for('detail', record_type=record_type, record_id=record_id))
+        
         # User confirmation check
         confirmed = request.form.get('confirmed')
         if confirmed != 'yes':
@@ -1516,24 +1550,7 @@ def manage_annotation(record_type, record_id):
         
         try:
             if action == 'create':
-                # Create new annotation
-                fields = {
-                    'additional_names': request.form.get('additional_names'),
-                    'birth_date': request.form.get('birth_date'),
-                    'birth_place_detail': request.form.get('birth_place_detail'),
-                    'family_info': request.form.get('family_info'),
-                    'pre_war_occupation': request.form.get('pre_war_occupation'),
-                    'enlistment_details': request.form.get('enlistment_details'),
-                    'service_notes': request.form.get('service_notes'),
-                    'casualty_details': request.form.get('casualty_details'),
-                    'burial_memorial': request.form.get('burial_memorial'),
-                    'medals_honors': request.form.get('medals_honors'),
-                    'personal_effects': request.form.get('personal_effects'),
-                    'newspaper_mentions': request.form.get('newspaper_mentions'),
-                    'family_stories': request.form.get('family_stories'),
-                    'research_notes': request.form.get('research_notes'),
-                    'sources': request.form.get('sources'),
-                }
+                fields = _annotation_fields_from_form()
                 
                 annotation_id = manager.create_annotation(record_type, record_id, user_name, fields)
                 flash(f'Annotation created successfully! (ID: {annotation_id})', 'success')
@@ -1541,24 +1558,7 @@ def manage_annotation(record_type, record_id):
             elif action == 'update':
                 annotation_id = int(request.form.get('annotation_id'))
                 change_reason = request.form.get('change_reason')
-                
-                fields = {
-                    'additional_names': request.form.get('additional_names'),
-                    'birth_date': request.form.get('birth_date'),
-                    'birth_place_detail': request.form.get('birth_place_detail'),
-                    'family_info': request.form.get('family_info'),
-                    'pre_war_occupation': request.form.get('pre_war_occupation'),
-                    'enlistment_details': request.form.get('enlistment_details'),
-                    'service_notes': request.form.get('service_notes'),
-                    'casualty_details': request.form.get('casualty_details'),
-                    'burial_memorial': request.form.get('burial_memorial'),
-                    'medals_honors': request.form.get('medals_honors'),
-                    'personal_effects': request.form.get('personal_effects'),
-                    'newspaper_mentions': request.form.get('newspaper_mentions'),
-                    'family_stories': request.form.get('family_stories'),
-                    'research_notes': request.form.get('research_notes'),
-                    'sources': request.form.get('sources'),
-                }
+                fields = _annotation_fields_from_form()
                 
                 manager.update_annotation(annotation_id, user_name, fields, change_reason)
                 flash('Annotation updated successfully!', 'success')
@@ -1583,6 +1583,9 @@ def manage_annotation(record_type, record_id):
 def upload_image(record_type, record_id):
     """Upload image for a record."""
     manager = get_annotation_manager()
+    
+    if not _check_write_auth():
+        return redirect(url_for('detail', record_type=record_type, record_id=record_id))
     
     # User confirmation check
     confirmed = request.form.get('confirmed')
@@ -1634,11 +1637,14 @@ def serve_image(image_id):
         if not image:
             return "Image not found", 404
         
-        return send_file(
-            io.BytesIO(image['image_data']),
-            mimetype=image['image_type'],
-            as_attachment=False
-        )
+        etag = hashlib.md5(image['image_data']).hexdigest()
+        if request.headers.get('If-None-Match') == etag:
+            return '', 304
+        resp = make_response(image['image_data'])
+        resp.headers['Content-Type'] = image['image_type']
+        resp.headers['ETag'] = etag
+        resp.headers['Cache-Control'] = 'public, max-age=86400'
+        return resp
     except Exception as e:
         return f"Error: {str(e)}", 500
 
@@ -1647,6 +1653,9 @@ def serve_image(image_id):
 def delete_image(image_id):
     """Delete an image."""
     manager = get_annotation_manager()
+    
+    if not _check_write_auth():
+        return redirect(request.referrer or url_for('home'))
     
     confirmed = request.form.get('confirmed')
     if confirmed != 'yes':

@@ -96,13 +96,7 @@ class DataExtractor:
             raise FileNotFoundError(f"Database not found: {self.mdb_path}")
         if not self.mdb_path.suffix.lower() == ".mdb":
             raise ValueError(f"Expected .mdb file, got: {self.mdb_path.suffix}")
-        try:
-            subprocess.run(
-                ["mdb-tables", "--version"],
-                capture_output=True,
-                timeout=5,
-            )
-        except FileNotFoundError:
+        if shutil.which("mdb-export") is None:
             raise EnvironmentError(
                 "mdbtools not installed. Install with: brew install mdbtools"
             )
@@ -136,6 +130,8 @@ class DataExtractor:
         return result.stdout
 
     def get_row_count(self, table_name: str) -> int:
+        """WARNING: Exports full table to count rows. O(N) in table size.
+        Use only in offline migration/validation scripts, never in a web request."""
         result = self._run_mdb_command(
             ["mdb-export", str(self.mdb_path), table_name],
             timeout=600,
@@ -260,13 +256,17 @@ class DataExtractor:
                 ))
                 continue
 
-            # Read CSV and count rows/columns
+            # Read CSV and count rows/columns (streaming to avoid OOM)
             with open(csv_file, "r", encoding="utf-8") as f:
                 reader = csv.reader(f)
                 columns = next(reader, [])
-                rows = list(reader)
+                actual_rows = 0
+                sample_rows = []
+                for row in reader:
+                    actual_rows += 1
+                    if len(sample_rows) < 5:
+                        sample_rows.append(row)
 
-            actual_rows = len(rows)
             total_rows += actual_rows
             expected = self.EXPECTED_COUNTS.get(table, actual_rows)
             row_match = actual_rows == expected
@@ -276,12 +276,11 @@ class DataExtractor:
                     f"{table}: expected {expected} rows, got {actual_rows}"
                 )
 
-            # Spot check: verify 5 random records are parseable and complete
+            # Spot check: verify sample records are parseable and complete
             spot_details = []
             spot_passed = True
-            sample_size = min(5, len(rows))
+            sample_size = len(sample_rows)
             if sample_size > 0:
-                sample_rows = random.sample(rows, sample_size)
                 for i, row in enumerate(sample_rows):
                     if len(row) != len(columns):
                         spot_passed = False

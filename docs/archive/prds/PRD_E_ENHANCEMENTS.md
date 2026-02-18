@@ -18,7 +18,7 @@
 > ### Completed Enhancements
 >
 > | ID | Enhancement | Status |
-> |---|---|---|
+> | --- | --- | --- |
 > | ENH-01 | Human-readable death dates | DONE |
 > | ENH-02 | UI test suite (test_ui.py) — 38 tests | DONE |
 > | ENH-03 | Breadcrumb navigation | DONE |
@@ -31,7 +31,7 @@
 > ### Remaining Enhancements (carried to MASTER_PLAN.md)
 >
 > | ID | Enhancement | Priority |
-> |---|---|---|
+> | --- | --- | --- |
 > | ENH-06 | Saved record lists / bookmarks | P3 |
 > | ENH-07 | Formal accessibility audit | P2 |
 > | ENH-08 | Loading indicator | P3 |

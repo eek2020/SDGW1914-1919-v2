@@ -3,9 +3,13 @@
 # Usage: ./server.sh [start|stop|restart|status]
 
 PORT=5001
-PIDFILE="/tmp/sdgw_server.pid"
-LOGFILE="/tmp/sdgw_server.log"
 APP_DIR="$(cd "$(dirname "$0")" && pwd)"
+PIDFILE="/tmp/sdgw_server.pid"
+LOGFILE="$APP_DIR/logs/sdgw_server.log"
+mkdir -p "$APP_DIR/logs"
+
+# Generate a secret key if not already set
+export FLASK_SECRET_KEY="${FLASK_SECRET_KEY:-$(python3 -c 'import secrets; print(secrets.token_hex(32))')}"
 
 start_server() {
     if [ -f "$PIDFILE" ] && kill -0 "$(cat "$PIDFILE")" 2>/dev/null; then

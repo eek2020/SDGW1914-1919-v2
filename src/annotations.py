@@ -86,8 +86,20 @@ class AnnotationManager:
         finally:
             conn.close()
     
+    VALID_ANNOTATION_FIELDS = frozenset({
+        'additional_names', 'birth_date', 'birth_place_detail', 'family_info',
+        'pre_war_occupation', 'enlistment_details', 'service_notes',
+        'casualty_details', 'burial_memorial', 'medals_honors',
+        'personal_effects', 'newspaper_mentions', 'family_stories',
+        'research_notes', 'sources'
+    })
+
     def update_annotation(self, annotation_id, user_identifier, fields, change_reason=None):
         """Update existing annotation and track changes in history."""
+        safe_fields = {k: v for k, v in fields.items() if k in self.VALID_ANNOTATION_FIELDS}
+        if not safe_fields:
+            raise ValueError("No valid fields to update")
+        
         conn = self._get_connection()
         try:
             # Get current values
@@ -103,7 +115,7 @@ class AnnotationManager:
             
             # Track changes
             changes = []
-            for field, new_value in fields.items():
+            for field, new_value in safe_fields.items():
                 old_value = current_dict.get(field)
                 if old_value != new_value:
                     changes.append((field, old_value, new_value))
@@ -112,14 +124,14 @@ class AnnotationManager:
                 return annotation_id  # No changes
             
             # Update annotation
-            set_clause = ', '.join([f"{field}=?" for field in fields.keys()])
+            set_clause = ', '.join([f"{field}=?" for field in safe_fields.keys()])
             query = f"""
                 UPDATE record_annotations 
                 SET {set_clause}, modified_at=datetime('now'), modified_by=?
                 WHERE annotation_id=?
             """
             
-            values = list(fields.values()) + [user_identifier, annotation_id]
+            values = list(safe_fields.values()) + [user_identifier, annotation_id]
             conn.execute(query, values)
             
             # Record history

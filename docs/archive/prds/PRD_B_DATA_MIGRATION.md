@@ -38,7 +38,6 @@
 > - `src/data_migration.py` — Core module
 > - `src/scripts/migrate_personnel.py`, `validate_migration.py` — Scripts
 > - `tests/test_migration.py` — Test suite
-
 > **v1.1 Changelog (17 Feb 2026):** Updated §5.2 schema to match actual implementation. Documented column name mappings (PRD → actual). Noted `created_at`/`updated_at` not implemented (read-only data). Updated index count from 7 to 27. Added `surname_lookup` table. Split `regiment_battalion_associations` into `_sd` and `_od` tables. See ENH-11 in `11_PRD_E_ENHANCEMENTS.md`.
 
 ---

@@ -1,191 +1,172 @@
 # SDGW 1914-1919
 
-A comprehensive data access and web application system for the **Soldiers Died in the Great War 1914-1919** dataset. This project modernizes historical military data access through a complete migration from legacy systems to a modern web interface.
-
-## 🎯 Project Overview
-
-The SDGW 1914-1919 project preserves and provides modern access to historical military records from World War I. It transforms a legacy Windows application into a modern, searchable web interface with comprehensive data export capabilities.
-
-### Key Features
-
-- **🔍 Advanced Search**: Search through 709,203+ military records
-- **📊 Data Export**: Complete CSV exports for analysis
-- **🌐 Modern Web UI**: Clean, responsive interface built with Flask
-- **📱 Senior-Friendly Design**: Large fonts and intuitive navigation
-- **🗄️ SQLite Database**: Fast, reliable data storage with 26 indexes
-- **🧪 Comprehensive Testing**: 39+ tests ensuring data integrity
-
-## 📋 Project Status
-
-### ✅ Phase A: Data Access Layer (Complete)
-- DataExtractor class for accessing legacy MDB files
-- 7 CSV exports with validation
-- Data profiling and documentation
-- **14 tests passing**
-
-### ✅ Phase B: Data Migration (Complete)  
-- Complete migration to SQLite database
-- 709,203 records across 7 tables
-- 26 performance indexes
-- **25 tests passing**
-
-### 🟡 Phase C: Basic Web UI (~75% Complete)
-- Flask web application with search and detail views
-- Responsive design with accessibility features
-- **Known Issues**: Pagination bug, date formatting
-- **Missing**: Related records, breadcrumbs, UI tests
-
-### 🔴 Phase D: Desktop Application (Not Started)
-- Standalone desktop app using pywebview
-- Senior-first UX overhaul
-- Fuzzy search capabilities
-- Windows deployment
-
-## 🚀 Quick Start
-
-### Prerequisites
-
-- Python 3.8+
-- pip package manager
-
-### Installation
-
-1. **Clone the repository**
-   ```bash
-   git clone https://github.com/eek2020/SDGW1914-1919.git
-   cd SDGW1914-1919
-   ```
-
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Run the web application**
-   ```bash
-   python src/web_app.py
-   ```
-
-4. **Access the application**
-   Open your browser to `http://localhost:5000`
-
-### Database Setup
-
-The main database (`data/sd_2011.db`) is excluded from git due to size constraints. To recreate it:
-
-1. Place your original `sd_2011.mdb` file in the `data/` directory
-2. Run the migration script:
-   ```bash
-   python src/data_migration.py
-   ```
-
-## 📁 Project Structure
-
-```
-SDGW1914-1919/
-├── src/                    # Source code
-│   ├── web_app.py         # Flask web application
-│   ├── data_access.py     # Legacy data access
-│   ├── data_migration.py  # Database migration
-│   ├── schema.sql         # Database schema
-│   ├── scripts/           # Utility scripts
-│   ├── templates/         # HTML templates
-│   └── static/           # CSS and assets
-├── data/                  # Data files
-│   ├── exports/          # CSV exports
-│   └── backups/          # Database backups
-├── tests/                 # Test suite
-├── docs/                  # Documentation
-├── old_system/           # Legacy system files
-└── logs/                 # Application logs
-```
-
-## 🧪 Testing
-
-Run the complete test suite:
-
-```bash
-# Data access tests
-python -m pytest tests/test_data_access.py
-
-# Migration tests  
-python -m pytest tests/test_migration.py
-
-# All tests
-python -m pytest tests/
-```
-
-## 📊 Data Overview
-
-### Database Schema
-
-| Table | Records | Description |
-|-------|---------|-------------|
-| soldiers | ~703,000 | Service personnel records |
-| officers | ~6,200 | Officer records |
-| battalions | ~8,500 | Unit information |
-| ranks | ~500 | Rank hierarchy |
-| regiments | ~300 | Regiment details |
-| casualties | ~703,000 | Casualty information |
-| theaters | ~10 | Theater of operations |
-
-### Key Data Fields
-
-- **Personnel**: Name, service number, rank, regiment, battalion
-- **Service**: Enlistment date, death date, theater of operations
-- **Casualty**: Death date, burial location, memorial information
-- **Administrative**: Record source, validation status
-
-## 🔧 Development
-
-### Adding New Features
-
-1. **Database changes**: Update `src/schema.sql`
-2. **Web features**: Modify `src/web_app.py` and templates
-3. **Data access**: Extend `src/data_access.py`
-4. **Testing**: Add corresponding tests in `tests/`
-
-### Code Style
-
-- Follow PEP 8 for Python code
-- Use descriptive variable names
-- Add docstrings for functions and classes
-- Maintain test coverage above 90%
-
-## 📚 Documentation
-
-- **[Data Access Plan](docs/01_DATA_ACCESS_PLAN.md)** - Phase A specifications
-- **[Migration Plan](docs/04_PRD_B_DATA_MIGRATION.md)** - Phase B specifications  
-- **[UI Specifications](docs/05_PRD_C_BASIC_UI.md)** - Phase C requirements
-- **[Desktop Application](docs/09_PRD_D_DESKTOP_APPLICATION.md)** - Phase D roadmap
-- **[Implementation Status](docs/08_IMPLEMENTATION_STATUS.md)** - Current progress
-
-## 🤝 Contributing
-
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
-
-## 📄 License
-
-This project is dedicated to preserving historical military data. Please ensure respect for the historical records and individuals documented.
-
-## 🙏 Acknowledgments
-
-- Original data from Commonwealth War Graves Commission
-- Legacy system preservation efforts
-- Contributors to historical data digitization
-
-## 📞 Support
-
-For questions, issues, or contributions:
-
-- Create an issue on GitHub
-- Check the documentation in the `docs/` directory
-- Review the test files for usage examples
+Modern web application for searching **703,806 World War I military personnel records** from the "Soldiers Died in the Great War 1914-19" dataset. Originally a Windows CD-ROM application (Version 2.5, The Naval & Military Press Ltd.), now a Flask web app with SQLite backend.
 
 ---
 
-**Note**: Large database files are excluded from this repository for size constraints. See the Database Setup section above for recreation instructions.
+## Project Status
+
+| Phase | Status | Tests |
+| --- | --- | --- |
+| **A: Data Access** — Extract from legacy `.mdb` | Complete | 14 passing |
+| **B: Data Migration** — Load into SQLite | Complete | 25 passing |
+| **C: Web UI** — Flask search & display | Complete | 81 passing |
+| **D: Desktop App** — Standalone `.exe` for Windows | Not started | — |
+| **Total** | | **120 tests** |
+
+---
+
+## Quick Start
+
+### Prerequisites
+
+- Python 3.11+
+- `data/sd_2011.db` (SQLite database, 257 MB — gitignored; see [Rebuilding the Database](#rebuilding-the-database))
+
+### Run
+
+```bash
+pip3 install -r requirements.txt
+./server.sh start
+# Open http://127.0.0.1:5001
+```
+
+Or run directly:
+
+```bash
+python3 src/web_app.py
+# Open http://127.0.0.1:5001
+```
+
+### Test
+
+```bash
+python3 -m pytest tests/ -v
+```
+
+---
+
+## Features
+
+- **12-field multi-parameter search** — surname, christian names, initials, service number, rank, battalion, birth town, enlistment location, decoration, death location, death date range, record type
+- **Surname autocomplete** — 50,323 distinct surnames with instant suggestions
+- **Cascading filters** — dropdowns narrow based on active filters (Advanced mode)
+- **Basic/Advanced search mode** — toggle in nav bar; persisted in localStorage
+- **Paginated results** — 20 per page with First/Previous/Next/Last navigation
+- **Card and table view** — toggle saved in sessionStorage
+- **5 sort options** — Name A-Z/Z-A, Death Date earliest/latest, Rank
+- **Removable filter pills** — click to remove individual filters
+- **Record detail view** — grouped sections, related records, record-by-record navigation
+- **Breadcrumb navigation** — Home > Results > Record
+- **CSV export** — up to 10,000 rows, UTF-8 with BOM for Excel
+- **Copy to clipboard** — one-click formatted record text
+- **Human-readable dates** — "5 September 1915" (not ISO format)
+- **Print support** — individual records and results lists
+- **WCAG AAA accessibility** — 7:1 contrast, 18px+ fonts, 44px touch targets, keyboard navigation, ARIA landmarks, skip-to-main
+- **Display settings** — theme (light/dark/system), density, layout, font size
+- **Annotation system** — user-contributed supplemental data and image uploads (backend complete)
+
+---
+
+## Database
+
+**SQLite:** `data/sd_2011.db` (257 MB)
+
+| Table | Rows | Purpose |
+| --- | --- | --- |
+| `soldiers` | 661,960 | Enlisted soldier records |
+| `officers` | 41,846 | Officer records |
+| `ranks` | 547 | Rank reference |
+| `battalions_sd` | 721 | Scottish Division battalions |
+| `battalions_od` | 480 | Other Districts battalions |
+| `regiment_battalion_sd` | 1,987 | Regiment-battalion mapping (SD) |
+| `regiment_battalion_od` | 1,662 | Regiment-battalion mapping (OD) |
+| `surname_lookup` | 50,323 | Autocomplete index |
+
+27 indexes for multi-parameter search. Additional tables for annotations, images, and reference data.
+
+See `docs/architecture/DATABASE_SCHEMA.md` for full schema reference.
+
+---
+
+## Rebuilding the Database
+
+If `data/sd_2011.db` is not available:
+
+```bash
+# 1. Install mdbtools (macOS)
+brew install mdbtools
+
+# 2. Export CSVs from legacy MDB
+python3 src/scripts/export_data.py
+
+# 3. Validate exports
+python3 src/scripts/validate_export.py
+
+# 4. Migrate to SQLite
+python3 src/scripts/migrate_personnel.py
+
+# 5. Apply annotation schema
+python3 src/scripts/apply_amendments.py
+
+# 6. Load reference data
+sqlite3 data/sd_2011.db < src/reference_data.sql
+
+# 7. Validate
+python3 src/scripts/validate_migration.py
+```
+
+---
+
+## Project Structure
+
+```text
+SDGW 1914-1919/
+├── src/
+│   ├── web_app.py              Flask application (1,691 lines)
+│   ├── annotations.py          Annotation/image manager
+│   ├── data_access.py          MDB data extractor
+│   ├── data_migration.py       CSV → SQLite migrator
+│   ├── schema.sql              Core database DDL
+│   ├── schema_amendments.sql   Annotation/image schema
+│   ├── reference_data.sql      Regiment names, theatres, regions
+│   ├── scripts/                Utility scripts
+│   ├── templates/              7 Jinja2 HTML templates
+│   └── static/                 CSS, icons
+├── tests/                      120 tests across 4 files
+├── data/                       Database and exports (gitignored)
+├── docs/                       Documentation
+│   ├── MASTER_PLAN.md          Single source of truth
+│   ├── architecture/           Schema reference
+│   ├── process/                Development guide
+│   └── archive/                Archived PRDs and plans
+├── old_system/                 Legacy CD-ROM files and screenshots
+├── requirements.txt            Python dependencies
+└── server.sh                   Server management script
+```
+
+---
+
+## Documentation
+
+- **[Master Plan](docs/MASTER_PLAN.md)** — Single source of truth for project status, architecture, and roadmap
+- **[Database Schema](docs/architecture/DATABASE_SCHEMA.md)** — Complete schema reference
+- **[Development Guide](docs/process/DEVELOPMENT_GUIDE.md)** — Setup, testing, and coding conventions
+
+### Archived Documents
+
+All original PRDs and planning documents are preserved in `docs/archive/` with completion summaries:
+
+- `docs/archive/prds/` — PRDs A through E with status annotations
+- `docs/archive/plans/` — Superseded planning documents, reports, and analysis
+
+---
+
+## Acknowledgements
+
+- **Original data:** "Soldiers Died in the Great War 1914-19 Version 2.5" by The Naval & Military Press Ltd.
+- **Licence:** Vendor has granted permission for modernisation and web deployment.
+
+---
+
+**Note:** Database files (`data/*.db`, `data/*.mdb`) are gitignored due to size. See [Rebuilding the Database](#rebuilding-the-database) for recreation instructions.

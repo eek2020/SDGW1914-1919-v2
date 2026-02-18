@@ -4,8 +4,23 @@
 
 **Version:** 1.0
 **Date:** 16 February 2026
-**Status:** Draft
+**Status:** NOT STARTED — Archived for reference; see MASTER_PLAN.md for current priorities
 **Audience:** Engineering Team & Stakeholders
+
+---
+
+> ## Archive Note
+>
+> **Status:** NOT STARTED — Zero implementation has been done for this PRD.
+> **Archived:** This PRD is preserved as a reference for the desktop application initiative.
+> All requirements remain valid. Consult `docs/MASTER_PLAN.md` for current prioritization.
+>
+> ### Key Dependencies Before Starting
+>
+> - Phase C web UI is complete and stable
+> - Fuzzy/phonetic search requires Soundex columns in database (schema change)
+> - Windows 11 build machine required for PyInstaller packaging
+> - pywebview dependency not yet in `requirements.txt`
 
 ---
 

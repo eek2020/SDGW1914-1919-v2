@@ -4,8 +4,53 @@
 
 **Version:** 1.2  
 **Date:** 17 February 2026  
-**Status:** Complete — Aligned with Implementation  
+**Status:** COMPLETED  
 **Audience:** Engineering Team & Stakeholders
+
+---
+
+> ## Completion Summary
+>
+> **Status:** COMPLETED — All core requirements delivered and verified.
+> **Completion Date:** February 2026
+>
+> ### What Was Delivered
+>
+> - `src/web_app.py` — Flask application: search form, results page, detail view, autocomplete API, filter-options API, CSV export, annotation/image routes, 404 handler
+> - `src/templates/home.html` — Search form with Tom Select dropdowns, surname autocomplete, dynamic filter narrowing, Basic/Advanced search mode toggle
+> - `src/templates/search_results.html` — Paginated results with card/table toggle, sort controls, filter pills with removal, print support, CSV export
+> - `src/templates/detail.html` — Full record view with related records, record-by-record navigation (First/Prev/Next/Last), copy to clipboard, breadcrumbs
+> - `src/templates/settings.html` — User display preferences (theme, density, layout, font size)
+> - `src/templates/about.html` — About page
+> - `src/templates/annotation_form.html` — Annotation editing form
+> - `src/templates/404.html` — Friendly error page
+> - `src/static/style.css` — Responsive CSS with WCAG AAA contrast, 18px+ fonts, 44px touch targets, print styles, dark/light/system themes
+> - `src/annotations.py` — AnnotationManager for user-contributed supplemental data and images
+> - `src/schema_amendments.sql` — Annotation/image database schema (4 tables + 2 views)
+> - `tests/test_web_app.py` — 43 tests, all passing
+> - `tests/test_ui.py` — 38 UI structure/accessibility tests, all passing
+>
+> ### Deviations from PRD v1.0
+>
+> - **12 search fields** (PRD specified fewer): surname, christian names, initials, service number, rank, battalion, birth town, enlistment location, decoration, death location, death date range, record type
+> - **20 results per page** (PRD said 10, implementation started at 50, reduced to 20 in Sprint 2)
+> - **Tom Select CDN** dependency added for enhanced dropdowns (not in original tech stack)
+> - **Card/table view toggle**, **5 sort options**, **removable filter pills**, **breadcrumbs**, **CSV export**, **copy to clipboard** all added beyond original scope
+> - **Record-by-record navigation** with First/Prev/Next/Last in detail view
+> - **API endpoints** added: `/api/surname-suggest`, `/api/filter-options`, `/api/fuzzy-suggest`, `/api/annotations/stats`
+> - **Annotation and image upload system** added (backend complete, UI templates created)
+> - **Settings page** with theme, density, layout, font size preferences
+> - **Basic/Advanced search mode** toggle with cascading filter control
+> - **Reference data tables** added: regiment names, theatre groups, region places, place keywords (`src/reference_data.sql`)
+>
+> ### Links to Implementation
+>
+> - `src/web_app.py` — Core application
+> - `src/annotations.py` — Annotation system
+> - `src/templates/` — All 7 HTML templates
+> - `src/static/style.css` — Styling
+> - `src/schema_amendments.sql`, `src/reference_data.sql` — Extended schema
+> - `tests/test_web_app.py`, `tests/test_ui.py` — Test suites
 
 > **v1.2 Changelog (17 Feb 2026):** Updated to match actual implementation. Key changes: 12 search fields (was 2), 50 results per page (was 10), Tom Select CDN dependency added, card/table view toggle, 5 sort options, filter pills, record-by-record navigation, breadcrumb navigation, CSV export, human-readable death dates, API endpoints documented, test suites documented. See ENH-12 in `11_PRD_E_ENHANCEMENTS.md`.
 

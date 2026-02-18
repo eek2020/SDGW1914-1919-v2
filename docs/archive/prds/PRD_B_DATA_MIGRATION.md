@@ -4,8 +4,40 @@
 
 **Version:** 1.1  
 **Date:** 17 February 2026  
-**Status:** Complete — Schema Aligned with Implementation  
+**Status:** COMPLETED  
 **Audience:** Engineering Team & Stakeholders
+
+---
+
+> ## Completion Summary
+>
+> **Status:** COMPLETED — All requirements delivered and verified.  
+> **Completion Date:** February 2026
+>
+> ### What Was Delivered
+>
+> - `src/schema.sql` — Full DDL: 8 tables (7 data + 1 lookup), 27 indexes, includes `surname_lookup` materialised table
+> - `src/data_migration.py` — `DataMigrator` class: type conversions, date parsing (DD/MM/YY → ISO 8601), chunked inserts for SOLDIERS (5,000/batch)
+> - `src/scripts/migrate_personnel.py` — CLI runner: drops old DB, applies schema, loads all tables in FK order
+> - `src/scripts/validate_migration.py` — Post-migration validation: row counts, null checks, date parsing verification, search performance benchmarks, spot checks
+> - `data/sd_2011.db` — 257.3 MB SQLite database, fully indexed, ready for queries
+> - `tests/test_migration.py` — 25 tests, all passing
+>
+> ### Deviations from PRD v1.0
+>
+> - **8 tables instead of 6:** `surname_lookup` added for autocomplete; `regiment_battalion_associations` split into `regiment_battalion_sd` and `regiment_battalion_od`
+> - **27 indexes instead of 7:** Additional composite indexes added for multi-parameter search performance
+> - **Column name changes:** `enlistment_location` → `enlistment_loc`, `additional_notes` → `additional_text`
+> - **`created_at`/`updated_at` not implemented:** Data is read-only historical records; timestamps not needed
+> - **SQLite chosen over PostgreSQL:** Single-file database ideal for desktop distribution; no production PostgreSQL needed
+> - All deviations documented in v1.1 changelog
+>
+> ### Links to Implementation
+>
+> - `src/schema.sql` — Database DDL
+> - `src/data_migration.py` — Core module
+> - `src/scripts/migrate_personnel.py`, `validate_migration.py` — Scripts
+> - `tests/test_migration.py` — Test suite
 
 > **v1.1 Changelog (17 Feb 2026):** Updated §5.2 schema to match actual implementation. Documented column name mappings (PRD → actual). Noted `created_at`/`updated_at` not implemented (read-only data). Updated index count from 7 to 27. Added `surname_lookup` table. Split `regiment_battalion_associations` into `_sd` and `_od` tables. See ENH-11 in `11_PRD_E_ENHANCEMENTS.md`.
 

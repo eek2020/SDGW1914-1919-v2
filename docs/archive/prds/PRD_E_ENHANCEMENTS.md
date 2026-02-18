@@ -4,9 +4,39 @@
 
 **Version:** 1.0
 **Date:** 17 February 2026
-**Status:** Draft — Prioritized Backlog
+**Status:** PARTIALLY COMPLETED — Archived; see MASTER_PLAN.md for remaining items
 **Audience:** Engineering Team & Stakeholders
 **Source:** Parity Report (`10_PARITY_REPORT.md`) — gaps, regressions, and opportunities identified during legacy-to-modern system audit.
+
+---
+
+> ## Archive Note
+>
+> **Status:** PARTIALLY COMPLETED — 8 of 13 enhancements delivered.
+> **Archived:** Remaining items carried forward to `docs/MASTER_PLAN.md`.
+>
+> ### Completed Enhancements
+>
+> | ID | Enhancement | Status |
+> |---|---|---|
+> | ENH-01 | Human-readable death dates | DONE |
+> | ENH-02 | UI test suite (test_ui.py) — 38 tests | DONE |
+> | ENH-03 | Breadcrumb navigation | DONE |
+> | ENH-04 | Export results to CSV | DONE |
+> | ENH-05 | Copy record to clipboard | DONE |
+> | ENH-10 | First/Last record navigation | DONE |
+> | ENH-11 | PRD B schema alignment update | DONE |
+> | ENH-12 | PRD C implementation alignment update | DONE |
+>
+> ### Remaining Enhancements (carried to MASTER_PLAN.md)
+>
+> | ID | Enhancement | Priority |
+> |---|---|---|
+> | ENH-06 | Saved record lists / bookmarks | P3 |
+> | ENH-07 | Formal accessibility audit | P2 |
+> | ENH-08 | Loading indicator | P3 |
+> | ENH-09 | User guide documentation | P3 |
+> | ENH-13 | Missing files cleanup | P3 |
 
 ---
 

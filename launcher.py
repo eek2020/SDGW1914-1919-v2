@@ -23,6 +23,28 @@ if not FROZEN:
 
 os.environ.setdefault("FLASK_SECRET_KEY", os.urandom(32).hex())
 
+
+def _claim_app_mutex():
+    """Hold a named Windows mutex so Inno Setup can detect this running app.
+
+    The name must match AppMutex in packaging/installer.iss. The handle is
+    returned and stored at module scope so it lives for the lifetime of the
+    process — closing the handle releases the mutex and tells the installer
+    the app is gone. Without this, /CLOSEAPPLICATIONS in the silent updater
+    is a no-op and the install over a running .exe silently fails to replace
+    locked files.
+    """
+    if not (FROZEN and sys.platform == "win32"):
+        return None
+    try:
+        import ctypes
+        return ctypes.windll.kernel32.CreateMutexW(None, False, "SDGW1914-1919-AppMutex")
+    except Exception:
+        return None
+
+
+_APP_MUTEX = _claim_app_mutex()
+
 HOST = "127.0.0.1"
 PORT = 5001
 URL = f"http://{HOST}:{PORT}"

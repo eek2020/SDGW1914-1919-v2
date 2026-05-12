@@ -25,6 +25,13 @@ AppName=Soldiers Died in the Great War 1914-1919
 AppVersion={#AppVersion}
 AppVerName=SDGW 1914-1919 {#AppVersion}
 AppPublisher=eek2020
+; AppMutex must match the named mutex created in launcher.py on Windows.
+; Without it, /CLOSEAPPLICATIONS passed by the silent auto-updater has no
+; way to identify the running SDGW.exe, so the running process holds file
+; locks and the installer cannot overwrite them — the "update" produces no
+; version change. With AppMutex set, Inno Setup detects the running app
+; and gracefully closes + restarts it.
+AppMutex=SDGW1914-1919-AppMutex
 AppPublisherURL=https://github.com/eek2020/SDGW1914-1919-v2
 AppSupportURL=https://github.com/eek2020/SDGW1914-1919-v2/issues
 DefaultDirName={localappdata}\SDGW

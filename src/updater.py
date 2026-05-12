@@ -23,6 +23,7 @@ import subprocess
 import sys
 import tempfile
 import time
+import traceback
 import urllib.error
 import urllib.request
 from pathlib import Path
@@ -44,6 +45,26 @@ def _state_dir() -> Path:
         base = os.environ.get("LOCALAPPDATA") or str(Path.home() / "AppData" / "Local")
         return Path(base) / "SDGW"
     return Path.home() / ".config" / "sdgw"
+
+
+def _log_file() -> Path:
+    return _state_dir() / "updater.log"
+
+
+def _log(msg: str) -> None:
+    """Append a timestamped line to updater.log. Never raises."""
+    try:
+        _state_dir().mkdir(parents=True, exist_ok=True)
+        with open(_log_file(), "a", encoding="utf-8") as f:
+            ts = time.strftime("%Y-%m-%d %H:%M:%S")
+            f.write(f"{ts} [{__version__}] {msg}\n")
+    except Exception:
+        pass
+
+
+def _log_exc(msg: str) -> None:
+    """Append a message plus traceback. Never raises."""
+    _log(msg + "\n" + traceback.format_exc())
 
 
 def _last_check_file() -> Path:
@@ -89,9 +110,11 @@ def _is_newer(latest: str, current: str) -> bool:
 def check_for_update() -> Optional[dict]:
     """Return {'tag', 'url', 'size'} if a newer release exists, else None."""
     if not _should_check():
+        _log("skip: throttled by last_update_check timestamp")
         return None
 
     api_url = f"https://api.github.com/repos/{__repo__}/releases/latest"
+    _log(f"checking {api_url}")
     try:
         req = urllib.request.Request(
             api_url,
@@ -102,51 +125,55 @@ def check_for_update() -> Optional[dict]:
         )
         with urllib.request.urlopen(req, timeout=NETWORK_TIMEOUT_SECONDS) as resp:
             data = json.loads(resp.read().decode("utf-8"))
-    except (urllib.error.URLError, TimeoutError, ValueError, OSError):
+    except Exception as e:
+        _log(f"check failed: {type(e).__name__}: {e}")
         return None
 
     _mark_checked()
 
     latest_tag = data.get("tag_name", "")
-    if not latest_tag or not _is_newer(latest_tag, __version__):
+    _log(f"github says latest={latest_tag!r}, current={__version__!r}")
+    if not latest_tag:
+        _log("skip: no tag_name in response")
+        return None
+    if not _is_newer(latest_tag, __version__):
+        _log(f"skip: parsed {_parse_version(latest_tag)} not newer than {_parse_version(__version__)}")
         return None
 
     for asset in data.get("assets", []):
         if asset.get("name") == INSTALLER_ASSET_NAME:
+            _log(f"found asset {INSTALLER_ASSET_NAME}, size={asset.get('size', 0)}")
             return {
                 "tag": latest_tag,
                 "url": asset["browser_download_url"],
                 "size": asset.get("size", 0),
             }
+    _log(f"skip: no asset named {INSTALLER_ASSET_NAME} in release")
     return None
 
 
 def _download(url: str, target: Path) -> None:
+    _log(f"downloading {url} -> {target}")
     with urllib.request.urlopen(url, timeout=DOWNLOAD_TIMEOUT_SECONDS) as resp, open(target, "wb") as out:
         while True:
             chunk = resp.read(64 * 1024)
             if not chunk:
                 break
             out.write(chunk)
+    _log(f"download complete, {target.stat().st_size} bytes")
 
 
 def _spawn_installer(installer: Path) -> None:
-    """Launch Inno Setup installer detached with silent + close + restart flags.
-
-    /SILENT     - shows progress dialog, no wizard
-    /CLOSEAPPLICATIONS - asks running SDGW.exe to close so files can be replaced
-    /RESTARTAPPLICATIONS - relaunches SDGW.exe after install
-    /NORESTART  - never reboots Windows (just in case)
-    """
+    """Launch Inno Setup installer detached with silent + close + restart flags."""
     flags = DETACHED_PROCESS | CREATE_NO_WINDOW
-    subprocess.Popen(
-        [str(installer), "/SILENT", "/CLOSEAPPLICATIONS", "/RESTARTAPPLICATIONS", "/NORESTART"],
-        creationflags=flags,
-        close_fds=True,
-    )
+    cmd = [str(installer), "/SILENT", "/CLOSEAPPLICATIONS", "/RESTARTAPPLICATIONS", "/NORESTART"]
+    _log(f"spawning: {' '.join(cmd)}")
+    proc = subprocess.Popen(cmd, creationflags=flags, close_fds=True)
+    _log(f"installer pid={proc.pid}")
 
 
 def _show_splash_and_install(release: dict) -> bool:
+    _log(f"showing splash for {release['tag']}")
     """Display a small pywebview splash while downloading + spawning installer.
 
     Returns True if the installer was spawned successfully (caller should
@@ -164,8 +191,9 @@ def _show_splash_and_install(release: dict) -> bool:
             _download(release["url"], target)
             _spawn_installer(target)
             result["spawned"] = True
-        except Exception:
-            pass
+            _log("worker complete, will destroy splash window")
+        except Exception as e:
+            _log_exc(f"worker failed: {type(e).__name__}: {e}")
         finally:
             for w in list(webview.windows):
                 try:
@@ -202,16 +230,23 @@ def try_update() -> bool:
     if sys.platform != "win32":
         return False
     if not getattr(sys, "frozen", False):
+        _log("skip: not frozen (dev mode)")
         return False
 
+    _log(f"try_update() starting, current={__version__}")
     try:
         release = check_for_update()
-    except Exception:
+    except Exception as e:
+        _log_exc(f"check_for_update raised: {type(e).__name__}: {e}")
         return False
     if release is None:
+        _log("no update to apply")
         return False
 
     try:
-        return _show_splash_and_install(release)
-    except Exception:
+        spawned = _show_splash_and_install(release)
+        _log(f"splash returned spawned={spawned}")
+        return spawned
+    except Exception as e:
+        _log_exc(f"splash failed: {type(e).__name__}: {e}")
         return False

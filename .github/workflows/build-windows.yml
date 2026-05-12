@@ -1,0 +1,114 @@
+name: Build Windows installer
+
+on:
+  push:
+    branches: [main]
+    tags: ['v*']
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Cache pip
+        uses: actions/cache@v4
+        with:
+          path: ~\AppData\Local\pip\Cache
+          key: pip-${{ runner.os }}-${{ hashFiles('requirements-build.txt') }}
+
+      - name: Install build dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements-build.txt
+
+      - name: Compute version
+        id: version
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF -like 'refs/tags/v*') {
+            $v = $env:GITHUB_REF -replace 'refs/tags/v',''
+          } else {
+            $v = "0.0.0-$($env:GITHUB_SHA.Substring(0,7))"
+          }
+          "version=$v" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          Write-Host "AppVersion: $v"
+
+      - name: Download database from db-base release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force -Path data | Out-Null
+          gh release download db-base --pattern 'sd_2011.db.zip' --dir data --clobber
+          if (-not (Test-Path data\sd_2011.db.zip)) {
+            Write-Error "data\sd_2011.db.zip not found. Eric: upload sd_2011.db.zip as an asset on the 'db-base' release on this repo. See README."
+            exit 1
+          }
+          Expand-Archive -Path data\sd_2011.db.zip -DestinationPath data -Force
+          Remove-Item data\sd_2011.db.zip
+          if (-not (Test-Path data\sd_2011.db)) {
+            Write-Error "sd_2011.db not present after extracting db-base asset."
+            exit 1
+          }
+          Write-Host "DB size: $((Get-Item data\sd_2011.db).Length / 1MB) MB"
+
+      - name: Build PyInstaller bundle
+        run: pyinstaller packaging/sdgw.spec --noconfirm
+
+      - name: Verify PyInstaller output
+        shell: pwsh
+        run: |
+          if (-not (Test-Path dist\SDGW\SDGW.exe)) {
+            Write-Error "PyInstaller did not produce dist\SDGW\SDGW.exe"
+            exit 1
+          }
+          Get-ChildItem dist\SDGW\ | Select-Object -First 10
+
+      - name: Compile Inno Setup installer
+        shell: pwsh
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          if (-not (Test-Path $iscc)) {
+            Write-Error "Inno Setup not found at $iscc. The windows-latest runner image should include it."
+            exit 1
+          }
+          & $iscc "/DAppVersion=${{ steps.version.outputs.version }}" packaging\installer.iss
+          if (-not (Test-Path build\SDGW-Setup.exe)) {
+            Write-Error "Inno Setup did not produce build\SDGW-Setup.exe"
+            exit 1
+          }
+          $size = (Get-Item build\SDGW-Setup.exe).Length / 1MB
+          Write-Host "SDGW-Setup.exe: $size MB"
+
+      - name: Upload installer as workflow artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: SDGW-Setup-${{ steps.version.outputs.version }}
+          path: build/SDGW-Setup.exe
+          retention-days: 30
+
+      - name: Publish to GitHub Release (tag pushes only)
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        shell: pwsh
+        run: |
+          $tag = $env:GITHUB_REF -replace 'refs/tags/',''
+          gh release view $tag *> $null
+          if ($LASTEXITCODE -ne 0) {
+            gh release create $tag --title "SDGW $tag" --notes "Auto-generated release. Download SDGW-Setup.exe below."
+          }
+          gh release upload $tag build\SDGW-Setup.exe --clobber
+          Write-Host "Published SDGW-Setup.exe to release $tag"
+          Write-Host "Stable URL: https://github.com/$env:GITHUB_REPOSITORY/releases/latest/download/SDGW-Setup.exe"

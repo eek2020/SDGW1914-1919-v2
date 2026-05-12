@@ -15,10 +15,22 @@ from datetime import datetime
 from flask import Flask, render_template, request, g, jsonify, url_for, Response, redirect, flash, send_file, make_response
 from pathlib import Path
 import sys
-sys.path.insert(0, str(Path(__file__).parent))
+
+if getattr(sys, 'frozen', False):
+    BUNDLE_DIR = Path(getattr(sys, '_MEIPASS', Path(sys.executable).parent / "_internal"))
+    INSTALL_DIR = Path(sys.executable).parent
+    TEMPLATE_DIR = BUNDLE_DIR / "templates"
+    STATIC_DIR = BUNDLE_DIR / "static"
+else:
+    sys.path.insert(0, str(Path(__file__).parent))
+    HERE = Path(__file__).parent
+    INSTALL_DIR = HERE.parent
+    TEMPLATE_DIR = HERE / "templates"
+    STATIC_DIR = HERE / "static"
+
 from annotations import AnnotationManager
 
-app = Flask(__name__)
+app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATIC_DIR))
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-only-fallback-key')
 
 WRITE_PASSPHRASE = os.environ.get('SDGW_WRITE_PASSPHRASE', '')
@@ -54,8 +66,8 @@ def human_date_short(value):
     return _format_date(value, '%-d %b %Y')
 
 
-# Database path
-DB_PATH = Path(__file__).parent.parent / "data" / "sd_2011.db"
+# Database path — INSTALL_DIR is the repo root in dev, the install dir (next to SDGW.exe) when frozen
+DB_PATH = INSTALL_DIR / "data" / "sd_2011.db"
 
 # Valid sort options: (label, ORDER BY clause for officers, ORDER BY clause for soldiers, ORDER BY for union)
 SORT_OPTIONS = {

@@ -1,9 +1,10 @@
 """Single-window launcher for SDGW 1914-1919.
 
-Double-click target for the macOS .app bundle and Windows .bat shortcut.
-Starts the Flask server on 127.0.0.1:5001 in a daemon thread, then opens
-a native window pointing at it. Closing the window ends the process and
-the daemon-thread server dies with it.
+Entry point for both the development workflow (run from repo root) and
+the PyInstaller-frozen Windows/macOS bundle. Starts the Flask server on
+127.0.0.1:5001 in a daemon thread, then opens a native window pointing
+at it. Closing the window ends the process and the daemon-thread server
+dies with it.
 """
 
 import os
@@ -13,9 +14,12 @@ import threading
 import time
 from pathlib import Path
 
-REPO_ROOT = Path(__file__).resolve().parent
-sys.path.insert(0, str(REPO_ROOT))
-sys.path.insert(0, str(REPO_ROOT / "src"))
+FROZEN = getattr(sys, 'frozen', False)
+
+if not FROZEN:
+    REPO_ROOT = Path(__file__).resolve().parent
+    sys.path.insert(0, str(REPO_ROOT))
+    sys.path.insert(0, str(REPO_ROOT / "src"))
 
 os.environ.setdefault("FLASK_SECRET_KEY", os.urandom(32).hex())
 
@@ -45,11 +49,36 @@ def _wait_for_server(timeout: float = 15.0) -> bool:
     return False
 
 
+def _show_error(message: str) -> None:
+    """Show a native dialog so a non-technical user sees the problem clearly."""
+    try:
+        import webview
+        webview.create_window("SDGW 1914-1919", html=f"<body style='font-family:Segoe UI,sans-serif;padding:2em;'><h2>SDGW 1914-1919</h2><p>{message}</p></body>", width=560, height=300)
+        webview.start()
+    except Exception:
+        sys.stderr.write(message + "\n")
+
+
 def main() -> int:
+    from src.web_app import DB_PATH
+
+    if not DB_PATH.exists():
+        _show_error(
+            "The personnel database file could not be found.<br><br>"
+            f"Expected at: <code>{DB_PATH}</code><br><br>"
+            "Please reinstall the application, or contact whoever sent it to you."
+        )
+        return 1
+
     if not _port_open(HOST, PORT):
         threading.Thread(target=_run_server, daemon=True).start()
         if not _wait_for_server():
-            sys.stderr.write(f"SDGW server failed to start on {URL}\n")
+            _show_error(
+                "The application failed to start its internal server.<br><br>"
+                "This is usually caused by another program already using port 5001, "
+                "or by antivirus software blocking the application. "
+                "Please restart your PC and try again."
+            )
             return 1
 
     import webview

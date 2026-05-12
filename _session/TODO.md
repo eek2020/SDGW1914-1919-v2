@@ -2,15 +2,7 @@
 
 ## Active queue
 
-- [ ] **Validate the silent auto-update path end-to-end on a real Windows machine.** The load-bearing thing right now — the whole "email one URL forever" distribution promise is unproven until we've watched a silent update succeed in the field.
-  - Pre-requisite: a newer release tag than the version installed on the target machine. Either an existing newer release on `eek2020/SDGW1914-1919-v2`, or cut a no-op bump tag (see next item).
-  - On target machine: delete `%LOCALAPPDATA%\SDGW\last_update_check` to bypass the 24h throttle. Launch SDGW. Watch for splash → install → relaunch → footer shows new version.
-  - On any failure: read `%LOCALAPPDATA%\SDGW\updater.log` — every decision point is logged ([`src/updater.py`](../src/updater.py)).
-  - Once proven: never lower the 24h throttle in production code.
-
-- [ ] **Cut a no-op version-bump tag** *(supports the validation above; needs explicit user sign-off — tag push affects shared state)*.
-  - `git tag v0.X.Y+1 && git push origin v0.X.Y+1`. CI ([`.github/workflows/build-windows.yml`](../.github/workflows/build-windows.yml)) builds and attaches `SDGW-Setup.exe` to the matching GitHub Release.
-  - Pair with a trivial visible change (e.g. footer string tweak) so the user can confirm the version flipped after the silent update.
+*(empty — Phase D is signed off in the field as of 2026-05-13. Pick from Next-up.)*
 
 ## Next-up (not started; pick by user direction)
 
@@ -32,6 +24,7 @@
 
 ## Done
 
+- [x] **Silent auto-update path validated end-to-end** (2026-05-13). Fixed the missing-`AppMutex` bug in [`installer.iss`](../packaging/installer.iss) + matching mutex in [`launcher.py`](../launcher.py) (commit [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a) → v0.2.3 baseline). Cut v0.2.4 (commit [`2b22f3e`](https://github.com/eek2020/SDGW1914-1919-v2/commit/2b22f3e), `.version-tag` opacity 0.6 → 0.85) as the proof point. On the user's Windows machine: deleted throttle file, launched, splash appeared, installer ran silently, app relaunched, footer flipped v0.2.3 → v0.2.4. See [PROGRESS.md](PROGRESS.md) for the diagnostic narrative.
 - [x] **Adopted EngineeringFramework session-continuity pattern** (2026-05-12). Created `_session/HANDOVER.md` + `_session/TODO.md` + `_session/PROGRESS.md`; added bootstrap pointer at the top of [CLAUDE.md](../CLAUDE.md). See [PROGRESS.md](PROGRESS.md) for the framing decision.
 - [x] **Phase A — Data Access** (mdbtools → CSV extraction pipeline; one-time).
 - [x] **Phase B — Migration** (CSV → SQLite; `src/data_migration.py`; 703,806 rows landed across 8 tables + 27 indexes).

@@ -6,6 +6,32 @@
 
 ---
 
+## 2026-05-13 — Silent auto-update path proven end-to-end (Phase D done)
+
+**What changed.** Identified and fixed the root cause of "auto-update appears to run but the installed version doesn't change", then proved the fix in the field.
+
+**The bug.** `packaging/installer.iss` had no `AppMutex` directive. The auto-updater at `src/updater.py:169` spawns Inno Setup with `/SILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /NORESTART` — but `/CLOSEAPPLICATIONS` needs `AppMutex` to know *which* running process to close. Without it, the running `SDGW.exe` kept its file locks, the installer silently failed to replace `SDGW.exe` + `_internal/*`, and the relaunched app was still the old code. Symptom in the field: footer kept reading the old version after every "update".
+
+**The fix.** Two coupled edits in commit [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a) (v0.2.3):
+
+1. `packaging/installer.iss`: `AppMutex=SDGW1914-1919-AppMutex` added to `[Setup]`, with an in-file comment explaining the coupling.
+2. `launcher.py`: `_claim_app_mutex()` calls `kernel32.CreateMutexW(None, False, "SDGW1914-1919-AppMutex")` at module load. The handle is stored in `_APP_MUTEX` at module scope so it lives for the process lifetime. Guarded to `FROZEN and sys.platform == "win32"` so dev runs on macOS/Linux/pytest are untouched. Created *before* `try_update()` runs so it's owned from the very first instant.
+
+**Validation.** Cut v0.2.4 (commit [`2b22f3e`](https://github.com/eek2020/SDGW1914-1919-v2/commit/2b22f3e)) as the proof point — `.version-tag` opacity 0.6 → 0.85 chosen because (a) it gave the footer version flip a small bonus legibility improvement aimed at the actual end user, and (b) "no empty commits" is the project rule. On the user's Windows machine: deleted `%LOCALAPPDATA%\SDGW\last_update_check` to bypass the 24h throttle, launched SDGW, splash appeared, installer ran silently, app relaunched, footer flipped `v0.2.3 → v0.2.4`. Phase D is signed off in the field.
+
+**Decisions taken.**
+
+1. **Don't introduce a quick-fix safety net.** I considered adding `Flags: restartreplace` to the `[Files]` lines as a belt-and-braces fallback, but rejected it — `restartreplace` defers the overwrite to next reboot, which is exactly the "I installed it but it still says the old version" experience for the elderly end user. The proper fix (mutex) is the only one that produces a clean update in a single launch.
+2. **Pre-flight diagnosis caveat noted in-session.** Surface readings (the user reported "shows 2.0" while v0.2.0 doesn't have the footer commit) couldn't be fully explained before the fix. The fix worked anyway — the field result *is* the validation — but a follow-up worth flagging: if anyone reports a version-display oddity after future updates, check that CI's PowerShell `Out-File -Encoding utf8` BOM step in [`.github/workflows/build-windows.yml`](../.github/workflows/build-windows.yml) isn't introducing an import quirk.
+3. **Bootstrap install must be manual for one more rev.** v0.2.3 added the mutex, so updates *to* v0.2.3 from a pre-mutex install (v0.2.2 or earlier) still couldn't close cleanly — the user manually downloaded and reinstalled SDGW-Setup.exe to land on v0.2.3. From v0.2.3 onward the mutex is in place and auto-updates work. This is a one-time bootstrap cost; never recurs.
+4. **Working agreement held throughout.** Mini-passes: diagnose → propose → wait for approval → edit → wait for approval → tag → wait for CI → validate → wrap. Author-approval per git action enforced — every commit, push, and tag had explicit user sign-off.
+
+**Cross-document edits.** `packaging/installer.iss` (+7), `launcher.py` (+22), `src/static/style.css` (1-line opacity bump). Two new release tags (v0.2.3, v0.2.4). Auto-memory updated: `project_auto_update.md` now reflects validation status + the AppMutex requirement.
+
+**Open questions raised.** None blocking. Carried items unchanged: USB installer bug (May 2026 build) is still open; archive remote audit still deferred; archival-as-skill question still parked.
+
+---
+
 ## 2026-05-12 — Adopted EngineeringFramework session-continuity pattern
 
 **What changed.** Created `_session/HANDOVER.md`, `_session/TODO.md`, and this file. Added a short bootstrap pointer at the top of [CLAUDE.md](../CLAUDE.md) so a new session reads the static project doc first and then the session-state files.

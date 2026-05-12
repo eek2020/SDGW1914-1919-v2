@@ -27,6 +27,8 @@ a = Analysis(
     ] + webview_datas,
     hiddenimports=[
         'annotations',
+        'updater',
+        'version',
         'clr',
         'clr_loader',
         'pythonnet',

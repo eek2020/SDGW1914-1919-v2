@@ -60,6 +60,17 @@ def _show_error(message: str) -> None:
 
 
 def main() -> int:
+    # Check for self-update before doing anything else. No-ops on dev
+    # builds, non-Windows, and when no update is available. If an update
+    # was kicked off this returns True and we exit so the installer can
+    # replace files; Inno Setup's /RESTARTAPPLICATIONS relaunches us.
+    try:
+        from src.updater import try_update
+        if try_update():
+            return 0
+    except Exception:
+        pass
+
     from src.web_app import DB_PATH
 
     if not DB_PATH.exists():

@@ -33,7 +33,6 @@ DisableDirPage=auto
 DisableProgramGroupPage=yes
 DisableWelcomePage=no
 PrivilegesRequired=lowest
-PrivilegesRequiredOverridesAllowed=dialog
 OutputBaseFilename=SDGW-Setup
 OutputDir=..\build
 SetupIconFile=..\src\static\SDGW1419.ico

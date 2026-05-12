@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Entry point for the "SDGW 1914-1919.app" bundle.
+# The .app sits inside the repo, so the repo root is three levels up.
+set -e
+
+BUNDLE_MACOS="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$BUNDLE_MACOS/../../.." && pwd)"
+LOGFILE="$REPO_ROOT/logs/sdgw_launcher.log"
+mkdir -p "$REPO_ROOT/logs"
+
+PYTHON_BIN="$(command -v python3 || true)"
+if [ -z "$PYTHON_BIN" ]; then
+    /usr/bin/osascript -e 'display dialog "Python 3 is required but was not found. Please install Python 3 from python.org and try again." buttons {"OK"} default button "OK" with icon caution with title "SDGW 1914-1919"'
+    exit 1
+fi
+
+cd "$REPO_ROOT"
+exec "$PYTHON_BIN" -u launcher.py >>"$LOGFILE" 2>&1

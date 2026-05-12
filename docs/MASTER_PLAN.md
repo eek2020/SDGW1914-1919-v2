@@ -337,11 +337,6 @@ SDGW 1914-1919/
 │   ├── test_migration.py              25 tests (Phase B)
 │   ├── test_web_app.py                43 tests (Phase C routes)
 │   └── test_ui.py                     38 tests (UI structure/accessibility)
-├── old_system/                        Legacy CD-ROM application files
-│   ├── screens/                       13 screenshots of original UI
-│   ├── help/SDHELP.exe                Original help system
-│   ├── runtime/                       Neuron105 runtime environment
-│   └── README.TXT                     Original installation instructions
 └── docs/
     ├── MASTER_PLAN.md                 ← This document (single source of truth)
     ├── architecture/

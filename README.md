@@ -25,13 +25,24 @@ Modern web application for searching **703,806 World War I military personnel re
 
 ### Run
 
+**For end users (recommended) — one-click launcher with the SDGW icon:**
+
+After a one-time `pip3 install -r requirements.txt`:
+
+- **macOS** — double-click `SDGW 1914-1919.app` in the repo root. The app window opens with the SDGW icon; closing the window stops the embedded server.
+- **Windows** — double-click `SDGW 1914-1919.bat` (or a desktop shortcut to it; right-click → Properties → Change Icon → `src\static\SDGW1419.ico`). Closing the window stops the server.
+
+Both launchers use a single native window (no browser, no separate server step). The first launch on macOS may prompt Gatekeeper — right-click the `.app` once and choose "Open" to approve it.
+
+**For developers — command-line:**
+
 ```bash
 pip3 install -r requirements.txt
 ./server.sh start
 # Open http://127.0.0.1:5001
 ```
 
-Or run directly:
+Or run the Flask app directly:
 
 ```bash
 python3 src/web_app.py
@@ -140,9 +151,11 @@ SDGW 1914-1919/
 │   ├── architecture/           Schema reference
 │   ├── process/                Development guide
 │   └── archive/                Archived PRDs and plans
-├── old_system/                 Legacy CD-ROM files and screenshots
+├── launcher.py                 Single-window launcher (Flask + pywebview)
+├── SDGW 1914-1919.app/         macOS double-click app bundle
+├── SDGW 1914-1919.bat          Windows double-click launcher
 ├── requirements.txt            Python dependencies
-└── server.sh                   Server management script
+└── server.sh                   Server management script (CLI / dev)
 ```
 
 ---

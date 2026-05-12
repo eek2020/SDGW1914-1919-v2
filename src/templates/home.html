@@ -6,7 +6,7 @@
     <title>SDGW 1914-1919 - Personnel Database Search</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='SDGW1419.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/css/tom-select.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/tom-select.css') }}">
     <style>
         .ts-wrapper { flex: 1; }
         .ts-wrapper .ts-control { border: 1.5px solid #cbd5e1; border-radius: var(--border-radius, 8px); padding: 0 2rem 0 0.75rem; height: var(--input-height, 40px); font-size: inherit; background: #fff; display: flex; align-items: center; overflow: hidden; flex-wrap: nowrap !important; position: relative; }
@@ -493,7 +493,7 @@
         </div>
     </footer>
 
-<script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/js/tom-select.complete.min.js"></script>
+<script src="{{ url_for('static', filename='vendor/tom-select.complete.min.js') }}"></script>
 <script>
 (function() {
     const FILTER_OPTIONS_URL = '{{ url_for("filter_options") }}';

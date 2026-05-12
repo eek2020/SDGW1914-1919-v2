@@ -6,7 +6,7 @@
     <title>Search Results - SDGW 1914-1919</title>
     <link rel="icon" type="image/x-icon" href="{{ url_for('static', filename='SDGW1419.ico') }}">
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/css/tom-select.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='vendor/tom-select.css') }}">
     <style>
         .quick-filter-field .ts-wrapper { width: 100% !important; display: block !important; }
         .quick-filter-field .ts-wrapper .ts-control {
@@ -330,7 +330,7 @@
         </div>
     </footer>
 
-    <script src="https://cdn.jsdelivr.net/npm/tom-select@2.4.1/dist/js/tom-select.complete.min.js"></script>
+    <script src="{{ url_for('static', filename='vendor/tom-select.complete.min.js') }}"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
         var form = document.querySelector('.results-quick-filters');

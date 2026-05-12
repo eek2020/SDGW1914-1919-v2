@@ -1,0 +1,7 @@
+# Build-time dependencies for PyInstaller-packaged Windows .exe.
+# CI uses this; developers use requirements.txt.
+
+Flask==3.0.0
+Werkzeug==3.0.2
+pywebview==5.1
+pyinstaller==6.10.0

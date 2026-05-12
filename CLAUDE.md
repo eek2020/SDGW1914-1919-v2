@@ -214,6 +214,7 @@ These constants live in `src/web_app.py` (or `src/annotations.py`, `src/updater.
 - **Don't create extra docs unprompted.** This file, the README, and the docs in `docs/` already cover everything; don't scatter new `.md` files at the root.
 - **Honour the audience.** Any UI change should be testable by a 70-year-old on a 1366×768 laptop with reading glasses. Big targets, plain language, no jargon, no tiny icons without labels.
 - **Use the project permission allowlist.** `.claude/settings.json` pre-approves read-only inspection commands (git status/log/diff, gh run/release view, file reads) so non-destructive work moves at pace. Operations that change state — `git push`, `git tag`, `gh release create/upload`, `gh repo edit`, `rm`, etc. — still prompt for confirmation. **Do not silently expand the allowlist** to include state-changing commands; ask first.
+- **Keep code clean and lean. Don't trade clean for fast silently.** When a quick fix would solve the immediate problem but introduce later rework (a hardcoded branch, a workaround layered on a workaround, a copy-paste rather than a small extraction), name the tradeoff out loud before taking it: "this solves it now but costs us X later because Y — happy to do the lean version, takes a bit longer." Silent quick fixes accumulate into technical debt that becomes invisible until it's expensive to unwind. Three more lines of properly-scoped code today is almost always cheaper than the rewrite next quarter.
 
 ---
 

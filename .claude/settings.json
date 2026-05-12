@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json.schemastore.org/claude-code-settings.json",
+  "permissions": {
+    "allow": [
+      "Bash(ls *)",
+      "Bash(pwd)",
+      "Bash(cat *)",
+      "Bash(head:*)",
+      "Bash(tail:*)",
+      "Bash(wc:*)",
+      "Bash(file:*)",
+      "Bash(stat:*)",
+      "Bash(find *)",
+      "Bash(grep:*)",
+      "Bash(rg:*)",
+      "Bash(echo:*)",
+      "Bash(which:*)",
+      "Bash(command -v *)",
+      "Bash(test *)",
+      "Bash(diff *)",
+
+      "Bash(git status:*)",
+      "Bash(git log:*)",
+      "Bash(git diff:*)",
+      "Bash(git show:*)",
+      "Bash(git blame:*)",
+      "Bash(git branch:*)",
+      "Bash(git remote -v)",
+      "Bash(git remote show:*)",
+      "Bash(git ls-files:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git check-ignore:*)",
+      "Bash(git fetch:*)",
+      "Bash(git config --get:*)",
+
+      "Bash(gh run list:*)",
+      "Bash(gh run view:*)",
+      "Bash(gh run watch:*)",
+      "Bash(gh release view:*)",
+      "Bash(gh release list:*)",
+      "Bash(gh release download:*)",
+      "Bash(gh repo view:*)",
+      "Bash(gh workflow list:*)",
+      "Bash(gh workflow view:*)",
+      "Bash(gh api repos/eek2020/SDGW1914-1919-v2/*)",
+      "Bash(gh auth status)",
+
+      "Bash(python3 -m py_compile *)",
+      "Bash(python3 -c *)",
+      "Bash(bash -n *)",
+
+      "Bash(curl -sI*)",
+      "Bash(curl -sIL*)",
+
+      "Bash(mkdir -p *)",
+      "Bash(chmod +x *)"
+    ],
+    "ask": [],
+    "deny": []
+  }
+}

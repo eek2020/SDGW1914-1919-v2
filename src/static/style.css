@@ -2134,6 +2134,14 @@ footer[role="contentinfo"] {
     color: #475569;
 }
 
+.version-tag {
+    color: #64748b;
+    font-size: 0.75rem;
+    margin-left: 0.5rem;
+    opacity: 0.6;
+    font-variant-numeric: tabular-nums;
+}
+
 /* Simple footer fallback (for pages not yet updated) */
 footer[role="contentinfo"] > p {
     text-align: center;

@@ -30,7 +30,17 @@ else:
 
 from annotations import AnnotationManager
 
+try:
+    from version import __version__ as APP_VERSION
+except ImportError:
+    APP_VERSION = "dev"
+
 app = Flask(__name__, template_folder=str(TEMPLATE_DIR), static_folder=str(STATIC_DIR))
+
+
+@app.context_processor
+def _inject_app_version():
+    return {"app_version": APP_VERSION}
 app.secret_key = os.environ.get('FLASK_SECRET_KEY', 'dev-only-fallback-key')
 
 WRITE_PASSPHRASE = os.environ.get('SDGW_WRITE_PASSPHRASE', '')

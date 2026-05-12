@@ -4,6 +4,17 @@ Guidance for Claude (and other AI coding assistants) when working in this reposi
 
 This file is the AI-facing complement to `README.md`, `docs/MASTER_PLAN.md`, and `docs/process/DEVELOPMENT_GUIDE.md`. Read those first if you need deeper detail; this document distils what an assistant needs to be productive without breaking anything.
 
+## Read on session start
+
+In order:
+
+1. **This file** — static project doc (tech stack, invariants, file paths, release flow). Doesn't change session-to-session.
+2. [`_session/HANDOVER.md`](_session/HANDOVER.md) — current state, active task, paste-able resume prompt, end-of-session checklist.
+3. [`_session/TODO.md`](_session/TODO.md) — active queue.
+4. [`_session/PROGRESS.md`](_session/PROGRESS.md) — append-only log of decisions and work.
+
+Then proceed with the active task in HANDOVER.md. Mini-passes only — one focused unit of work, then check in. Update HANDOVER + PROGRESS + TODO at session end.
+
 ---
 
 ## 1. Project at a Glance

@@ -4,15 +4,17 @@
 
 ## Status
 
-**Phases A–D complete. Silent auto-update path proven hands-free end-to-end on the user's Windows machine on 2026-05-13.** Three load-bearing fixes shipped today, each diagnosed from the live `updater.log` rather than assumed: **AppMutex** (v0.2.3, closing the running app), **truststore SSL** (v0.2.5, downloading the new installer), and **paired `[Run]` with `skipifnotsilent`** (v0.2.7, relaunching the app after silent install). v0.2.6 → v0.2.7 validated in the field: download 84,792,335 bytes in 5m27s, install 26s, **app auto-relaunched 71s after install completion** with no human interaction. The "email one URL forever" distribution promise is operationally true.
+**Phases A–D complete. Silent auto-update path proven hands-free end-to-end on 2026-05-13.** Three load-bearing fixes shipped that day, each diagnosed from the live `updater.log` rather than assumed: **AppMutex** (v0.2.3, closing the running app), **truststore SSL** (v0.2.5, downloading the new installer), and **paired `[Run]` with `skipifnotsilent`** (v0.2.7, relaunching the app after silent install). v0.2.6 → v0.2.7 validated: download 84,792,335 bytes in 5m27s, install 26s, **app auto-relaunched 71s after install completion** with no human interaction.
 
-Key recent commits: [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a) **AppMutex fix**, [`a754eef`](https://github.com/eek2020/SDGW1914-1919-v2/commit/a754eef) **truststore SSL fix**, [`bfd6bf8`](https://github.com/eek2020/SDGW1914-1919-v2/commit/bfd6bf8) **paired `[Run]` relaunch fix**, [`a9f81ae`](https://github.com/eek2020/SDGW1914-1919-v2/commit/a9f81ae) PM session wrap.
+**Most recent session (2026-05-13, evening 2):** Maintenance pass on CI. Bumped four GitHub Actions in [.github/workflows/build-windows.yml](../.github/workflows/build-windows.yml) to their Node 24 majors ahead of the 2026-06-02 deprecation deadline (`checkout v4→v5`, `setup-python v5→v6`, `cache v4→v5`, `upload-artifact v4→v6`). Shipped in commit [`ddc0b0c`](https://github.com/eek2020/SDGW1914-1919-v2/commit/ddc0b0c). User attempted a re-test of the updater after deleting the throttle file — correctly observed no update happened, because the `main` push builds a workflow artifact but does not publish a release; `releases/latest` still resolves to v0.2.7 (matching the running version). Expected behaviour, confirmed.
 
-Working tree currently dirty with session-wrap doc updates (this file, `_session/PROGRESS.md`, `_session/TODO.md`, auto-memory). Pending commit + push.
+Key recent commits: [`ddc0b0c`](https://github.com/eek2020/SDGW1914-1919-v2/commit/ddc0b0c) **CI actions Node 24 bump**, [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a) AppMutex fix, [`a754eef`](https://github.com/eek2020/SDGW1914-1919-v2/commit/a754eef) truststore SSL fix, [`bfd6bf8`](https://github.com/eek2020/SDGW1914-1919-v2/commit/bfd6bf8) paired `[Run]` relaunch fix.
+
+Working tree currently dirty with session-wrap doc updates (this file, [_session/PROGRESS.md](PROGRESS.md), [_session/TODO.md](TODO.md)). Pending commit + push.
 
 ## Active task
 
-**None — Phase D is fully signed off in the field as of 2026-05-13.** Pick the next thing from Next-up candidates when ready.
+**None — Phase D is fully signed off and the June CI deprecation deadline is cleared.** Pick the next thing from Next-up candidates when ready.
 
 ## Next-up candidates
 
@@ -21,7 +23,8 @@ Picked by user direction. None block the others.
 1. **Audit the `archive` remote for unmerged work** — older Inno Setup scripts and vendored assets that were done independently. Deferred per CLAUDE.md §11; only revisit with explicit user sign-off because the two histories have diverged.
 2. **Annotation UI integration on the detail page** is partial (backend complete). Promote when prioritised; do as its own mini-pass.
 3. **Performance debt items** carried in TODO.md *Open questions* — detail-page query count, `fuzzy_suggest` caching, CI test wiring, fixture-based test isolation. Not blocking distribution; pick when feature work quiets.
-4. **Archival-as-skill question (parked)** — whether to operationalise PROGRESS.md archival cadence as a Claude Code skill rather than a prose rule in this file. Decide if archival passes start firing often enough to be friction.
+4. **Updater throttle-on-failure refinement** — `_mark_checked()` in [src/updater.py](../src/updater.py) sets the 24h throttle after API success but before download attempt, so a download failure locks out retries for a day. Low priority since the silent path is validated; worth fixing if any future regression breaks the download leg again.
+5. **Archival-as-skill question (parked)** — whether to operationalise PROGRESS.md archival cadence as a Claude Code skill rather than a prose rule in this file. Decide if archival passes start firing often enough to be friction.
 
 ## Carried items
 

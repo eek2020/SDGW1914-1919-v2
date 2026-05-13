@@ -6,6 +6,31 @@
 
 ---
 
+## 2026-05-13 — CI maintenance: bumped GitHub Actions to Node 24 majors
+
+**Work done.** Bumped four pinned actions in [.github/workflows/build-windows.yml](../.github/workflows/build-windows.yml) ahead of the 2026-06-02 deprecation deadline / 2026-09-16 removal cutoff for Node 20 actions:
+
+| Action | Old | New | Notes |
+| --- | --- | --- | --- |
+| `actions/checkout` | v4 | v5 | Pure Node 24 bump. v6 also exists (adds creds-to-separate-file) but no functional gain here. |
+| `actions/setup-python` | v5 | v6 | Node 24 + minor features. No API breaks for our usage. |
+| `actions/cache` | v4 | v5 | Pure Node 24 bump. |
+| `actions/upload-artifact` | v4 | v6 | v5 was preliminary Node 24; v6 makes it the default. v7 only adds optional direct-upload — not needed. |
+
+`runs-on: windows-latest` already points at the new image alias, so no runner pin change needed.
+
+**Shipped in commit [`ddc0b0c`](https://github.com/eek2020/SDGW1914-1919-v2/commit/ddc0b0c). CI run [25791179643](https://github.com/eek2020/SDGW1914-1919-v2/actions/runs/25791179643) kicked off automatically on the `main` push.
+
+**Decisions taken.**
+
+1. **Conservative pin choice.** For each action, picked the lowest major that is fully on Node 24, not the latest available. Avoids inheriting unrelated feature changes (e.g. upload-artifact v7's ESM rewrite + direct-upload behavior) when the goal is just clearing deprecation warnings.
+2. **Push to `main` is sufficient for validation.** The workflow runs on `push: branches: [main]`, so we don't need a tag bump to exercise the bumped actions. Tag pushes only differ in that they additionally publish to the Release.
+3. **No tag cut.** Confirmed user observation: re-opening the app after deleting `last_update_check` did not produce an update, which is correct — the `main` push builds a workflow artifact but does not publish a release, so `releases/latest` still resolved to v0.2.7 (matching the running version). Expected behaviour, not a regression. Per CLAUDE.md §11: tags are the one manual gate, deliberately.
+
+**Open questions raised.** None. The other TODO open-questions (detail-page query count, fuzzy_suggest caching, CI pytest wiring, test isolation, updater throttle-on-failure, auto-updater rollback) are unchanged. Next session picks from Next-up candidates per user direction.
+
+---
+
 ## 2026-05-13 — SSL cert failure in updater diagnosed and fixed (truststore); v0.2.5 → v0.2.6 silent update succeeded; relaunch gap identified and fixed; v0.2.6 → v0.2.7 hands-free auto-relaunch confirmed
 
 **Final status:** Phase D fully signed off. Three load-bearing fixes shipped and all three proven end-to-end on the user's Windows machine in a single working session. The "email one URL forever" distribution promise is no longer theoretical — it works in the field, silent, hands-free, with a 71-second relaunch latency on a real ~80 MB delta.

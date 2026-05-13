@@ -6,9 +6,9 @@
 
 ---
 
-## 2026-05-13 — SSL cert failure in updater diagnosed and fixed (truststore); v0.2.5 → v0.2.6 silent update succeeded; relaunch gap identified
+## 2026-05-13 — SSL cert failure in updater diagnosed and fixed (truststore); v0.2.5 → v0.2.6 silent update succeeded; relaunch gap identified and fixed; v0.2.6 → v0.2.7 hands-free auto-relaunch confirmed
 
-**Status when this entry was finalised:** v0.2.5 → v0.2.6 silent update completed successfully on the field machine. Footer reads v0.2.6, updater.log shows clean chain end-to-end. **One residual issue:** Inno Setup's `/RESTARTAPPLICATIONS` flag is a no-op without Windows Restart Manager registration, and `installer.iss` only had a `[Run]` entry with `skipifsilent` — so silent installs left the app closed. Fix added (paired `skipifnotsilent` entry); awaiting v0.2.7 to validate.
+**Final status:** Phase D fully signed off. Three load-bearing fixes shipped and all three proven end-to-end on the user's Windows machine in a single working session. The "email one URL forever" distribution promise is no longer theoretical — it works in the field, silent, hands-free, with a 71-second relaunch latency on a real ~80 MB delta.
 
 **What changed.** After walking back the morning's overclaimed validation, we got the actual diagnostic from the field `updater.log` and identified the real failure mode of the silent auto-update path. Fixed it with a single dependency add, cut v0.2.5 (bootstrap) and v0.2.6 (visible-change test), and the silent v0.2.5 → v0.2.6 update is currently downloading on the field machine.
 
@@ -30,7 +30,7 @@
 | (morning rollback) | Docs only — retract overclaimed validation, retire USB | [`9f1fc7f`](https://github.com/eek2020/SDGW1914-1919-v2/commit/9f1fc7f) | n/a (docs) |
 | v0.2.5 | SSL fix via truststore; manual bootstrap on field machine | [`25783214893`](https://github.com/eek2020/SDGW1914-1919-v2/actions/runs/25783214893) | ✓ installed, footer reads v0.2.5 |
 | v0.2.6 | Visible-change test (`.version-tag` opacity 0.85 → 1.0) | [`25785297920`](https://github.com/eek2020/SDGW1914-1919-v2/actions/runs/25785297920) | ✓ silent update succeeded; download 84,755,110 bytes in 6m52s; install 26s; footer reads v0.2.6 at full opacity. App did NOT auto-relaunch (see relaunch gap below). |
-| v0.2.7 | Installer relaunch fix (`installer.iss` paired `[Run]` with `skipifnotsilent`) | _pending tag_ | _pending field test_ |
+| v0.2.7 | Installer relaunch fix (`installer.iss` paired `[Run]` with `skipifnotsilent`) | [`25787404058`](https://github.com/eek2020/SDGW1914-1919-v2/actions/runs/25787404058) | ✓ hands-free end-to-end. Download 84,792,335 bytes in 5m27s; install 26s; **app auto-relaunched 71s after install completion** (v0.2.6 splash → v0.2.7 `try_update()` log entry, no human interaction). The "email one URL forever" promise is operationally true. |
 
 **Decisions taken.**
 
@@ -53,7 +53,15 @@
 | Frozen Python SSL trust | Download leg fails `CERTIFICATE_VERIFY_FAILED` on GitHub release CDN | `truststore.inject_into_ssl()` at top of `src/updater.py` | v0.2.5 (`a754eef`) |
 | Silent install never reopens app | Update succeeds, files replaced, but app stays closed; elderly user has to find it on desktop | Paired `[Run]` entry in `installer.iss` with `skipifnotsilent` | v0.2.7 (pending tag) |
 
-**Open questions raised.** Once v0.2.7 confirms the relaunch fix, Phase D is genuinely signed off. The Active task retires; the working agreement carries us forward with the known-good "email one URL forever" promise.
+**Final retrospective.** Three things stand out from today's work:
+
+1. **The morning's overclaimed validation was the most important moment of the session.** If the 2026-05-13 AM "validated end-to-end" entry had not been walked back, the SSL bug would have stayed invisible (because "splash appeared then app launched normally" reads identically to "splash appeared, install happened, app relaunched"). The discipline of demanding observed proof — and admitting when proof was not actually observed — is what got us to the real diagnostic (the SSLCertVerificationError traceback in updater.log) within the same session.
+
+2. **Three independent bugs in one feature is unusual.** AppMutex, truststore SSL, and the paired `[Run]` are each load-bearing and each silent — none of them produced a user-visible error, all of them broke the "email one URL forever" promise. The fail-invisible design philosophy of the updater amplified this: every failure mode shows up as "splash appeared then nothing happened." Without the file-based `updater.log` (added in commit `4170850` earlier in the project history), we could not have diagnosed any of them. The log is now the load-bearing diagnostic tool; never disable it.
+
+3. **Author-approval per action was correct discipline.** Each git commit, push, and tag was a separate explicit approval. Six tags published across the day (or rather: 3 — v0.2.5, v0.2.6, v0.2.7) — each one a deliberate decision. No drive-by commits, no auto-pushes, no surprises. The pattern survived a fast-moving session under real-world pressure (user opening logs on a Windows machine, downloads progressing live).
+
+**Open questions raised.** Phase D is fully signed off. The throttle-on-failure follow-up captured in TODO.md remains as low-priority maintenance debt. The GH Actions Node.js 20 deprecation by 2026-06-02 needs a maintenance pass before the deadline. The Active task in HANDOVER.md retires; future work picks from Next-up candidates per user direction.
 
 ---
 

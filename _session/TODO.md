@@ -19,6 +19,8 @@
 - **Test isolation** — tests run against the production DB; fixture-based isolation is on the roadmap.
 - **CI test wiring** — CI runs the Windows build pipeline only; pytest is not yet wired into CI.
 - **Auto-updater rollback path** — none currently. Recovery for a bad release is "uninstall via Add/Remove Programs, reinstall from URL". Ship releases carefully.
+- **Updater throttle behavior on download failure.** `_mark_checked()` in [`src/updater.py`](../src/updater.py) is called after a successful API call but before the download attempt, so a failing download (e.g. the v0.2.3 SSL bug) sets the 24h throttle file anyway and the user can't naturally retry without deleting `%LOCALAPPDATA%\SDGW\last_update_check`. Better behavior: reset the throttle in the `worker()` exception path in `_show_splash_and_install()`. Won't recur once the silent path is fully validated; low priority but real friction if any future regression breaks the download leg again.
+- **GitHub Actions deprecation warnings.** CI annotations on every run flag Node.js 20 actions (`actions/cache@v4`, `actions/checkout@v4`, `actions/setup-python@v5`, `actions/upload-artifact@v4`) as deprecated by 2026-06-02 with removal by 2026-09-16. Also the `windows-2025` runner is being redirected to `windows-2025-vs2026` (already transparent; pin the new label when convenient). Not blocking today but worth a maintenance mini-pass before the June deadline.
 
 ## Done
 

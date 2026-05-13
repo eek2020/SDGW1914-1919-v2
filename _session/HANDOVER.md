@@ -4,15 +4,15 @@
 
 ## Status
 
-**Phases A–C complete. Phase D substantially complete in code but the silent auto-update path is NOT yet field-proven.** All Phase-D plumbing is shipped: PyInstaller spec, Inno Setup installer, CI workflow on tag push, silent on-launch updater, public download URL, and the `AppMutex` coupling between `installer.iss` and `launcher.py` that lets `/CLOSEAPPLICATIONS` actually close the running app. v0.2.4 is published to GitHub Releases. What hasn't happened: a clean, observed v0.2.4 → v0.2.5 silent update on the user's Windows machine. (An earlier session log claimed this was validated on 2026-05-13 — that claim was overstated; treat Phase D as not signed off.)
+**Phases A–C complete. Phase D 95% signed off as of 2026-05-13 PM — silent install + file replacement + version flip is proven; one remaining issue (app doesn't auto-relaunch post-install) is fixed in `installer.iss` and awaits v0.2.7 validation.** All Phase-D plumbing shipped: PyInstaller spec, Inno Setup installer, CI workflow on tag push, silent on-launch updater, public download URL, and the three load-bearing fixes found and fixed across today's session — **AppMutex** (v0.2.3, closing the running app), **truststore SSL** (v0.2.5, downloading the new installer), and **paired `[Run]` with `skipifnotsilent`** (v0.2.7 pending, relaunching the app after silent install). v0.2.5 → v0.2.6 confirmed clean on the field machine: download 84,755,110 bytes in 6m52s, install 26s, footer reads v0.2.6 at full opacity.
 
-Key recent commits: [`5efb7bd`](https://github.com/eek2020/SDGW1914-1919-v2/commit/5efb7bd) silent auto-updater, [`55ad769`](https://github.com/eek2020/SDGW1914-1919-v2/commit/55ad769) version footer, [`4170850`](https://github.com/eek2020/SDGW1914-1919-v2/commit/4170850) updater file logging, [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a) **AppMutex fix (the load-bearing one)**, [`2b22f3e`](https://github.com/eek2020/SDGW1914-1919-v2/commit/2b22f3e) v0.2.4 cut as a proof-point candidate.
+Key recent commits: [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a) **AppMutex fix**, [`a754eef`](https://github.com/eek2020/SDGW1914-1919-v2/commit/a754eef) **truststore SSL fix**, [`40cb97c`](https://github.com/eek2020/SDGW1914-1919-v2/commit/40cb97c) `.version-tag` opacity bump (v0.2.6 visible signal), plus pending uncommitted `installer.iss` relaunch fix for v0.2.7.
 
-Working tree is clean on `main`.
+Working tree currently dirty: `packaging/installer.iss` (the relaunch fix) + this file + `_session/PROGRESS.md` + `_session/TODO.md` + auto-memory `project_auto_update.md`, all reflecting the v0.2.6 confirmation and the relaunch-gap diagnosis. Pending commit + push + v0.2.7 tag.
 
 ## Active task
 
-**Validate the silent auto-update path end-to-end on the user's Windows machine.** Concrete next step (cut a v0.2.5 with a tiny visible change vs. force-trigger on the existing install) is to be decided per author-approval in the next mini-pass.
+**Validate the post-install relaunch on the user's Windows machine via v0.2.7.** The silent update mechanism itself is proven. After v0.2.7 ships, the test is: launch v0.2.6 → splash → install → expect the app to reopen itself **without user intervention** with footer reading v0.2.7. If confirmed, Phase D is fully signed off and the Active task retires.
 
 ## Next-up candidates
 
@@ -35,8 +35,9 @@ Full ledger in [PROGRESS.md](PROGRESS.md). One-bite version:
 
 - **Distribution model:** one URL, emailed once, that always resolves to the latest release. `https://github.com/eek2020/SDGW1914-1919-v2/releases/latest/download/SDGW-Setup.exe`.
 - **Install path:** per-user install to `%LOCALAPPDATA%\SDGW` — **no UAC prompt**, no "this user / all users" dialog.
-- **Auto-update:** silent, on-launch, throttled to once per 24h. Splash during download. Inno Setup spawned with `/SILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /NORESTART`. Fail-invisible — all exceptions swallowed; app launches normally on any error. Diagnostic file at `%LOCALAPPDATA%\SDGW\updater.log`. Field validation pending.
+- **Auto-update:** silent, on-launch, throttled to once per 24h. Splash during download. Inno Setup spawned with `/SILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /NORESTART`. Fail-invisible — all exceptions swallowed; app launches normally on any error. Diagnostic file at `%LOCALAPPDATA%\SDGW\updater.log`. Field validation in flight (v0.2.5 → v0.2.6) as of 2026-05-13 PM.
 - **`AppMutex` is mandatory.** Inno Setup's `/CLOSEAPPLICATIONS` flag is a no-op without `AppMutex` in `installer.iss`. The running `SDGW.exe` must hold a named Windows kernel mutex (`SDGW1914-1919-AppMutex`, created in `launcher.py` at module load when `FROZEN and win32`) so the installer can identify and close it. Without this, "silent updates" silently failed to replace locked files. Discovered + fixed in v0.2.3 commit [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a).
+- **`truststore` is mandatory.** Frozen PyInstaller Windows bundles can't verify the cert chain on GitHub's release-download CDN (`objects.githubusercontent.com`, the 302 target). The API call works (different chain); the download leg fails with `CERTIFICATE_VERIFY_FAILED`. `truststore.inject_into_ssl()` at the top of `src/updater.py` routes SSL trust through Windows' OS cert store (Crypt32) so the download succeeds. Chosen over `certifi` because the OS cert store is kept current by Windows Update — no forced release every time a CA chain rotates. Discovered + fixed in v0.2.5 commit [`a754eef`](https://github.com/eek2020/SDGW1914-1919-v2/commit/a754eef).
 - **DB is separate from the app binary.** Shipped as `sd_2011.db.zip` on the `db-base` Release tag. CI fetches at build time so the .exe always carries a fresh DB without bloating the repo.
 - **No code signing.** SmartScreen blue dialog mitigated by emailed screenshot on first install only; auto-updates inherit trust from the running app.
 - **No new runtime dependencies.** Standard library + Flask + Jinja2 + Tom Select (vendored) + Lucide (vendored). No build step. No SPA framework.

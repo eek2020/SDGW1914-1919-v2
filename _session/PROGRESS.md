@@ -6,6 +6,57 @@
 
 ---
 
+## 2026-05-13 — SSL cert failure in updater diagnosed and fixed (truststore); v0.2.5 → v0.2.6 silent update succeeded; relaunch gap identified
+
+**Status when this entry was finalised:** v0.2.5 → v0.2.6 silent update completed successfully on the field machine. Footer reads v0.2.6, updater.log shows clean chain end-to-end. **One residual issue:** Inno Setup's `/RESTARTAPPLICATIONS` flag is a no-op without Windows Restart Manager registration, and `installer.iss` only had a `[Run]` entry with `skipifsilent` — so silent installs left the app closed. Fix added (paired `skipifnotsilent` entry); awaiting v0.2.7 to validate.
+
+**What changed.** After walking back the morning's overclaimed validation, we got the actual diagnostic from the field `updater.log` and identified the real failure mode of the silent auto-update path. Fixed it with a single dependency add, cut v0.2.5 (bootstrap) and v0.2.6 (visible-change test), and the silent v0.2.5 → v0.2.6 update is currently downloading on the field machine.
+
+**The bug.** Frozen PyInstaller Windows bundles don't reliably resolve the cert chain for GitHub's release-download CDN. The flow worked up to the API call (`api.github.com` cert chain happens to be resolvable via the bundle's SSL setup) but failed at the redirected download host (`objects.githubusercontent.com`, the 302 target for `/releases/download/`). The worker raised `ssl.SSLCertVerificationError: CERTIFICATE_VERIFY_FAILED: unable to get local issuer certificate`, all exceptions were swallowed per fail-invisible policy, splash returned `spawned=False`, app relaunched on the old version. The footprint of "splash appears but version doesn't change" is *exactly* what this looks like — which explains why the morning's session log misread it as "validated."
+
+**The fix.** Commit [`a754eef`](https://github.com/eek2020/SDGW1914-1919-v2/commit/a754eef) (v0.2.5 baseline):
+
+1. `requirements.txt` + `requirements-build.txt`: add `truststore==0.10.4`.
+2. `src/updater.py`: guarded `truststore.inject_into_ssl()` at module load (Windows + frozen only, fail-invisible). Routes SSL trust through Windows' OS cert store (Crypt32) instead of Python's bundled defaults. No spec changes needed — PyInstaller picks `truststore` up automatically.
+
+**Why truststore over certifi.** Certifi ships its own CA bundle that drifts behind the OS — every CA chain rotation would force a new SDGW release. The end user can't be asked to manually reinstall every time DigiCert/Let's Encrypt/AWS rotate roots. truststore delegates to the OS trust store, which Windows Update keeps current. ~15KB, pure Python, maintained by Python's SSL maintainer. One line of init.
+
+**Bootstrap.** Same shape as the AppMutex bootstrap: v0.2.3 (no fix) couldn't pull v0.2.5 (with fix) automatically because the fix only exists *in* v0.2.5+. User manually downloaded `SDGW-Setup.exe` from the stable `/releases/latest/` URL, did the SmartScreen "More info → Run anyway", installed v0.2.5. From v0.2.5 onward, the SSL fix is in the running app. This is a one-time bootstrap cost that never recurs.
+
+**Sequence of releases today (chronological).**
+
+| Tag | Reason | CI run | Confirmed in field |
+| --- | --- | --- | --- |
+| (morning rollback) | Docs only — retract overclaimed validation, retire USB | [`9f1fc7f`](https://github.com/eek2020/SDGW1914-1919-v2/commit/9f1fc7f) | n/a (docs) |
+| v0.2.5 | SSL fix via truststore; manual bootstrap on field machine | [`25783214893`](https://github.com/eek2020/SDGW1914-1919-v2/actions/runs/25783214893) | ✓ installed, footer reads v0.2.5 |
+| v0.2.6 | Visible-change test (`.version-tag` opacity 0.85 → 1.0) | [`25785297920`](https://github.com/eek2020/SDGW1914-1919-v2/actions/runs/25785297920) | ✓ silent update succeeded; download 84,755,110 bytes in 6m52s; install 26s; footer reads v0.2.6 at full opacity. App did NOT auto-relaunch (see relaunch gap below). |
+| v0.2.7 | Installer relaunch fix (`installer.iss` paired `[Run]` with `skipifnotsilent`) | _pending tag_ | _pending field test_ |
+
+**Decisions taken.**
+
+1. **truststore over certifi.** OS trust store keeps the bundle independent of CA rotations. Avoids forcing periodic releases just to refresh `cacert.pem`.
+2. **Visible-change pattern for proof points.** `.version-tag` opacity nudges (0.6 → 0.85 → 1.0) are the cheap, reversible, instantly visible signal we'll use whenever we cut a real-world validation release. Lower-blast-radius than touching copy.
+3. **Honest doc updates during the download window.** Author chose to update docs while the v0.2.6 download was in progress rather than waiting for confirmation, on the principle that the work narrative is captured now and the result is a one-line follow-up. Per author: *"lets update docs in the mean time - pending confirmation it did in fact update."*
+4. **Throttle-on-failure behavior flagged as a follow-up.** `_mark_checked()` is called after a successful API call but before download attempt, so when the v0.2.3 download failed at SSL, the throttle file was set for 24h anyway. The user had to manually delete it to force a retry. Better behavior would be to reset the throttle in the download/spawn exception path so a failure naturally retries on next launch. Captured in TODO.md Open questions. Not blocking — won't recur once auto-update is proven working.
+
+**Cross-document edits.** `requirements.txt` (+truststore), `requirements-build.txt` (+truststore), `src/updater.py` (+11 lines for the guarded inject), `src/static/style.css` (1-line opacity bump for v0.2.6). Three new release tags (v0.2.5, v0.2.6). HANDOVER + this PROGRESS entry + auto-memory `project_auto_update.md` updated to reflect the SSL learning.
+
+**The relaunch gap.** After v0.2.6 confirmation, the user reported: *"app shows as v0.2.6, although i did leave it and when i came back the app was closed, assuming it doesnt aut restart after update?"* — and they're right, it doesn't. The updater spawns Inno Setup with `/RESTARTAPPLICATIONS`, but that flag only relaunches apps registered with Windows Restart Manager. Holding `AppMutex` makes `/CLOSEAPPLICATIONS` work (Inno Setup can find and close the running app) but doesn't register us with Restart Manager. Worse, `installer.iss` had a single `[Run]` entry with `skipifsilent` — so the "Launch SDGW now" tickbox the human user sees on the first-time install wizard is intentionally NOT run during silent installs. Net: silent updates landed cleanly but left the desktop blank. The elderly-friction implication is obvious: "click email link → app opens → updates happen invisibly → app stays open" is the promise; "→ app stays closed until user finds and opens it manually" is friction.
+
+**The relaunch fix.** Added a paired `[Run]` entry in `installer.iss` with the inverse flag `skipifnotsilent` — fires only during silent installs, runs `{app}\SDGW.exe` with `nowait` so Inno Setup doesn't block on the launch. Cleanest possible fix; no `launcher.py` changes, no Restart Manager plumbing. Same low-blast-radius pattern.
+
+**Three load-bearing fixes for Phase D, now identified and shipped (modulo v0.2.7 confirmation).**
+
+| Bug | Symptom | Fix | Shipped in |
+| --- | --- | --- | --- |
+| Missing AppMutex | Installer couldn't close locked .exe; files not replaced; "update" produced no version change | `AppMutex=SDGW1914-1919-AppMutex` in `installer.iss` + named mutex held by `launcher.py` | v0.2.3 (`913c31a`) |
+| Frozen Python SSL trust | Download leg fails `CERTIFICATE_VERIFY_FAILED` on GitHub release CDN | `truststore.inject_into_ssl()` at top of `src/updater.py` | v0.2.5 (`a754eef`) |
+| Silent install never reopens app | Update succeeds, files replaced, but app stays closed; elderly user has to find it on desktop | Paired `[Run]` entry in `installer.iss` with `skipifnotsilent` | v0.2.7 (pending tag) |
+
+**Open questions raised.** Once v0.2.7 confirms the relaunch fix, Phase D is genuinely signed off. The Active task retires; the working agreement carries us forward with the known-good "email one URL forever" promise.
+
+---
+
 ## 2026-05-13 — Correction: auto-update validation was overclaimed; USB channel retired
 
 **What changed.** Walked back the previous 2026-05-13 entry's claim that the silent auto-update path was proven end-to-end. The AppMutex code change in commit [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a) is real and shipped; v0.2.3 and v0.2.4 are real published releases; but a clean, observed silent v0.2.3 → v0.2.4 update on the user's Windows machine did **not** actually happen the way the prior log described. Phase D is not signed off. Validation goes back into the Active queue.

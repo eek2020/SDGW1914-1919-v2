@@ -67,4 +67,10 @@ Name: "{group}\Uninstall SDGW"; Filename: "{uninstallexe}"
 Name: "{userdesktop}\Soldiers Died in the Great War"; Filename: "{app}\SDGW.exe"; IconFilename: "{app}\SDGW.exe"; Tasks: desktopicon
 
 [Run]
+; Interactive first install: offer a "Launch SDGW" tick on the finish page.
 Filename: "{app}\SDGW.exe"; Description: "Launch SDGW now"; Flags: nowait postinstall skipifsilent
+; Silent install (auto-update path): relaunch SDGW immediately after files land.
+; /RESTARTAPPLICATIONS only works when the closed app is registered with Windows
+; Restart Manager; holding AppMutex alone is not enough. This [Run] entry is the
+; load-bearing way to reopen the app post-update for the elderly end user.
+Filename: "{app}\SDGW.exe"; Flags: nowait skipifnotsilent

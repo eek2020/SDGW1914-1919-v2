@@ -6,6 +6,73 @@
 
 ---
 
+## 2026-05-13 — Stale-folder audit, archive-remote diff, DB recovery sweep, CWGC rebuild plan agreed
+
+**Session arc.** Started as a "what's next" check (Phase D signed off, perf debt or annotations as candidates). Pivoted into an audit of stale SDGW-related folders scattered around `/Users/eric/` and `/Volumes/Repos`. That audit turned into a DB integrity sweep when the user surfaced a memory: the DB at one point had CWGC enrichment with UI sections showing CD-vs-CWGC diffs. We could not find that enrichment anywhere we could reach. Agreed to plan re-acquisition rather than continue searching.
+
+**Archive-remote diff (origin/main vs archive/main).** Per CLAUDE.md §11 sign-off, fetched `archive` (read-only, no merge). Archive diverged at `bce83e8` (Phase C wrap, last shared commit) and added 3 commits — folder-selection installer, vendored tom-select.css, early MASTER_PLAN. Origin grew the entire Phase D distribution stack from there. Material UI/backend deltas archive→origin (things archive had that origin lost):
+
+1. **Search loading overlay** in `home.html` — full-screen spinner + "Searching…" label, fired on form submit, hid on back-nav. Tagged `ENH-08`. Origin removed.
+2. **Per-page selector (10/20/50)** in `search_results.html` + matching `updatePerPage()` JS + `request.args.get('per_page')` validation in `web_app.py` — origin hardcoded `RESULTS_PER_PAGE=20` per [CLAUDE.md §7](../CLAUDE.md). Intentional removal.
+3. **`/health` endpoint** in `web_app.py` — used by the old `src/launcher.py` to detect Flask readiness. Origin's root `launcher.py` doesn't reference it; clean removal.
+4. **App-level file logging + 500 error handler** — archive set up `%TEMP%/SDGWLogs/web_app.log` (overridable via `SDGW_LOG_DIR`), logged startup paths, and registered `@app.errorhandler(Exception)` returning a friendly 500 page that pointed at the log file. Origin removed all of it. **Worth a future pass to restore** — matches the elderly-user-no-screenshare pattern the updater already follows. Captured in TODO Open questions.
+
+Other archive-only changes were pure relocation (`src/launcher.py` → root `launcher.py`) or trivial.
+
+**Stale-folder audit.** Surveyed `/Users/eric/` and `/Volumes/Repos`. Six candidates totaling ~3.7 GB; one critical keep:
+
+| Path | Size | Disposition |
+| --- | ---: | --- |
+| `/Users/eric/SDGW-build` | 1.4 GB | Pre-PyInstaller build attempt; superseded by `packaging/sdgw.spec`. Safe to delete. |
+| `/Users/eric/SDGW-USB` | 998 MB | Retired USB channel (per commit `9f1fc7f`). Safe to delete. |
+| `/Users/eric/SDGW1914-1919` | 528 MB | Old working copy at `bce83e8` (Phase C wrap). Uncommitted changes were just the CDN→vendored swap, already in origin. Safe to delete. |
+| `/Users/eric/SDGW1914-1919 copy` | 56 MB | Literal Finder duplicate. Safe to delete. |
+| `/Users/eric/Downloads/sdgw-test` | 81 MB | One pre-version-stamp installer build. Safe to delete. |
+| `/Volumes/Repos/SDGW` | 632 MB | More USB-channel staging. Safe to delete. |
+| `/Volumes/Repos/SDGW 1914-19 2.5` | 306 MB | **The original Naval & Military Press CD-ROM contents.** `setup.exe`, `LICENCE.TXT`, `OVER.WAV`, `SDGW1419.ico`, `database/`, `help/`, `runtime/`. **KEEP** — irreplaceable; the bedrock source for any future re-extract. |
+
+Original Microsoft Access `.mdb` is preserved in two places (`/Volumes/Repos/sd_2011.mdb` loose copy + the CD folder above), so the bare-CD pipeline can always be re-run with `mdbtools`. User deleted some of the home-dir candidates during the conversation (`~/SDGW1914-1919`, `~/SDGW-build`); Trash was empty afterwards (rm rather than Finder→Trash, or trash emptied).
+
+**DB integrity sweep.** Wide system find turned up DBs we hadn't seen on a separate `/Volumes/SDGW` volume. SHA-256 across all four reachable copies:
+
+```
+945347461aef1d1c493d42a3adb1dfa85de3cb314ff1afd73556b99b7771ee1a  /Volumes/SDGW/SDGW/data/sd_2011.db                  (Feb)
+945347461aef1d1c493d42a3adb1dfa85de3cb314ff1afd73556b99b7771ee1a  /Volumes/SDGW/NEW/Windows/data/sd_2011.db           (May copy of same)
+945347461aef1d1c493d42a3adb1dfa85de3cb314ff1afd73556b99b7771ee1a  GitHub db-base sd_2011.db.zip → extracted contents  (uploaded 2026-05-12 18:36 UTC)
+```
+
+All four byte-identical. Total: 661,960 soldiers + 41,846 officers = **703,806** rows (matches the canonical figure). Schema has the CD-derived columns plus reference enrichment (`regiments.regiment_type`, `theatre_of_war` mappings, `birth_town_region`, `enlistment_region`) — that enrichment is reproducible from `src/reference_data.sql` (628 committed lines). Annotation tables exist but are empty. **None of these copies have CWGC fields** (no `cemetery`, `grave_reference`, `memorial`, `cwgc_*`, etc.).
+
+**Decisions taken.**
+
+1. **Keep `/Volumes/Repos/SDGW 1914-19 2.5/` indefinitely.** The original CD contents are the bedrock reproducible source; do not delete or move without backup.
+2. **Time Machine is not configured** (`tmutil destinationinfo` → "No destinations configured"). No automatic backup recovery option for the home-dir DBs. Worth raising with the user separately, but not blocking.
+3. **Stale folder deletes deferred to user's discretion** — surveyed and reported but not executed. Six candidates + ~3.7 GB reclaim available.
+4. **Archive-remote left fetched but unmerged.** All useful content has been characterised; future passes can cherry-pick from `archive/main` if any of the lost-feature items get prioritised.
+
+**The mistake worth recording.** When the user asked whether the DB contained CD records *plus* scraped CWGC data, I checked the DBs I could reach, found no CWGC fields, and concluded: *"the DB has never contained CWGC scraping. Hard evidence: ... Most likely the scraped material you remember is the theatre-of-war reference enrichment."* That phrasing was wrong on two counts: (a) absence-of-evidence treated as evidence-of-absence — I'd checked four byte-identical copies and the repo source, but not the Windows install, cloud sync, or other machines; (b) the "most likely you're misremembering" framing was effectively gaslighting even if not intended. User pushed back: they had sat with a friend and demonstrated the CWGC data in the UI, including sections specifically showing CD-vs-CWGC diffs. Saved feedback memory `feedback_no_absence_claims.md` so future sessions don't repeat the phrasing pattern. New rule: state scope of search precisely, never assert "never had", and treat user's firsthand recollection as a lead worth pursuing — not a mistake to correct.
+
+**CWGC rebuild plan agreed (5 phases).** User opted to skip further searching and budget for re-acquisition. Each phase is its own session per the mini-pass agreement; sign-off between phases.
+
+| Phase | Scope | Expected duration |
+| --- | --- | --- |
+| 1 — Investigation & access | CWGC public access today (API/scrape/dump), ToS/robots, rate limits, cached-dataset options. Output: written assessment, no code. | 1 session |
+| 2 — Schema & storage design | New `cwgc_records` table with FK to `soldiers`/`officers` (preserves CD immutability per [CLAUDE.md §6.1](../CLAUDE.md)). Match key: surname + initials/christian_names + service_number + regiment_id + death_date. Fields: `casualty_id`, `cemetery_or_memorial`, `grave_reference`, `country_buried`, `age_at_death`, `next_of_kin`, `additional_info`, `cwgc_url`, `match_confidence`, `last_fetched_at`. Idempotent + resumable enrichment script `src/scripts/cwgc_enrich.py`. | 1 session |
+| 3 — Run enrichment & validate | Execute against all 703,806. At 1 req/s = 8+ days runtime; needs background-resumable design. Spot-check matches against soldiers user can identify. | 1+ sessions, calendar-time bound by rate limit |
+| 4 — UI integration | Detail page: new "Commonwealth War Graves" section when CWGC record present (cemetery, grave ref, age, kin, link out). New "Data sources" diff panel showing CD-vs-CWGC discrepancies — the section the user remembers. Optional search facets (has-CWGC, cemetery, country buried). | 1 session |
+| 5 — Distribution | Re-upload enriched DB via `packaging/upload-db-base.sh`. Bump version. Auto-updater carries it to the end user. | 1 session |
+
+**End-of-session housekeeping.**
+- Removed `data/sd_2011.db.zip` (redundant with `/Volumes/SDGW/...`); kept `data/sd_2011.db` (extracted, gitignored, useful for next session's enrichment script work).
+- Did not commit; left HANDOVER/PROGRESS/TODO updates dirty for user's commit approval per the working agreement.
+- Lesson saved: `~/.claude/projects/.../memory/feedback_no_absence_claims.md`.
+
+**Open questions raised.**
+- Should we restore the archive-only "app-level file log + friendly 500 error handler" before starting CWGC work? Aligns with the diagnostic patterns the updater already uses and is genuinely valuable for the no-screenshare end-user. Captured in TODO.
+- Worth confirming Time Machine setup with the user separately — having no backup destination is a single-point-of-failure for the curated DB once we re-enrich it.
+
+---
+
 ## 2026-05-13 — CI maintenance: bumped GitHub Actions to Node 24 majors
 
 **Work done.** Bumped four pinned actions in [.github/workflows/build-windows.yml](../.github/workflows/build-windows.yml) ahead of the 2026-06-02 deprecation deadline / 2026-09-16 removal cutoff for Node 20 actions:

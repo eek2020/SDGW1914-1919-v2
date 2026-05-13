@@ -1,14 +1,26 @@
 # TODO
 
-## Active queue
+## Active queue — CWGC rebuild (5-phase plan)
 
-*(empty — Phase D is fully signed off in the field as of 2026-05-13. Pick from Next-up.)*
+- [ ] **Phase 1 — CWGC investigation & access.** Find out how CWGC data is accessible today: public API at [cwgc.org](https://www.cwgc.org/find-records/), scraping ToS/robots, rate limits, whether bulk download is permitted, whether a cached dataset exists (Internet Archive, genealogy datasets, researcher partnership). Output: a written assessment with tradeoffs. **No code yet.** Each subsequent phase needs sign-off before starting.
 
-## Next-up (not started; pick by user direction)
+- [ ] **Phase 2 — Schema & storage design.** New `cwgc_records` table with FK to `soldiers`/`officers`. Preserve CD immutability per [CLAUDE.md §6.1](../CLAUDE.md). Match key: surname + initials/christian_names + service_number + regiment_id + death_date. Fields: `casualty_id`, `cemetery_or_memorial`, `grave_reference`, `country_buried`, `age_at_death`, `next_of_kin`, `additional_info`, `cwgc_url`, `match_confidence`, `last_fetched_at`. Design for `src/scripts/cwgc_enrich.py` (idempotent + resumable + rate-limited + logs unmatched). Schema-only — no fetch yet.
 
-- [ ] **Audit the `archive` remote for unmerged work.** Older Inno Setup scripts and vendored assets done independently in the legacy private repo `SDGW1914-1919`. Deferred per [CLAUDE.md §11](../CLAUDE.md) — only revisit with explicit user sign-off because the two histories have diverged.
+- [ ] **Phase 3 — Run enrichment & validate.** Execute against all 703,806 records. At 1 req/s = 8+ days runtime; needs background-resumable design. Spot-check matches against soldiers user can identify by name.
+
+- [ ] **Phase 4 — UI integration.** Detail page: new "Commonwealth War Graves" section when CWGC record present (cemetery, grave ref, age, next of kin, link out to cwgc.org). New "Data sources" diff panel showing CD-vs-CWGC discrepancies on rank/regiment/death-date/etc. — the section the user remembers having before. Optional search facets: has-CWGC, cemetery, country buried.
+
+- [ ] **Phase 5 — Distribution.** Re-upload enriched DB via [`packaging/upload-db-base.sh`](../packaging/upload-db-base.sh). Bump version. Silent auto-updater carries it to the end user.
+
+## Next-up (paused while CWGC is active; pick by user direction)
+
+- [ ] **Restore archive-only logging + 500 handler.** Archive had `web_app.log` at `%TEMP%/SDGWLogs/web_app.log` (overridable via `SDGW_LOG_DIR`) plus `@app.errorhandler(Exception)` returning a friendly 500 page that pointed at the log path. Origin removed both. Worth restoring — matches the diagnostic patterns the updater already uses, and is genuinely valuable for the no-screenshare end-user. Mini-pass; cherry-pickable from `archive/main`.
 
 - [ ] **Decide on archival-as-skill for PROGRESS.md cadence.** Currently a prose rule in HANDOVER.md (Path A). Path B would author a `.claude/skills/archive-progress.md` skill to operationalise the cadence. Decide when archival passes start firing often enough that manual execution is friction. Right now, n = 0 archival passes — defer until needed.
+
+- [ ] **Stale-folder cleanup (~3.7 GB reclaim).** Six candidates surveyed in 2026-05-13 PROGRESS entry: `~/SDGW-build`, `~/SDGW-USB`, `~/SDGW1914-1919`, `~/SDGW1914-1919 copy`, `~/Downloads/sdgw-test`, `/Volumes/Repos/SDGW`. **DO NOT delete `/Volumes/Repos/SDGW 1914-19 2.5/`** — original CD master.
+
+- [ ] **Confirm Time Machine setup with user.** `tmutil destinationinfo` → "No destinations configured". The DB has no automatic backup beyond the GitHub `db-base` Release. Particularly important to flag before committing a freshly-enriched (and expensive-to-rebuild) post-CWGC DB.
 
 ## Open questions to resolve later
 
@@ -23,6 +35,10 @@
 - **`windows-2025` → `windows-2025-vs2026` runner label.** Transparent today via the `windows-latest` alias used in [`.github/workflows/build-windows.yml`](../.github/workflows/build-windows.yml). Pin the explicit new label only if/when a build pins on the precise toolchain. Low priority.
 
 ## Done
+
+- [x] **Audited `archive` remote for divergence** (2026-05-13). Read-only fetched per CLAUDE.md §11 sign-off; no merge. Diff characterised in PROGRESS — five things archive had that origin lost (search loading overlay, per-page selector, `/health` endpoint, app-level file logging, friendly 500 handler). Most are intentional removals; the logging/500-handler pair is worth restoring (carried in Next-up above).
+
+- [x] **DB integrity sweep + canonical SHA recorded** (2026-05-13). All four reachable copies of `sd_2011.db` are byte-identical: SHA-256 `945347461aef1d1c493d42a3adb1dfa85de3cb314ff1afd73556b99b7771ee1a`. Stored in `/Volumes/SDGW/SDGW/data/`, `/Volumes/SDGW/NEW/Windows/data/`, the GitHub `db-base` Release zip (uploaded 2026-05-12 18:36 UTC), and `data/sd_2011.db` (extracted locally for next-session script work). Confirmed: this DB has the CD baseline + reference enrichment from `src/reference_data.sql` but no CWGC fields — re-acquisition planned in Active queue above.
 
 - [x] **CI actions bumped to Node 24 majors** (2026-05-13). [`.github/workflows/build-windows.yml`](../.github/workflows/build-windows.yml): `checkout v4→v5`, `setup-python v5→v6`, `cache v4→v5`, `upload-artifact v4→v6`. Shipped in commit [`ddc0b0c`](https://github.com/eek2020/SDGW1914-1919-v2/commit/ddc0b0c). Clears the 2026-06-02 deprecation deadline; CI run [25791179643](https://github.com/eek2020/SDGW1914-1919-v2/actions/runs/25791179643) triggered automatically on the `main` push.
 - [x] **Silent auto-update path validated end-to-end** (2026-05-13). Three load-bearing fixes shipped and proven in the field over a single working day: AppMutex (v0.2.3, commit [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a)) to close the running app cleanly, truststore SSL (v0.2.5, commit [`a754eef`](https://github.com/eek2020/SDGW1914-1919-v2/commit/a754eef)) to allow the installer download over GitHub's release CDN, paired `[Run]` with `skipifnotsilent` (v0.2.7, commit [`bfd6bf8`](https://github.com/eek2020/SDGW1914-1919-v2/commit/bfd6bf8)) to reopen the app post-install. Final field result: v0.2.6 → v0.2.7 hands-free, 71-second relaunch latency. See [PROGRESS.md](PROGRESS.md) for the full diagnostic narrative.

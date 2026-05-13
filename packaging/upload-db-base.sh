@@ -8,14 +8,16 @@
 # Usage:
 #   packaging/upload-db-base.sh [path/to/sd_2011.db]
 #
-# Default DB path: ~/SDGW-USB/Windows/SDGW/data/sd_2011.db
+# Default DB path: ./data/sd_2011.db (repo-local).
 # Override by passing a path as the first argument.
 
 set -euo pipefail
 
 REPO="eek2020/SDGW1914-1919-v2"
 TAG="db-base"
-DEFAULT_DB="${HOME}/SDGW-USB/Windows/SDGW/data/sd_2011.db"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+DEFAULT_DB="${REPO_ROOT}/data/sd_2011.db"
 DB_PATH="${1:-$DEFAULT_DB}"
 
 if [[ ! -f "$DB_PATH" ]]; then

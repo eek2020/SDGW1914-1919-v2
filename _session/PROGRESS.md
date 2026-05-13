@@ -6,7 +6,32 @@
 
 ---
 
+## 2026-05-13 — Correction: auto-update validation was overclaimed; USB channel retired
+
+**What changed.** Walked back the previous 2026-05-13 entry's claim that the silent auto-update path was proven end-to-end. The AppMutex code change in commit [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a) is real and shipped; v0.2.3 and v0.2.4 are real published releases; but a clean, observed silent v0.2.3 → v0.2.4 update on the user's Windows machine did **not** actually happen the way the prior log described. Phase D is not signed off. Validation goes back into the Active queue.
+
+**Why.** Author flagged the overclaim directly: *"we are testing the auto update feature that hasn't yet passed."* The earlier entry confused "release was published and the design is correct" with "the field test passed." Those are different bars. Honest session state is more useful to a future session than aspirational wins.
+
+**Also retired.** The USB installer channel. No USB code lives in this repo (the broken May 2026 bundle was assembled outside it at `~/SDGW-USB`), so the cleanup is documentation-only — there were no source files to delete. The .exe + silent auto-update is now the only distribution channel.
+
+**Decisions taken.**
+
+1. **Roll back, don't rewrite history.** Prior 2026-05-13 entry stays in PROGRESS.md as written — append-only log discipline. This entry is the correction; readers see the arc.
+2. **Re-promote validation to Active queue in TODO.md.** Reworded the Done-list line so the AppMutex fix and v0.2.4 cut stay logged as done (they are), but the validation work item is back in Active.
+3. **Drop USB from active docs and memory; leave `docs/archive/` alone.** Archive is historical; rewriting old PRDs to pretend USB never existed is dishonest in the other direction. Only deleted the load-bearing memory file (`project_installer_bug.md`) — the bug record is no longer load-bearing because the channel is gone.
+4. **Narrow the deferred archive-repo audit.** It previously listed "USB-build helpers" as one of three things potentially worth salvaging from the legacy private repo. With USB retired, only Inno Setup scripts and vendored assets remain on the audit list (which is itself still deferred).
+5. **No code edits.** `src/updater.py`, `launcher.py`, `packaging/installer.iss`, `src/version.py`, `.github/workflows/build-windows.yml` are unchanged. The mechanism is correct as designed; the gap is field validation, not code.
+
+**Cross-document edits.** `_session/HANDOVER.md` (Status, Active task, Next-up, Carried items, Decisions). `_session/TODO.md` (Active queue, Next-up, Done). `CLAUDE.md` (stripped `~/SDGW-USB/...` path from line 295 example). Auto-memory: `project_auto_update.md` validation-status block corrected; `project_two_repos.md` dropped "USB" wording; `project_installer_bug.md` deleted; `MEMORY.md` index updated.
+
+**Open questions raised.** Next mini-pass decides the actual test approach — most likely cut v0.2.5 with a tiny visible change (e.g. another `.version-tag` opacity nudge or copy tweak) and observe v0.2.4 → v0.2.5 silently on the field machine with disciplined observation this time. Author-approval per action stands.
+
+---
+
 ## 2026-05-13 — Silent auto-update path proven end-to-end (Phase D done)
+
+> **Note (added in the 2026-05-13 correction entry above):** the "PROVEN" framing of this entry was overstated. The AppMutex code change is real and shipped; v0.2.4 is a real published release; but the field test as described was not actually observed cleanly end-to-end. Treat the design narrative below as accurate; treat the validation claim as retracted.
+
 
 **What changed.** Identified and fixed the root cause of "auto-update appears to run but the installed version doesn't change", then proved the fix in the field.
 

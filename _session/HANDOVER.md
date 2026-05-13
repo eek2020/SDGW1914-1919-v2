@@ -4,30 +4,28 @@
 
 ## Status
 
-**Phases A–D complete. Silent auto-update path validated end-to-end on the user's Windows machine on 2026-05-13.** Update flow: v0.2.3 (first build with `AppMutex` in `installer.iss` + matching named mutex held by `launcher.py`) → v0.2.4 (legibility bump on `.version-tag`) auto-applied silently — splash appeared, installer ran, app relaunched, footer flipped. The "email one URL forever" distribution promise is now proven, not just designed.
+**Phases A–C complete. Phase D substantially complete in code but the silent auto-update path is NOT yet field-proven.** All Phase-D plumbing is shipped: PyInstaller spec, Inno Setup installer, CI workflow on tag push, silent on-launch updater, public download URL, and the `AppMutex` coupling between `installer.iss` and `launcher.py` that lets `/CLOSEAPPLICATIONS` actually close the running app. v0.2.4 is published to GitHub Releases. What hasn't happened: a clean, observed v0.2.4 → v0.2.5 silent update on the user's Windows machine. (An earlier session log claimed this was validated on 2026-05-13 — that claim was overstated; treat Phase D as not signed off.)
 
-Key recent commits: [`5efb7bd`](https://github.com/eek2020/SDGW1914-1919-v2/commit/5efb7bd) silent auto-updater, [`55ad769`](https://github.com/eek2020/SDGW1914-1919-v2/commit/55ad769) version footer, [`4170850`](https://github.com/eek2020/SDGW1914-1919-v2/commit/4170850) updater file logging, [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a) **AppMutex fix (the load-bearing one)**, [`2b22f3e`](https://github.com/eek2020/SDGW1914-1919-v2/commit/2b22f3e) v0.2.4 legibility tweak / proof-point.
+Key recent commits: [`5efb7bd`](https://github.com/eek2020/SDGW1914-1919-v2/commit/5efb7bd) silent auto-updater, [`55ad769`](https://github.com/eek2020/SDGW1914-1919-v2/commit/55ad769) version footer, [`4170850`](https://github.com/eek2020/SDGW1914-1919-v2/commit/4170850) updater file logging, [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a) **AppMutex fix (the load-bearing one)**, [`2b22f3e`](https://github.com/eek2020/SDGW1914-1919-v2/commit/2b22f3e) v0.2.4 cut as a proof-point candidate.
 
 Working tree is clean on `main`.
 
 ## Active task
 
-**None — Phase D is signed off in the field.** Pick the next thing from Next-up candidates when ready.
+**Validate the silent auto-update path end-to-end on the user's Windows machine.** Concrete next step (cut a v0.2.5 with a tiny visible change vs. force-trigger on the existing install) is to be decided per author-approval in the next mini-pass.
 
 ## Next-up candidates
 
 Picked by user direction. None block the others.
 
-1. **Fix the May 2026 USB build installer bug** (see [Carried items](#carried-items)) — broken PowerShell installer with a wrong source-folder path. Blocks any further USB handover. Lower priority now that the .exe + auto-update path is the primary distribution channel **and proven**, but still real debt.
-2. **Audit the `archive` remote for unmerged work** — older Inno Setup scripts, USB-build helpers, and vendored assets that were done independently. Deferred per CLAUDE.md §11; only revisit with explicit user sign-off because the two histories have diverged.
-3. **Annotation UI integration on the detail page** is partial (backend complete). Promote when prioritised; do as its own mini-pass.
-4. **Performance debt items** carried in TODO.md *Open questions* — detail-page query count, `fuzzy_suggest` caching, CI test wiring, fixture-based test isolation. Not blocking distribution; pick when feature work quiets.
-5. **Archival-as-skill question (parked)** — whether to operationalise PROGRESS.md archival cadence as a Claude Code skill rather than a prose rule in this file. Decide if archival passes start firing often enough to be friction.
+1. **Audit the `archive` remote for unmerged work** — older Inno Setup scripts and vendored assets that were done independently. Deferred per CLAUDE.md §11; only revisit with explicit user sign-off because the two histories have diverged.
+2. **Annotation UI integration on the detail page** is partial (backend complete). Promote when prioritised; do as its own mini-pass.
+3. **Performance debt items** carried in TODO.md *Open questions* — detail-page query count, `fuzzy_suggest` caching, CI test wiring, fixture-based test isolation. Not blocking distribution; pick when feature work quiets.
+4. **Archival-as-skill question (parked)** — whether to operationalise PROGRESS.md archival cadence as a Claude Code skill rather than a prose rule in this file. Decide if archival passes start firing often enough to be friction.
 
 ## Carried items
 
-- **USB installer bug.** May 2026 USB build ships a PowerShell installer with a wrong source-folder path. Needs a fix before any further Windows USB handover. Not blocking the .exe path.
-- **Two-repo state.** `origin` = `SDGW1914-1919-v2` (PUBLIC, active). `archive` = `SDGW1914-1919` (PRIVATE, legacy with unmerged spec/vendor/USB work). Do not fetch from `archive` without explicit user sign-off.
+- **Two-repo state.** `origin` = `SDGW1914-1919-v2` (PUBLIC, active). `archive` = `SDGW1914-1919` (PRIVATE, legacy with unmerged spec/vendor work). Do not fetch from `archive` without explicit user sign-off.
 - **DB distribution model.** DB ships as a separate versioned Release asset on tag `db-base`, not bundled in the .exe. Reader-only for now; annotation-DB split is deferred.
 - **Code signing.** Explicitly out of scope (see [CLAUDE.md §6](../CLAUDE.md) hard constraint #9). SmartScreen blue dialog on first install is mitigated by an emailed screenshot showing **More info → Run anyway**. Subsequent auto-updates do not trigger SmartScreen.
 
@@ -37,7 +35,7 @@ Full ledger in [PROGRESS.md](PROGRESS.md). One-bite version:
 
 - **Distribution model:** one URL, emailed once, that always resolves to the latest release. `https://github.com/eek2020/SDGW1914-1919-v2/releases/latest/download/SDGW-Setup.exe`.
 - **Install path:** per-user install to `%LOCALAPPDATA%\SDGW` — **no UAC prompt**, no "this user / all users" dialog.
-- **Auto-update:** silent, on-launch, throttled to once per 24h. Splash during download. Inno Setup spawned with `/SILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /NORESTART`. Fail-invisible — all exceptions swallowed; app launches normally on any error. Diagnostic file at `%LOCALAPPDATA%\SDGW\updater.log`. **Validated end-to-end on 2026-05-13 (v0.2.3 → v0.2.4).**
+- **Auto-update:** silent, on-launch, throttled to once per 24h. Splash during download. Inno Setup spawned with `/SILENT /CLOSEAPPLICATIONS /RESTARTAPPLICATIONS /NORESTART`. Fail-invisible — all exceptions swallowed; app launches normally on any error. Diagnostic file at `%LOCALAPPDATA%\SDGW\updater.log`. Field validation pending.
 - **`AppMutex` is mandatory.** Inno Setup's `/CLOSEAPPLICATIONS` flag is a no-op without `AppMutex` in `installer.iss`. The running `SDGW.exe` must hold a named Windows kernel mutex (`SDGW1914-1919-AppMutex`, created in `launcher.py` at module load when `FROZEN and win32`) so the installer can identify and close it. Without this, "silent updates" silently failed to replace locked files. Discovered + fixed in v0.2.3 commit [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a).
 - **DB is separate from the app binary.** Shipped as `sd_2011.db.zip` on the `db-base` Release tag. CI fetches at build time so the .exe always carries a fresh DB without bloating the repo.
 - **No code signing.** SmartScreen blue dialog mitigated by emailed screenshot on first install only; auto-updates inherit trust from the running app.

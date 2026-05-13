@@ -257,7 +257,7 @@ origin   https://github.com/eek2020/SDGW1914-1919-v2.git   (PUBLIC, active)
 archive  https://github.com/eek2020/SDGW1914-1919.git      (PRIVATE, legacy)
 ```
 
-`archive` holds an earlier parallel iteration with overlapping but unmerged work (older Inno Setup scripts, USB-build helpers, vendored assets done independently). Do not fetch/merge from `archive` without explicit user sign-off — it is preserved for audit, not for active development.
+`archive` holds an earlier parallel iteration with overlapping but unmerged work (older Inno Setup scripts and vendored assets done independently). Do not fetch/merge from `archive` without explicit user sign-off — it is preserved for audit, not for active development.
 
 ### The end-user journey
 
@@ -292,7 +292,7 @@ The download URL is stable: GitHub redirects `/releases/latest/` to the most rec
 When the local DB content changes (regiment scrapes, theatre enrichment, typo fixes), re-upload it:
 
 ```bash
-./packaging/upload-db-base.sh                           # default: ~/SDGW-USB/Windows/SDGW/data/sd_2011.db
+./packaging/upload-db-base.sh                           # default: local DB path
 ./packaging/upload-db-base.sh /path/to/sd_2011.db       # override
 ```
 

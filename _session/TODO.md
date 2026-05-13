@@ -2,13 +2,11 @@
 
 ## Active queue
 
-*(empty — Phase D is signed off in the field as of 2026-05-13. Pick from Next-up.)*
+- [ ] **Validate the silent auto-update path end-to-end on the user's Windows machine.** AppMutex fix is shipped (v0.2.3 baseline) and v0.2.4 is published, but a clean observed silent update has not yet been confirmed in the field. Next concrete step (cut v0.2.5 with a tiny visible change vs. force-trigger on existing install) to be decided per author-approval in the next mini-pass.
 
 ## Next-up (not started; pick by user direction)
 
-- [ ] **Fix May 2026 USB build installer bug.** Wrong source-folder path in the PowerShell installer ships in the May 2026 USB build. Blocks any further Windows USB handover. Not blocking the .exe path. Lower priority since auto-update is now the primary channel.
-
-- [ ] **Audit the `archive` remote for unmerged work.** Older Inno Setup scripts, USB-build helpers, vendored assets done independently in the legacy private repo `SDGW1914-1919`. Deferred per [CLAUDE.md §11](../CLAUDE.md) — only revisit with explicit user sign-off because the two histories have diverged.
+- [ ] **Audit the `archive` remote for unmerged work.** Older Inno Setup scripts and vendored assets done independently in the legacy private repo `SDGW1914-1919`. Deferred per [CLAUDE.md §11](../CLAUDE.md) — only revisit with explicit user sign-off because the two histories have diverged.
 
 - [ ] **Decide on archival-as-skill for PROGRESS.md cadence.** Currently a prose rule in HANDOVER.md (Path A). Path B would author a `.claude/skills/archive-progress.md` skill to operationalise the cadence. Decide when archival passes start firing often enough that manual execution is friction. Right now, n = 0 archival passes — defer until needed.
 
@@ -24,7 +22,7 @@
 
 ## Done
 
-- [x] **Silent auto-update path validated end-to-end** (2026-05-13). Fixed the missing-`AppMutex` bug in [`installer.iss`](../packaging/installer.iss) + matching mutex in [`launcher.py`](../launcher.py) (commit [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a) → v0.2.3 baseline). Cut v0.2.4 (commit [`2b22f3e`](https://github.com/eek2020/SDGW1914-1919-v2/commit/2b22f3e), `.version-tag` opacity 0.6 → 0.85) as the proof point. On the user's Windows machine: deleted throttle file, launched, splash appeared, installer ran silently, app relaunched, footer flipped v0.2.3 → v0.2.4. See [PROGRESS.md](PROGRESS.md) for the diagnostic narrative.
+- [x] **AppMutex fix shipped + v0.2.4 published** (2026-05-12 / 2026-05-13). Fixed the missing-`AppMutex` bug in [`installer.iss`](../packaging/installer.iss) + matching mutex in [`launcher.py`](../launcher.py) (commit [`913c31a`](https://github.com/eek2020/SDGW1914-1919-v2/commit/913c31a) → v0.2.3 baseline). Cut v0.2.4 (commit [`2b22f3e`](https://github.com/eek2020/SDGW1914-1919-v2/commit/2b22f3e), `.version-tag` opacity 0.6 → 0.85) as a proof-point candidate. **End-to-end field validation of the silent update is incomplete and back in the Active queue** — a prior session log overstated success. See [PROGRESS.md](PROGRESS.md) for the correction.
 - [x] **Adopted EngineeringFramework session-continuity pattern** (2026-05-12). Created `_session/HANDOVER.md` + `_session/TODO.md` + `_session/PROGRESS.md`; added bootstrap pointer at the top of [CLAUDE.md](../CLAUDE.md). See [PROGRESS.md](PROGRESS.md) for the framing decision.
 - [x] **Phase A — Data Access** (mdbtools → CSV extraction pipeline; one-time).
 - [x] **Phase B — Migration** (CSV → SQLite; `src/data_migration.py`; 703,806 rows landed across 8 tables + 27 indexes).

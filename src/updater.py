@@ -31,6 +31,17 @@ from typing import Optional
 
 from version import __version__, __repo__
 
+# Use the OS trust store for SSL on the frozen Windows build. Without this,
+# the bundled Python can't verify the cert chain on GitHub's release-download
+# CDN (the 302 target for /releases/download/...), and the silent updater
+# fails at the download step with CERTIFICATE_VERIFY_FAILED.
+if sys.platform == "win32" and getattr(sys, "frozen", False):
+    try:
+        import truststore
+        truststore.inject_into_ssl()
+    except Exception:
+        pass
+
 CHECK_INTERVAL_SECONDS = 24 * 3600
 NETWORK_TIMEOUT_SECONDS = 5
 DOWNLOAD_TIMEOUT_SECONDS = 600

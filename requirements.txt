@@ -3,3 +3,4 @@ Werkzeug==3.0.2
 pytest==7.4.3
 beautifulsoup4==4.12.2
 pywebview==5.1
+truststore==0.10.4

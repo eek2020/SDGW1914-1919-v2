@@ -40,8 +40,13 @@ ENV/
 
 # Database files (keep structure, exclude data)
 data/*.db
+data/*.db-shm
+data/*.db-wal
 data/*.mdb
 data/backups/
+
+# CWGC staging (intermediate scrape/import artifacts, not source-of-truth)
+temp_support/
 
 # Large export files
 data/exports/SOLDIERS.csv

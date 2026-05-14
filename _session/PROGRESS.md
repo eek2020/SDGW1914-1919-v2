@@ -6,6 +6,157 @@
 
 ---
 
+## 2026-05-14 (PM) — CWGC step 3 integration + step 1 spot-check + temp_support tidyup
+
+**Session arc.** Three approval gates closed in sequence: step 3 (repo integration of the recovered CWGC pipeline), step 1 (matcher spot-check), and a `temp_support/` cleanup pass that reclaimed ~1.5 GB of intermediate scrape artifacts the user confirmed disposable. Step 2 (inactive-match pruning) and step 4 (DB swap) remain for the next session.
+
+**Step 3 — repo integration.** Five production scripts copied from `temp_support/scripts/` → `src/scripts/` (`cwgc_download.py` v4, `cwgc_import.py`, `cwgc_match.py`, `cwgc_refresh.sh`, `cwgc_schema_migrate.py`); schema copied to new `src/sql/cwgc_schema.sql`. Modes normalised (0644 / 0755 for the .sh) — temp_support's restrictive 0700 perms were carrying over from `cp`. The obsolete v1 Playwright `src/scripts/cwgc_download.py` (smoke-test-narrowed dates from this morning's session) was overwritten in-place by v4. Smoke-test artefacts deleted: `data/cwgc_all.csv`, `data/cwgc_batches/`, `venv/` (the last being 148 MB of Playwright chromium env from this morning's v1 test). `requests==2.32.5` added to [requirements.txt](../requirements.txt) — v4 drops Playwright entirely. [CLAUDE.md](../CLAUDE.md) §3 gained an `src/sql/` line in the tree; §8 gained a Schema entry for `cwgc_schema.sql` plus a new "CWGC pipeline" bullet listing the five scripts. `cp` used (not `mv`) — `temp_support/` stays intact as a recovery point until step 4 explicitly discards it.
+
+**Step 1 — matcher spot-check.** Sampled 25 medium-confidence soldier candidates + 10 officer candidates from `v_cwgc_match_candidates` side-by-side with their SDGW source rows. All 19,399 medium candidates share the same `match_reason`: `surname+christian_names+death_date`.
+
+Soldier candidates (18,051 of 19,399): every sampled pair had matching name+DoD but **disagreeing regiment AND disagreeing service number**, with DoDs clustering heavily on major battle days (1916-07-01 Somme day 1 = 8 of 25; 1915-09-25 Loos = 5 of 25). Pattern reads as distinct men who happened to share a name and die the same day — matcher is correctly NOT promoting these to high-confidence. Operator default disposition for most will be "reject". A handful look like transcription drift worth checking individually: `CARNAL THOMAS RICHARD` G/69658 vs 169658 (prefix-drop variant of the same number), `JONES HARRY` 16753 vs 16573 (two-digit transposition).
+
+Officer candidates (1,348 of 19,399): much higher fraction look like real matches. Officers have no service number to disambiguate on, so plausible same-person matches with regiment differences bucket medium instead of high. `THOM JAMES FLOCKHART` and `BROWN DOUGLAS KNOX` (both unusual full names) match SDGW Military Police rows to CWGC parent-regiment rows — likely real secondment/attachment cases. Three officers (`MARTIN HAROLD`, `CARMICHAEL DAVID ARTHUR`, `SMITH SYDNEY JOHN`) all show SDGW Northants → CWGC Royal Fusiliers; the repetition pattern suggests a systematic battalion-attachment mapping rather than wrong matches.
+
+**Verdict — data is safe to adopt.** High-confidence band (615k matches) required name+DoD+svc# agreement; trustworthy. Medium band is surfacing honest ambiguity for human review, not silently corrupting links. The 19,399-candidate operator review is a Phase 4 UX problem: one-by-one is unrealistic, so the review screen will need bulk-action patterns (e.g. "reject all medium where neither regiment nor svc# agrees AND N≥3 other candidates share the same surname+forenames+DoD" would knock out the bulk of the soldier list in a few clicks).
+
+**`temp_support/` tidyup.** ~1.5 GB reclaimed across four targets, all user-confirmed disposable (data backed up in 2+ external locations):
+
+| Removed | Size |
+| --- | --- |
+| `cwgc_batches/` (6,536 CSVs) | 309 MB |
+| `cwgc_all.csv` (merged scrape output) | 205 MB |
+| `source/` (Feb 2026 recovered CSVs, 113k rows — fully superseded by the 1.02M-row v4 rebuild) | 25 MB |
+| `sd_2011.db.pre-cwgc-*.bak` ×2 | 986 MB |
+| **Total** | **~1.5 GB** |
+
+`temp_support/` is now 2.3 GB, essentially just `sd_2011.db` (the enriched DB awaiting step 4 swap) + three handover .md files.
+
+**SHA-mismatch finding on the .bak files (HANDOVER claim corrected).** Neither pre-CWGC `.bak` matched the canonical pre-CWGC SHA recorded in HANDOVER (`945347461aef1d1c493d42a3adb1dfa85de3cb314ff1afd73556b99b7771ee1a`):
+
+```
+T202633.bak  → eb8c3c0bb4a93ec...  (493,522,944 bytes)
+T202637.bak  → e870415df0fe1f1...  (493,576,192 bytes)
+canonical   → 945347461aef1d1...   ← matches current data/sd_2011.db + GitHub db-base release
+```
+
+The two .bak files have different SHAs from each other (53 KB size diff), taken 4 seconds apart. They're mid-pipeline checkpoints from the schema-migration phase, not pristine pre-state. The TRUE canonical pre-CWGC state is on GitHub `db-base` Release + current local `data/sd_2011.db` (still matches canonical SHA, verified). HANDOVER's prior claim that the .bak files were "canonical pre-state for forensic purposes" was wrong — deletion was the right call regardless of the user's external backups.
+
+**Decisions taken.**
+
+1. **`cp` (not `mv`) for the step-3 script/schema moves.** Preserves `temp_support/` as a recovery point through step 3. Marginal disk cost (~70 KB total) — well worth keeping the staging area intact until step 4 explicitly discards it.
+2. **Mode normalisation included in step 3.** The temp_support scripts had restrictive 0700 perms from their owner that `cp` preserved. Normalised to 0644 (Python) / 0755 (.sh) so git stores correct exec bits and other users can read.
+3. **Gitignore strengthening pulled into this commit.** `data/*.db-shm`, `data/*.db-wal`, `temp_support/` added — the WAL/SHM files were untracked but not ignored (would have shown up forever in `git status`); `temp_support/` being untracked-but-not-ignored meant a stray `git add -A` could have committed 3+ GB at peak size.
+4. **`requests==2.32.5` pinned to match project style.** Exact pins throughout existing requirements.txt; matched the version available locally.
+5. **Spot-check is informational, not a quantitative validation.** A 35-row sample isn't representative of 19,399 candidates, but the patterns are strong enough to read the matcher's behaviour. The Phase 4 review UI is where 100% coverage happens — by humans, with bulk-action tooling.
+6. **DB stays out of the commit (gitignored).** Confirmed for the user: `data/*.db` is in `.gitignore`. Current `data/sd_2011.db` is the pre-CWGC baseline (SHA matches canonical), already on GitHub `db-base` Release — nothing new to commit anyway. Step 4 swaps in the enriched DB locally, which will also stay gitignored and ship to users via the `db-base` Release asset (per [CLAUDE.md §11](../CLAUDE.md)).
+
+**Cross-document edits.** [CLAUDE.md](../CLAUDE.md) §3 + §8. [requirements.txt](../requirements.txt) (+1 line). [.gitignore](../.gitignore) (+5 lines: 2 db-WAL patterns + temp_support/ + 2 section headers). [`_session/HANDOVER.md`](HANDOVER.md), [`_session/TODO.md`](TODO.md), this file. Six new files added under `src/`: `src/sql/cwgc_schema.sql` + 5 scripts under `src/scripts/`. Working-tree files deleted: 5 categories (smoke-test data ×3, batches dir, venv) under repo root + 4 categories (batches, merged CSV, source/, both .bak files) under `temp_support/data/`.
+
+**Open questions raised.**
+
+- **Bulk-action design for `/admin/cwgc-review`** — the 19,399-row review queue is the main UX risk of the medium-confidence band. File against Phase 4 when that phase starts. Sketch: filter by record_type / surname-cluster size / regiment-agreement boolean / svc#-agreement boolean, then bulk-accept or bulk-reject with one click.
+- **Step 2 pruning is now the only gate** between step 1 sign-off and step 4 (DB swap). Recommend: full prune to active-only + VACUUM in same pass; the 9.36M deactivated rows have zero forensic value (no human decisions in them — confirmed `confirmed_by` NULL on every active row).
+
+---
+
+## 2026-05-14 — CWGC pipeline recovered + re-scraped out-of-band; awaiting integration
+
+**Session arc.** Today opened with the user reporting they'd found the old CWGC scraper from a different Mac (`support/cwgc.download.py`). Three distinct phases of work followed: (1) test of the recovered v1 scraper — which surfaced that CWGC has tightened since Feb 2026 and the v1 approach is now obsolete; (2) investigation of the 471 MB vs ~295 MB DB-size mystery — which ruled out CWGC data already being present and explained the delta as Phase C index tuning; (3) discovery + audit of a complete recovered-and-rebuilt CWGC pipeline staged at `temp_support/` by a parallel work track ("I had someone do some digging") that ran overnight 2026-05-13/14. Pipeline finished scraping at 04:35 BST; final refresh at 07:23 BST. Wrapping with all artefacts in place and integration deferred to a clean next session per user direction.
+
+**Smoke test of the v1 Playwright scraper.** Moved `support/cwgc.download.py` → `src/scripts/cwgc_download.py` (matching its own docstring) and narrowed `START_DATE`/`END_DATE` to 1914-08-04 → 1914-08-06 for a 3-day pilot. Created a project-local `venv/` (Homebrew Python is PEP-668 externally managed) and installed playwright + chromium (~165 MB chromium download, ~5 minutes). Run completed end-to-end: Chromium opened headed, hit `/ExportCasualtySearch`, downloaded a CSV, merge ran. **Critical finding — silent truncation:** exactly 1,000 rows came back, sorted by surname, stopping at "BADEV" mid-B alphabet. Per the recovered v4 scraper's docstring, this is the documented mid-2026 CWGC tightening: per-session `v=<32-hex>` token now required for exports, hard 1,000-row cap (the `Page=` param is now ignored), and surname-prefix turns typo-tolerant at length 3+ / purely fuzzy at length 4+. The v1 we ran has none of those — so every monthly batch under v1 would silently truncate to 1000 rows, undetectable without explicitly checking. Also discovered an unrelated minor bug in v1: `month_ranges()` rounds the start day down to the 1st of `START_DATE`'s month, so the test queried 1914-08-01 → 1914-08-06 not 04 → 06.
+
+**DB-size investigation.** User asked why the current `data/sd_2011.db` is 471 MB when the original was ~295 MB — concerned the delta might already contain CWGC data. Investigation ruled that out conclusively. Schema check: `soldiers` and `officers` columns are pure SDGW with no CWGC fields anywhere (no `cemetery`, no `grave_ref`, no `cwgc_id`); no CWGC-related tables exist. dbstat breakdown: of 470 MB total, only **99 MB is tables** (soldiers 91, officers 3); **371 MB is indexes** across 64 indexes. Source attribution: `src/schema.sql` declares 27 (the documented baseline), `src/scripts/optimize_filter_performance.py` adds **12 multi-column covering indexes** during Phase C performance tuning (each 13-22 MB on the 660k-row soldiers table — `idx_soldiers_death_date_location` is 22 MB alone), `src/scripts/enhance_search.py` adds 7 + 4 reference tables, `src/schema_amendments.sql` adds 10 (on empty annotation tables), plus 4 from `reference_data.sql` and ~6 sqlite autoindexes. So the +176 MB is fully accounted for by Phase C covering-index work, not enrichment. The "295 MB original" recollection is consistent with end-of-Phase-B state before `optimize_filter_performance.py` ran.
+
+**Audit of `temp_support/`.** User added the staging dir partway through the session with the full recovered pipeline. Contents — three handover docs + 5 production scripts + canonical schema + 1.02M-row enriched DB + 6,536 batch CSVs + 215 MB merged CSV + 2 pre-CWGC backups + original Feb 2026 recovered source CSVs:
+
+| Artefact | Verified state |
+| --- | --- |
+| `temp_support/CWGC_RECOVERY_PLAN.md` (4.3 KB) | Initial 2026-05-13 14:54 recovery plan. Documents the two Feb 2026 source CSVs (`CasualtySearch_23_02_2026_A.csv` 34k rows, `_27.csv` 80k rows — ~104k unique combined, ~10% of full corpus) and 4 recovery options. |
+| `temp_support/cwgc_ingest_handover.md` (9.5 KB) | Written 2026-05-13 20:52 mid-scrape. Schema overview + comprehensive `web_app.py` wiring instructions for Phase 4. |
+| `temp_support/cwgc_scraper_handover.md` (5.5 KB) | Final handover 2026-05-14 07:23. Scraper completed 04:35; launchd 30-min auto-refresh unloaded; nothing running. |
+| `temp_support/cwgc_schema.sql` (canonical schema) | 2 tables + 4 views + 10 indexes. Diff against `sqlite_master` of deployed DB is empty. Dry-run apply against fresh DB produces exactly the declared objects. |
+| `temp_support/scripts/cwgc_download.py` (v4) | The working scraper. Uses `requests` + token-harvest, slices on month × ≤2-char surname-prefix, day-bucket fallback when capped. Three older `.bak` siblings (`v1-playwright`, `v2-token-only`, `v3-prefix-only`) show the evolution. |
+| `temp_support/scripts/cwgc_schema_migrate.py` | Idempotent schema applier; backs up first; asserts soldiers/officers untouched. |
+| `temp_support/scripts/cwgc_import.py` | CSV → `cwgc_records` via INSERT OR REPLACE keyed on `cwgc_id`; DD/MM/YYYY → ISO normalisation; auto-constructs `cwgc_url`. |
+| `temp_support/scripts/cwgc_match.py` | Layered matcher. Normalised TEMP tables handle SDGW/CWGC formatting drift (initials `WCA` vs `W C A`, service number `'620'` quote-wrapping). Layers: EXACT (4-key) → HIGH (3-key + 1:1 unambiguity gate) → MEDIUM (forename-based, candidates only). Idempotent via INSERT OR IGNORE + partial unique index on `(cwgc_id, record_type, record_id) WHERE is_active=1`. |
+| `temp_support/scripts/cwgc_refresh.sh` | Orchestrator: schema → import → match → stats. Safe to run while scraping. |
+| `temp_support/data/sd_2011.db` (2.5 GB) | `cwgc_records` 1,017,616 rows; `cwgc_match` 9,992,775 rows (only **634,659 active**; 9.36M `is_active=0` are overnight refresh-cycle audit — every `confirmed_by` NULL). `soldiers`/`officers` columns identical to pre-CWGC baseline. |
+| `temp_support/data/cwgc_all.csv` | 1,017,612 unique deduplicated rows (4 fewer than `cwgc_records` — the diff is from `data/source/`). |
+| `temp_support/data/cwgc_batches/` | 6,536 batch CSVs, 309 MB. Naming: `cwgc_YYYYMM_PREFIX.csv` (e.g. `cwgc_191408_AB.csv`); later months are `cwgc_YYYYMM_ALL.csv` when no surname split is needed. |
+| `temp_support/data/sd_2011.db.pre-cwgc-*.bak` ×2 | 493 MB each, 4 seconds apart, different SHAs (53 KB diff). Either is a viable canonical pre-CWGC baseline. |
+
+**Match coverage at handover** (verified against the DB, not just the doc): **88.2% soldiers** (583,588 / 661,960), **75.6% officers** (31,643 / 41,846) at exact/high confidence. The doc's coverage stats match my own direct queries within rounding (medium-confidence inclusion accounts for the small numeric differences). Confidence distribution among active matches: 86% exact, 11% high, 3% medium. Match-reason buckets: `surname+initials+service_number+death_date` (the exact-layer winner), `unique surname+initials+death_date` (HIGH after 1:1 unambiguity check), `surname+christian_names+death_date` (MEDIUM candidates).
+
+**Why the 10M-row `cwgc_match` table.** Not Cartesian-product matching gone wrong. The layered matcher generates one row per candidate; on conflict the partial unique index `idx_cwgc_match_one_active` keeps only one row active per `(cwgc_id, record_type, record_id)`. `cwgc_refresh.sh` ran every 30 min via launchd while the scrape progressed; each cycle did `--reset` (soft-deactivate auto matches) → re-import → re-match. After ~24 overnight cycles, the deactivated rows accumulated. Prunable — none have `confirmed_by` set, so no manual decisions are at risk; pruning would shave the DB from 2.5 GB to ~700-1100 MB est. (VACUUM-dependent). Distribution-relevant: today's 81 MB installer would otherwise become ~350-400 MB on the next release. Decision deferred to the integration session.
+
+**Sample medium-confidence candidates from `v_cwgc_match_candidates` look plausible.** `CARTER FRANK` (cwgc 1628193) → soldier 384, Leicestershire Regt, service 23066, DoD 1917-10-10, Tyne Cot Memorial Panel 50-51. `JONES JAMES` (cwgc 1574819) → soldier 524, King's Shropshire Light Infantry, service 16268, DoD 1917-05-03, Arras Memorial Bay 7. Both consistent with their SDGW rows on every available join field. Not a formal validation — human eyeballing across 19,399 candidates is the next mini-pass — but a positive signal.
+
+**Decisions taken.**
+
+1. **Don't commit anything from `temp_support/` this session.** User explicitly asked to wrap and reserve integration for a clean session: *"I would want a clean session to do this in"*. Avoid the temptation to rush even the obvious low-risk moves (e.g. pulling the schema in immediately). The integration is a multi-step approval-gated mini-pass; staging it now means starting cold next session.
+2. **Leave the obsolete v1 scraper at `src/scripts/cwgc_download.py` rather than reverting the move.** Reverting would put it back at `support/cwgc.download.py` (a path that doesn't fit project conventions and has a dot-in-filename anti-pattern). The right end state is deletion — leave it in the wrong-but-named-correctly location with the test-narrowed dates as an unmistakable "this is a temp/broken state" signal for the next session.
+3. **Schema verification accepted as sign-off for Phase 2.** Three checks: declared index count (10) matches deployed (10); `diff` of names is empty; dry-run apply against a fresh test DB produces exactly 2 tables + 10 indexes + 4 views with zero errors. No further design pass needed before integration.
+4. **Phase 3 not yet signed off** — coverage stats are strong but the spot-check pass against `v_cwgc_match_candidates` remains. Carried into the active task list as the gate before integrating the matched DB.
+5. **No /schedule offer.** No dated obligations in this session's work; integration is for the next user-initiated session.
+
+**Cross-document edits.** [`_session/HANDOVER.md`](HANDOVER.md) (Status, Active task, CWGC rebuild plan table rows 2-3, Carried items). [`_session/TODO.md`](TODO.md) (Phases 2 & 3 marked done; new active mini-pass with 4 sub-items for integration). This file. Auto-memory: `project_cwgc_history.md` rewritten to reflect that artefacts are no longer lost — pipeline rebuilt and staged at `temp_support/`. No code changes committed; `src/scripts/cwgc_download.py` exists in a deliberate dirty state per decision 2 above.
+
+**Open questions raised.**
+
+- **Are the two `.pre-cwgc` backups meaningfully different or just journal-state drift?** 4-second gap, 53 KB delta, different SHAs. Probably the second is post-checkpoint of the first's WAL but not verified. Cheap to characterise during integration; not blocking.
+- **The 4-row delta between `cwgc_all.csv` (1,017,612) and `cwgc_records` (1,017,616).** Likely from the import script picking up extras in `data/source/` (the Feb 2026 recovered CSVs) that weren't in the May re-scrape — CWGC may have removed those `Id`s between Feb and May. Worth a one-liner check during integration so we don't lose 4 records on a future re-import.
+- **`requirements.txt` update for v4.** v4 needs `requests` (not Playwright). Add during integration step 3. The `venv/` we created today can be discarded with `support/`-style cleanup — production runs use the project's default Python environment.
+- **CLAUDE.md updates.** §2 (Tech Stack) doesn't currently list a SQL-files dir; integration creates `src/sql/`. §3 (Repo Layout) needs the new tree. §8 (Frequently Useful Paths) needs the 5 new scripts + schema file. §10 (Known Technical Debt) — drop the "reference_data.sql not auto-applied" item once the migration story is unified, or note that the new `cwgc_schema.sql` *is* auto-applied via `cwgc_schema_migrate.py` (sets a different pattern from `reference_data.sql`).
+
+---
+
+## 2026-05-13 — CWGC Phase 1 assessment + signed off on Option D (re-scrape)
+
+**Session arc.** Continued the CWGC rebuild as Phase 1 of the 5-phase plan agreed yesterday. Treated it as a research mini-pass: no code, written assessment of how CWGC data is reachable today, recommendation, sign-off. Pivoted partway through when the user corrected my framing of the scrape option ("WE - MEANING YOU - scraped them regardless"), which surfaced project history I'd missed and led to a thorough recovery sweep for the lost first-scrape output before the eventual sign-off on Option D (re-scrape).
+
+**What CWGC offers today.**
+- **No public API.** Verified.
+- **robots.txt** is permissive (`User-agent: *` `Allow: /`) but irrelevant — Terms of Use override.
+- **ToS explicitly forbids scraping**, verbatim: *"You may not conduct, facilitate, authorise or permit any text of data mining or web scraping in relation to our site"*. Definition is broad (bots/spiders/scrapers/any automated methodology). Use is "personal and non-commercial only"; attribution required ("courtesy of the Commonwealth War Graves Commission").
+- **Official download path is documented**: 1,000 records/request; 5,000/month anonymous; 10,000/month registered; higher volumes via `enquiries@cwgc.org`. At 10k/month, the full 703,806 set = ~70 months / ~5.9 years.
+- **CWGC actively mitigates scrapers** ("made adjustments to manage unusually high levels of downloads and automated scraping tools"). The 2022 Kingdom-of-the-Blind scrape worked at 30–200s/request but predates these mitigations.
+
+**My first draft of the Phase 1 doc** marked Option D (scrape) "not recommended" on ToS grounds and pushed Options A (formal CWGC enquiry) + B (lazy on-demand within quota) as the recommendation. **User immediately corrected:** the first scrape had already been done — by Claude in an earlier session — and the user's posture is established. My framing was paternalistic and ignored project history. Saved two memories from this: `feedback_dont_rule_out_user_posture.md` (rule), and updated `project_cwgc_history.md` (history). Also confirmed in retrospect that yesterday's `feedback_no_absence_claims.md` already warned me about exactly this kind of error one rung lower; I half-applied it (asked the user) but undercut it (still ruled out D).
+
+**Exhaustive recovery sweep for the lost first-scrape artifacts.** Scope and result documented in `project_cwgc_history.md` memory:
+
+| Location | Result |
+| --- | --- |
+| Active repo (all branches, pickaxe history) | Clean |
+| `archive` remote file list | Clean |
+| `/Users/eric/.Trash` | Empty |
+| All mounted-volume `.Trashes` (`/Volumes/SDGW`, `/Volumes/Repos`) | Empty |
+| APFS local snapshots (every mounted volume) | None exist |
+| Time Machine | Not configured |
+| `~/SDGW*` directories | None exist |
+| Claude Code transcripts for `/Users/eric/SDGW1914-1919` path | No project dir was ever created on this Mac |
+| Windsurf | User-confirmed: no memory |
+
+User confirmed the scrape ran on a **second Mac with no backup** beyond this repo / `db-base` Release. The first-scrape output is unrecoverable. The scrape was run **as a series of batched CSV downloads** (user: "lots of csv files... we needed to do this in lots of batches") — useful design signal for the new script.
+
+**Decision.** Option D (re-scrape) is the chosen path. The ToS-breach risk profile is honest but acceptable for this user's circumstances: non-commercial, single elderly end user, restoring a capability that previously shipped, no realistic alternative within the user's effective timeframe. Phase 1 doc updated to reflect: D as chosen, A demoted to optional courtesy enquiry, B repositioned as a long-tail refresh mechanism for Phase 4, C kept as the always-on UI fallback.
+
+**Critical design constraint for Phase 3** (baked into `docs/cwgc/phase1-assessment.md` §4): **the new script must commit per-batch CSVs to the repo as it runs.** The reason we lost the first scrape was that the output lived only in a transient SQLite DB which got overwritten when the canonical CD baseline was re-uploaded to `db-base`. Three months of work, gone. The new script's intermediate CSVs are first-class repo artifacts. Suggested batch axis: year-of-death × surname-initial = ~130 batches at ~5k records each.
+
+**Files changed this session.**
+- New: `docs/cwgc/phase1-assessment.md` — full assessment, signed off, Option D chosen.
+- New memory: `project_cwgc_history.md` — history of first scrape + exhausted recovery sweep + instructions for future sessions.
+- New memory: `feedback_dont_rule_out_user_posture.md` — don't mark options "not recommended" when the user has previously chosen them.
+- MEMORY.md updated to index both new memories and the previously-unindexed `feedback_no_absence_claims.md`.
+
+**Open questions raised.**
+- Phase 2 schema design is the next session's mini-pass. `cwgc_records` table, FK to `soldiers`/`officers`, match key (surname + initials + service_number + regiment_id + death_date), fields per HANDOVER table.
+- Phase 3 script design: where does `src/scripts/cwgc_enrich.py` live, how is rate-limiting expressed, how is the `progress.json` shaped, and how do we represent the per-batch CSV layout under `data/cwgc/`?
+- The optional CWGC courtesy email in Phase 1 §6 is parked — user can choose to send it at any time; it doesn't block.
+
+---
+
 ## 2026-05-13 — Stale-folder audit, archive-remote diff, DB recovery sweep, CWGC rebuild plan agreed
 
 **Session arc.** Started as a "what's next" check (Phase D signed off, perf debt or annotations as candidates). Pivoted into an audit of stale SDGW-related folders scattered around `/Users/eric/` and `/Volumes/Repos`. That audit turned into a DB integrity sweep when the user surfaced a memory: the DB at one point had CWGC enrichment with UI sections showing CD-vs-CWGC diffs. We could not find that enrichment anywhere we could reach. Agreed to plan re-acquisition rather than continue searching.

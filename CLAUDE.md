@@ -72,7 +72,9 @@ SDGW1914-1919/
 │   ├── schema.sql                  Core DDL: 8 tables, 27 indexes
 │   ├── schema_amendments.sql       Annotation/image DDL: 4 tables, 2 views
 │   ├── reference_data.sql          Regiment names, theatres, regions, keywords
-│   ├── scripts/                    One-shot utilities (export, validate, migrate, etc.)
+│   ├── sql/
+│   │   └── cwgc_schema.sql         CWGC enrichment DDL: 2 tables, 4 views, 10 indexes
+│   ├── scripts/                    One-shot utilities (export, validate, migrate, CWGC pipeline)
 │   ├── templates/                  7 Jinja2 templates
 │   └── static/
 │       ├── style.css
@@ -202,7 +204,8 @@ These constants live in `src/web_app.py` (or `src/annotations.py`, `src/updater.
 
 - **Search routing & SQL:** `src/web_app.py` — start at `/search` and `/api/filter-options`.
 - **Annotations CRUD:** `src/annotations.py` (`AnnotationManager`) + write routes in `src/web_app.py`.
-- **Schema:** `src/schema.sql` (core), `src/schema_amendments.sql` (annotations), `src/reference_data.sql` (regiment names, theatres, regions, keywords).
+- **Schema:** `src/schema.sql` (core), `src/schema_amendments.sql` (annotations), `src/reference_data.sql` (regiment names, theatres, regions, keywords), `src/sql/cwgc_schema.sql` (CWGC enrichment — `cwgc_records`, `cwgc_match`, plus `soldiers_with_cwgc` / `officers_with_cwgc` / `v_cwgc_match_candidates` / `v_cwgc_unmatched` views).
+- **CWGC pipeline:** `src/scripts/cwgc_schema_migrate.py` (apply schema), `src/scripts/cwgc_download.py` (v4 token-aware scraper, batched CSVs), `src/scripts/cwgc_import.py` (CSV → `cwgc_records`), `src/scripts/cwgc_match.py` (layered matcher → `cwgc_match`), `src/scripts/cwgc_refresh.sh` (orchestrator). Uses `requests`, not Playwright.
 - **Search results template:** `src/templates/search_results.html` (card/table toggle, pills, pagination).
 - **Detail view:** `src/templates/detail.html` (record nav, related records, clipboard, print).
 - **Styling and themes:** `src/static/style.css` (light/dark/system, density, layout, font size).
